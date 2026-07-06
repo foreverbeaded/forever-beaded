@@ -1243,7 +1243,7 @@ html { scroll-behavior: smooth; }
   color:#b8868b;
   letter-spacing: 3px;
   font-width:700;
-  font-size: 9rem;
+  font-size: clamp(2rem, 5vw, 4rem);
 }
 
 .maker-content h2{

@@ -3,283 +3,156 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forever Beaded</title>
-
-  <link rel="preconnect" herf="https://fonts.googleapis.com">
-  <link rel="preconnect" herf="https://fonts.gstatic.com" crossorigin>
-  
-  <link herf="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="css/style.css" />
+  <meta name="description" content="Forever Beaded is Gladlyn's handmade storybook bead boutique for custom keepsakes, gifts, flowers, butterflies, animals, and one-of-a-kind treasures." />
+  <title>Forever Beaded | A Cinematic Storybook Boutique</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/book.css" />
+  <link rel="stylesheet" href="css/garden.css" />
+  <link rel="stylesheet" href="css/animations.css" />
 </head>
-
-<body>
-  <div id="galleryModal" class="gallery-modal" aria-hidden="true">
-    <button id="prevImage" class="gallery-nav gallery-prev" type="button" aria-label="Previous image">‹</button>
-    <div class="gallery-image-wrap">
-      <img id="galleryModalImage" class="gallery-modal-img" src="" alt="Gallery preview">
+<body class="storybook-home intro-active">
+  <section id="openingScene" class="opening-scene" aria-label="Cinematic heirloom storybook opening">
+    <div class="webgl-stage">
+      <canvas id="storybookCanvas" class="butterfly-webgl" aria-hidden="true"></canvas>
+      <div id="imageIntroStage" class="image-intro-stage" aria-hidden="true">
+        <div class="intro-camera">
+          <div class="intro-book-element">
+            <img class="intro-book-image" src="images/storybook-intro-base.png" alt="" draggable="false" loading="eager" decoding="async" />
+            <div class="intro-cover-lift"></div>
+            <div class="intro-page-edge-depth"></div>
+            <div class="intro-paper-shadow"></div>
+            <div class="intro-page-compression"></div>
+            <div class="intro-spine-flex"></div>
+            <div class="intro-reflection-sweep"></div>
+            <div class="intro-gold-reflection"></div>
+            <div class="intro-flower-awakening" aria-hidden="true">
+              <span class="bloom bloom-one"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><b></b></span>
+              <span class="bloom bloom-two"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><b></b></span>
+              <span class="bloom bloom-three"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><b></b></span>
+            </div>
+            <div class="intro-page-glow-leak"></div>
+            <div class="intro-title-glow"></div>
+            <div class="intro-cover-light"></div>
+          </div>
+        </div>
+        <div class="intro-book-shadow"></div>
+        <div class="intro-golden-glow"></div>
+        <div class="intro-light-rays"></div>
+        <div class="intro-depth-field"></div>
+        <div class="intro-particles"></div>
+      </div>
     </div>
-    <button id="nextImage" class="gallery-nav gallery-next" type="button" aria-label="Next image">›</button>
-    <button id="zoomImage" class="gallery-zoom" type="button" aria-label="Zoom image">🔍 Zoom</button>
-    <button id="closeGalleryModal" class="gallery-close" type="button" aria-label="Close gallery">×</button>
-  </div>
+    <div class="opening-caption" aria-live="polite" aria-hidden="true">
+      <p>Forever Beaded</p>
+      <span>An heirloom storybook opens by hand, bead by bead.</span>
+    </div>
+    <div class="chapter-reveal-copy" aria-hidden="true">
+      <p class="chapter-kicker">Chapter One</p>
+      <h2>Every treasured piece begins with a story.</h2>
+      <span>The pages are open. Step inside.</span>
+    </div>
+    <div class="intro-audio-hooks" aria-hidden="true">
+      <audio id="audioPageTurn" preload="none"></audio>
+      <audio id="audioForestAmbience" preload="none" loop></audio>
+      <audio id="audioSoftWind" preload="none" loop></audio>
+      <audio id="audioMagicSparkle" preload="none"></audio>
+    </div>
+  </section>
 
-  <header class="header">
-    <a class="logo" href="index.html">Forever Beaded</a>
-    <button class="menu-btn" id="menuBtn">☰</button>
-    <nav id="nav">
-      <a href="#shop">Shop</a>
-      <a href="#designer">Design</a>
-      <a href="#gallery">Gallery</a>
-      <a href="#contact">Contact</a>
-      <button class="cart-btn" id="cartBtn">Cart <span id="cartCount">0</span></button>
+  <header class="story-header">
+    <a class="story-brand" href="index.html" aria-label="Forever Beaded home">
+      <span>Forever Beaded</span>
+      <small>by Gladlyn</small>
+    </a>
+    <button id="storyMenuButton" class="story-menu-button" type="button" aria-label="Open navigation" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <nav id="storyNav" class="story-nav" aria-label="Main navigation">
+      <a href="collections.html">Collections</a>
+      <a href="treasures.html">Treasures</a>
+      <a href="reviews.html">Kind Words</a>
+      <a href="maker.html">Meet the Maker</a>
+      <a class="nav-order" href="create.html">Create Yours</a>
     </nav>
   </header>
 
-  <main>
-    <section class="hero brand-hero">
+  <main id="chapterOne">
+    <div id="ambientNatureLayer" class="ambient-nature-layer" aria-hidden="true">
+      <span class="ambient-butterfly ambient-butterfly-one"><i></i><b></b></span>
+      <span class="ambient-butterfly ambient-butterfly-two"><i></i><b></b></span>
+      <span class="ambient-butterfly ambient-butterfly-three"><i></i><b></b></span>
+      <span class="ambient-particle-field"></span>
+    </div>
+    <div id="chapterTwoButterflyLayer" class="chapter-two-butterfly-layer" aria-hidden="true"></div>
+
+    <section class="chapter-hero" aria-labelledby="heroTitle">
+      <div class="garden-sky" aria-hidden="true"></div>
+      <div class="gold-dust" aria-hidden="true"></div>
+      <div class="wind-field" aria-hidden="true"></div>
+      <div class="floating-hearts" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+
+      <div class="hero-book-scene" aria-hidden="true">
+        <img src="images/storybook-intro-base.png" alt="" draggable="false" loading="eager" decoding="async">
+        <span class="hero-book-glow"></span>
+      </div>
+
       <div class="hero-copy">
-        <p class="eyebrow">Handmade beaded gifts</p>
-        <h1 class="brand-title">Forever Beaded</h1>
-        <p class="brand-tagline">Handcrafted • Personalized • Made with Love</p>
-        <p class="hero-description">Custom beaded keychains, charms, bookmarks, and keepsakes designed in your favourite colours.</p>
+        <p class="chapter-kicker">Chapter One</p>
+        <h1 id="heroTitle">Every treasured piece begins with a story.</h1>
+        <p>The pages are open. Step into Gladlyn's handmade world of keepsakes, patient detail, custom colours, and small treasures made bead by bead.</p>
         <div class="hero-actions">
-          <a href="#shop" class="primary-btn">Shop Now</a>
-          <a href="#gallery" class="secondary-btn">View Gallery</a>
+          <a href="collections.html" class="gold-button">Shop the collection</a>
+          <a href="create.html" class="glass-button">Design your own</a>
         </div>
       </div>
 
-      <div class="hero-showcase" aria-label="Forever Beaded featured designs">
-        <div class="hero-card hero-card-main">
-          <img src="images/phoenix-butterfly-flower-braided.jpeg" alt="Forever Beaded handmade bead designs">
-        </div>
-        <div class="hero-mini-card top">🦋</div>
-        <div class="hero-mini-card bottom">✨</div>
+      <article class="hero-feature" aria-label="This month's exclusive Sunset Macaw">
+        <p class="chapter-kicker">This Month's Exclusive</p>
+        <img src="images/macaw.jpeg" alt="Handmade beaded Macaw by Forever Beaded" loading="lazy" decoding="async">
+        <h2>Sunset Macaw</h2>
+        <p>Available until July 30. A vivid, detailed keepsake with collector energy.</p>
+        <a href="treasures.html" class="text-link">Discover the Sunset Macaw</a>
+      </article>
+
+      <div class="hero-story-tiles" aria-label="Forever Beaded story paths">
+        <a href="collections.html" class="story-tile tile-story">
+          <img src="images/butterfly.jpeg" alt="Handmade beaded butterfly" loading="lazy" decoding="async">
+          <span>Chapter One</span>
+          <strong>Explore the collection</strong>
+        </a>
+        <a href="create.html" class="story-tile tile-custom">
+          <img src="images/phoenix-butterfly-flower-braided.jpeg" alt="Custom handmade beaded design" loading="lazy" decoding="async">
+          <span>Chapter Two</span>
+          <strong>Create your own treasure</strong>
+        </a>
+        <a href="treasures.html" class="story-tile tile-exclusive">
+          <img src="images/macaw.jpeg" alt="Sunset Macaw handmade beaded exclusive" loading="lazy" decoding="async">
+          <span>This Month's Exclusive</span>
+          <strong>Sunset Macaw</strong>
+        </a>
       </div>
     </section>
 
-
-
-    <section class="brand-strip" aria-label="Forever Beaded highlights">
-      <div><strong>🇨🇦 Made in Canada</strong><span>Small handmade business</span></div>
-      <div><strong>🎨 Personalized</strong><span>Names, colours, and charms</span></div>
-      <div><strong>🎁 Gift Ready</strong><span>Thoughtful keepsakes</span></div>
-      <div><strong>💜 Handmade</strong><span>Each bead placed with care</span></div>
-    </section>
-
-    <section class="section boutique-section">
-      <p class="eyebrow">Why choose us</p>
-      <h2>Little handmade gifts with a lot of heart</h2>
-      <p class="section-intro">Forever Beaded pieces are made for birthdays, school gifts, bag charms, keys, backpacks, and sweet “just because” surprises.</p>
-      <div class="feature-grid">
-        <article class="feature-card">
-          <span>🦋</span>
-          <h3>Custom Designs</h3>
-          <p>Choose butterflies, geckos, flowers, pencils, ocean animals, faith designs, or a surprise creation.</p>
-        </article>
-        <article class="feature-card">
-          <span>✨</span>
-          <h3>Made to Order</h3>
-          <p>Pick your colours, add a name, and choose a regular, gold, or bag charm finish.</p>
-        </article>
-        <article class="feature-card">
-          <span>💌</span>
-          <h3>Easy Ordering</h3>
-          <p>Add your favourites to cart, then send the prepared order email with your shipping details.</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="section maker-section" id="maker">
-      <div class="maker-container">
-
-        <div class="maker-image"> 
-          <img src="images/gladlyn.png" alt="Gladlyn - Forever Beaded">
-        </div>
-
-        <div class="maker-content">
-         <span class="maker-tag">THE STORY BEHIND FOREVER BEADED</span>
-          <h2>Hi, I’m <span class="script-name"> Gladlyn </span>!👋</h2>
-
-          <p>
-            Welcome to <strong> Forever Beaded</strong>
-          </p>
-
-          <p>
-           Every butterfy, gecko, flower and keepsake that you can see here 
-           hancrafted by me, one bead at a time
-          </p>
-
-          <p>
-            Each piece is made with care, patience and attention to detail.
-            I love creating personalized gifts that become lasting memories.
-          </p>
-
-          <p>
-            Thank you for supporting my small business. It truly means the world to me.
-          </p>
-
-          <h4> 💜 Made with love, one bead at a time. </h4>
-          <a href="#shop" class="btn-primary">
-            Shop Collection
-          </a>
-
-        </div>
-        
-      </div>
-    
-    </section>
-
-    <section class="section review-section">
-      <p class="eyebrow">Customer love</p>
-      <h2>Sweet words from handmade gift lovers</h2>
-      <div class="review-grid">
-        <article class="review-card">
-          <div class="review-stars">★★★★★</div>
-          <p>“The butterfly was even prettier in person. Such a special personalized gift!”</p>
-          <strong>— Happy Customer</strong>
-        </article>
-        <article class="review-card">
-          <div class="review-stars">★★★★★</div>
-          <p>“Beautiful colours, careful work, and the custom name made it perfect.”</p>
-          <strong>— Custom Order</strong>
-        </article>
-        <article class="review-card">
-          <div class="review-stars">★★★★★</div>
-          <p>“So cute for backpacks and keys. You can tell it was made with love.”</p>
-          <strong>— Gift Order</strong>
-        </article>
-      </div>
-    </section>
-
-    <section class="custom-cta">
-      <div>
-        <p class="eyebrow">Need something special?</p>
-        <h2>Tell me the design, colours, name, and keychain style — I’ll make it personal.</h2>
-      </div>
-      <a href="#designer" class="primary-btn">Start Custom Order</a>
-    </section>
-
-    <section id="shop" class="section">
-      <p class="eyebrow">Browse the collection</p>
-      <h2>Shop Collections</h2>
-
-      <div class="shop-tools" aria-label="Product search and filters">
-        <div class="search-wrap">
-          <span aria-hidden="true">🔎</span>
-          <input id="productSearch" type="search" placeholder="Search butterflies, geckos, flowers..." autocomplete="off" />
-        </div>
-        <div class="shop-filters" id="shopFilters" aria-label="Filter by category"></div>
-      </div>
-
-      <div class="shop-results-row">
-        <p id="shopResultsCount">Showing all handmade pieces</p>
-        <button id="clearShopFilters" class="tiny-link-btn" type="button">Clear filters</button>
-      </div>
-
-      <div class="product-grid" id="productGrid"></div>
-    </section>
-
-    <section id="designer" class="section soft">
-      <h2>Custom Design Builder</h2>
-      <p>Pick a design, colours, and personalization. The price updates automatically.</p>
-
-      <div class="designer-box">
-        <div class="preview">
-          <div class="live-preview-wrap">
-            <div class="preview-label">Live Bead Pattern</div>
-            <div id="liveDesignPreview" class="live-design-preview" aria-label="Live bead colour preview"></div>
-          </div>
-          <h3 id="previewTitle">Butterfly Keychain</h3>
-          <p id="previewColours">Colours: Purple, White, Gold</p>
-          <p id="previewName">Name: None</p>
-          <strong id="previewPrice">$25 CAD</strong>
-        </div>
-
-        <form id="designForm">
-          <label>Design
-            <select id="designType">
-              <option value="Butterfly">Butterfly</option>
-              <option value="Gecko">Gecko</option>
-              <option value="Flower">Flower</option>
-              <option value="Macaw">Exclusive Macaw</option>
-              <option value="Natalie's Butterfly">Natalie's Butterfly</option>
-              <option value="Turtle">Turtle</option>
-              <option value="Octopus">Octopus</option>
-              <option value="Soccer Ball">Soccer Ball</option>
-              <option value="Canada Flag">Canada Flag</option>
-              <option value="Cross">Cross</option>
-              <option value="Pencil">Pencil</option>
-              <option value="Crab">Crab</option>
-              <option value="Fish">Fish</option>
-              <option value="Tiger">Tiger</option>
-              <option value="Penguin">Penguin</option>
-              <option value="Mushroom">Mushroom</option>
-              <option value="Surprise Me">Surprise Me</option>
-              <option value="Custom">Custom Design</option>
-            </select>
-          </label>
-
-          <label>Colours
-            <input id="colours" value="Purple, White, Gold" />
-          </label>
-
-          <label>Name or initials
-            <input id="customName" placeholder="Optional" />
-          </label>
-
-          <label>Keychain type
-            <select id="keychainType">
-              <option value="Regular">Regular keychain</option>
-              <option value="Gold">Gold keychain +$5</option>
-              <option value="Bag Charm">Bag charm +$3</option>
-            </select>
-          </label>
-
-          <button type="button" id="addCustomBtn">Add Custom Request to Cart</button>
-        </form>
-      </div>
-    </section>
-
-    <section id="gallery" class="section">
-      <h2>✨ Our Handmade Creations ✨</h2>
-      <p>Every piece is handcrafted with love. Browse real Forever Beaded designs with likes, stars, and review previews.</p>
-      <div class="gallery-filters" id="galleryFilters"></div>
-      <div class="gallery-grid" id="galleryGrid"></div>
-    </section>
-
-    <section id="contact" class="section soft">
-      <h2>Contact Forever Beaded</h2>
-      <p>Message Forever Beaded to place a custom order, ask about colours, or request shipping.</p>
-      <div class="contact-card">
-        <p>For custom colours, shipping, or special designs, contact Forever Beaded directly.</p>
-        <div class="contact-actions">
-          <a class="primary-btn" id="emailMeBtn" href="https://mail.google.com/mail/?view=cm&fs=1&to=foreverbeaded1%40gmail.com&su=Forever%20Beaded%20Inquiry&body=Hello%20Forever%20Beaded%2C%0A%0A">Open Gmail Draft</a>
-          <button class="secondary-btn" id="copyEmailBtn" type="button">Copy Email Address</button>
-        </div>
-        <div class="copy-box">foreverbeaded1@gmail.com</div>
-        <p class="small-note">If Gmail does not open, copy the email address and paste it into your email app.</p>
-      </div>
-    </section>
   </main>
 
-  <aside class="cart-panel" id="cartPanel">
-    <button class="close-btn" id="closeCart">×</button>
-    <h2>Your Cart</h2>
-    <div id="cartItems"></div>
-    <h3>Total: <span id="cartTotal">$0 CAD</span></h3>
-    <button id="clearCart">Clear Cart</button>
-    <button id="buyNowBtn" class="checkout-btn">Buy Now</button>
-  </aside>
+  <footer class="storybook-footer">
+    <p class="chapter-kicker">The End... for now</p>
+    <h2>Forever Beaded</h2>
+    <p>Handmade treasures with a story, crafted by Gladlyn.</p>
+    <nav aria-label="Footer links">
+      <a href="https://www.instagram.com/foreverbeaded1" target="_blank" rel="noopener">Instagram</a>
+      <a href="https://www.tiktok.com/@foreverbeaded1" target="_blank" rel="noopener">TikTok</a>
+      <a href="https://www.etsy.com/shop/foreverbeaded" target="_blank" rel="noopener">Etsy</a>
+      <a href="mailto:foreverbeaded1@gmail.com">Email</a>
+    </nav>
+  </footer>
 
-  <div class="fb-modal" id="fbModal" aria-hidden="true">
-    <div class="fb-modal-card">
-      <h2 id="fbModalTitle">🦋 Forever Beaded 💗</h2>
-      <p id="fbModalMessage"></p>
-      <button id="fbModalOk" class="primary-btn">OK</button>
-    </div>
-  </div>
-
-  <script src="js/app.js"></script>
+  <script src="js/book.js?v=butterfly-refine-20260711d"></script>
+  <script src="js/butterflies.js?v=butterfly-refine-20260711d"></script>
+  <script src="js/garden.js"></script>
 </body>
 </html>

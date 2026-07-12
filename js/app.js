@@ -198,10 +198,10 @@ function renderShopFilters() {
 }
 
 function productSocialStats(product) {
-  const likes = 35 + product.id * 7;
-  const reviews = Math.max(3, Math.round(likes / 9));
-  const comments = Math.max(1, Math.round(likes / 14));
-  return { likes, reviews, comments, rating: "5.0" };
+  // Gentle placeholders for engagement labels only; written reviews are customer-submitted below.
+  const likes = 12 + product.id * 3;
+  const comments = Math.max(0, Math.round(likes / 18));
+  return { likes, reviews: 0, comments, rating: "New" };
 }
 
 function showForeverBeadedMessage(message) {
@@ -226,6 +226,7 @@ function saveCart() {
 }
 
 function openCart() {
+  if (!cartPanel) return;
   cartPanel.classList.add("open");
 }
 
@@ -248,9 +249,9 @@ function renderProducts() {
   if (!visibleProducts.length) {
     productGrid.innerHTML = `
       <div class="no-results-card">
-        <h3>No matching pieces yet 💜</h3>
+        <h3>No matching pieces yet</h3>
         <p>Try another search, choose a different category, or use the custom order builder and I can make something just for you.</p>
-        <a href="#designer" class="primary-btn">Create Custom Order</a>
+        <a href="shop.html#designer" class="primary-btn">Create Custom Order</a>
       </div>
     `;
     return;
@@ -261,9 +262,9 @@ function renderProducts() {
     return `
       <article class="product-card" data-category="${product.category}">
         <img src="${product.image}" alt="${product.name}" class="product-image">
-        <span class="badge">${product.id === 1 ? "🏆 Exclusive" : "✨ Handmade"}</span>
+        <span class="badge">${product.id === 1 ? "Exclusive" : "Handmade"}</span>
         <h3>${product.name}</h3>
-        <div class="social-row">⭐⭐⭐⭐⭐ <strong>${stats.rating}</strong> · ❤️ ${stats.likes} · 💬 ${stats.comments}</div>
+        <div class="social-row">${stats.rating} · ${stats.likes} saved · Made to order</div>
         <p>${product.description}</p>
         <strong>${money(product.price)}</strong><br><br>
         <button class="add-to-cart-btn" data-index="${index}">Add to Cart</button>
@@ -294,10 +295,10 @@ function renderGallery(category = "All") {
       <article class="gallery-card">
         <img src="${product.image}" alt="${product.name}" class="gallery-image">
         <div class="gallery-info">
-          <span class="badge">${product.id === 1 ? "🏆 Most Loved" : "💜 Customer Favorite"}</span>
+          <span class="badge">${product.id === 1 ? "Most Loved" : "Customer Favorite"}</span>
           <h3>${product.name}</h3>
-          <div class="stars">⭐⭐⭐⭐⭐ <strong>${stats.rating}</strong> <span>(${stats.reviews} Reviews)</span></div>
-          <div class="social-row">❤️ ${stats.likes} Likes · 💬 ${stats.comments} Comments</div>
+          <div class="stars"><strong>Made to order</strong> <span>Customer photos welcome</span></div>
+          <div class="social-row">${stats.likes} saved · Handmade</div>
           <p>${product.description}</p>
           <strong>${money(product.price)}</strong>
           <button class="add-to-cart-btn" data-index="${originalIndex}">Add to Cart</button>
@@ -319,6 +320,7 @@ function addToCart(index) {
 }
 
 function addCustomToCart() {
+  if (!document.getElementById("designType")) return;
   const design = document.getElementById("designType").value;
   const colours = document.getElementById("colours").value;
   const name = document.getElementById("customName").value || "None";
@@ -342,6 +344,7 @@ function addCustomToCart() {
 }
 
 function renderCart() {
+  if (!cartCount || !cartItems || !cartTotal) return;
   cartCount.textContent = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
   if (cart.length === 0) {
@@ -612,6 +615,7 @@ function calculateCustomPrice() {
 }
 
 function updatePreview() {
+  if (!document.getElementById("designType")) return;
   const design = document.getElementById("designType").value;
   const colours = document.getElementById("colours").value;
   const name = document.getElementById("customName").value || "None";
@@ -637,10 +641,22 @@ document.addEventListener("click", (event) => {
     return;
   }
 
-  const filterButton = event.target.closest(".filter-btn");
-  if (filterButton) {
-    renderGallery(filterButton.dataset.category);
+  const galleryFilterButton = event.target.closest("[data-category]");
+  if (galleryFilterButton) {
+    renderGallery(galleryFilterButton.dataset.category || "All");
     return;
+  }
+
+  const collectionJump = event.target.closest("[data-jump-category]");
+  if (collectionJump) {
+    const category = collectionJump.dataset.jumpCategory;
+    if (category && category !== "custom") {
+      sessionStorage.setItem("foreverBeadedCategory", category);
+      activeShopCategory = category;
+      activeShopSearch = "";
+      if (productSearch) productSearch.value = "";
+      renderProducts();
+    }
   }
 
   if (event.target === fbModal || event.target === fbModalOk) {
@@ -663,6 +679,16 @@ function buildOrderMessage() {
   return `Hello Forever Beaded!\n\nI would like to place this order:\n\n${orderLines}\n\nTotal: ${money(total)}\n\nName:\nShipping Address:\nPhone Number:\nNotes:`;
 }
 
+function escapeHtml(value) {
+  return String(value || "").replace(/[&<>"']/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;"
+  }[character]));
+}
+
 function openEmailCompose(subject = "Forever Beaded Inquiry", body = "Hello Forever Beaded,\n\n") {
   const email = "foreverbeaded1@gmail.com";
   const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -681,8 +707,7 @@ function saveOrderToDatabase(orderItems, total) {
       email: "",
       phone: "",
       items: orderItems,
-      item: orderItems,
-      total: money(total),
+      total,
       notes: ""
     })
   })
@@ -706,16 +731,16 @@ function buyNow() {
   cart = [];
   localStorage.removeItem("foreverBeadedCart");
   renderCart();
-  cartPanel.classList.remove("open");
+  if (cartPanel) cartPanel.classList.remove("open");
 
-  showForeverBeadedMessage(`Thank you for shopping with Forever Beaded!\n\nA Gmail draft has been prepared with your order details.\n\nPlease review it, add your shipping information if needed, and press Send to complete your order.\n\nThank you for supporting a small handmade business! 💜`);
+  showForeverBeadedMessage(`Thank you for shopping with Forever Beaded!\n\nA Gmail draft has been prepared with your order details.\n\nPlease review it, add your shipping information if needed, and press Send to complete your order.\n\nThank you for supporting a small handmade business.`);
 
-  setTimeout(() => openEmailCompose("Forever Beaded Order", body), 600);
+  setTimeout(() => openEmailCompose("Forever Beaded E-transfer Order", body), 600);
 }
 
 if (menuBtn) {
   menuBtn.addEventListener("click", () => {
-    document.getElementById("nav").classList.toggle("open");
+    document.getElementById("nav")?.classList.toggle("open");
   });
 }
 
@@ -724,7 +749,7 @@ if (cartBtn) cartBtn.addEventListener("click", openCart);
 const closeCartBtn = document.getElementById("closeCart");
 if (closeCartBtn) {
   closeCartBtn.addEventListener("click", () => {
-    cartPanel.classList.remove("open");
+    if (cartPanel) cartPanel.classList.remove("open");
   });
 }
 
@@ -749,7 +774,7 @@ if (copyEmailButton) {
     const email = "foreverbeaded1@gmail.com";
     try {
       await navigator.clipboard.writeText(email);
-      showForeverBeadedMessage(`Copied! 💜\n\n${email}\n\nPaste it into your email app to contact Forever Beaded.`);
+      showForeverBeadedMessage(`Copied!\n\n${email}\n\nPaste it into your email app to contact Forever Beaded.`);
     } catch (error) {
       showForeverBeadedMessage(`Forever Beaded email:\n\n${email}`);
     }
@@ -787,6 +812,12 @@ if (clearShopFilters) {
     if (productSearch) productSearch.value = "";
     renderProducts();
   });
+}
+
+const savedCategoryJump = sessionStorage.getItem("foreverBeadedCategory");
+if (savedCategoryJump && productGrid) {
+  activeShopCategory = savedCategoryJump;
+  sessionStorage.removeItem("foreverBeadedCategory");
 }
 
 renderProducts();
@@ -901,3 +932,143 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "ArrowRight") showNextImage();
   if (event.key === "ArrowLeft") showPrevImage();
 });
+
+
+// Real customer review area. Reviews are saved in this browser until a backend is added.
+const reviewForm = document.getElementById("reviewForm");
+const reviewGrid = document.getElementById("reviewGrid");
+const savedReviewsKey = "foreverBeadedReviews";
+let customerReviews = JSON.parse(localStorage.getItem(savedReviewsKey) || "[]");
+
+function starsText(value) {
+  const stars = Number(value) || 5;
+  return `${stars} out of 5 stars`;
+}
+
+function renderReviews() {
+  if (!reviewGrid) return;
+  if (!customerReviews.length) {
+    reviewGrid.innerHTML = `
+      <article class="review-card empty-review">
+        <div class="review-stars">5 out of 5 stars</div>
+        <p>Reviews will appear here after real customers add them.</p>
+        <strong>— Forever Beaded</strong>
+      </article>
+    `;
+    return;
+  }
+
+  reviewGrid.innerHTML = customerReviews.map(review => `
+    <article class="review-card">
+      <div class="review-stars">${starsText(review.stars)}</div>
+      <p>“${escapeHtml(review.text)}”</p>
+      <strong>— ${escapeHtml(review.name)}</strong>
+    </article>
+  `).join("");
+}
+
+if (reviewForm) {
+  reviewForm.addEventListener("submit", event => {
+    event.preventDefault();
+    const name = document.getElementById("reviewName").value.trim();
+    const stars = document.getElementById("reviewStars").value;
+    const text = document.getElementById("reviewText").value.trim();
+    if (!name || !text) return;
+    customerReviews.unshift({ name, stars, text, date: new Date().toISOString() });
+    customerReviews = customerReviews.slice(0, 12);
+    localStorage.setItem(savedReviewsKey, JSON.stringify(customerReviews));
+    reviewForm.reset();
+    renderReviews();
+    showForeverBeadedMessage("Thank you for leaving a real review.");
+  });
+}
+
+const backToTop = document.getElementById("backToTop");
+if (backToTop) {
+  window.addEventListener("scroll", () => {
+    backToTop.classList.toggle("show", window.scrollY > 500);
+  });
+  backToTop.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+}
+
+renderReviews();
+
+
+
+/* Forever Beaded — Cinematic asset build */
+(function(){
+  const ready = fn => document.readyState !== "loading" ? fn() : document.addEventListener("DOMContentLoaded", fn);
+
+  ready(() => {
+    const opening = document.getElementById("openingScene");
+    const skip = document.getElementById("skipOpening");
+    if(skip && opening) skip.addEventListener("click", () => opening.classList.add("skip"));
+
+    const popup = document.getElementById("exclusivePopup");
+    const close = document.getElementById("closeExclusive");
+    if(popup && close){
+      const today = new Date();
+      const july31 = new Date(today.getFullYear(), 6, 31);
+      if(today < july31){
+        setTimeout(() => popup.classList.add("open"), 18000);
+      }
+      close.addEventListener("click", () => popup.classList.remove("open"));
+      popup.addEventListener("click", e => {
+        if(e.target === popup) popup.classList.remove("open");
+      });
+    }
+
+    setInterval(() => {
+      const h = document.createElement("span");
+      h.className = "fb-heart";
+      h.textContent = "♥";
+      h.style.left = Math.random() * 96 + "vw";
+      h.style.fontSize = (10 + Math.random() * 10) + "px";
+      h.style.animationDuration = (7 + Math.random() * 6) + "s";
+      document.body.appendChild(h);
+      h.addEventListener("animationend", () => h.remove());
+    }, 2600);
+
+    initLivingNature();
+
+    document.addEventListener("contextmenu", e => {
+      if(e.target.matches("img")) e.preventDefault();
+    });
+    document.querySelectorAll("img").forEach(img => img.setAttribute("draggable","false"));
+  });
+
+  function initLivingNature(){
+    if(document.body.classList.contains("storybook-home")) return;
+    if(document.querySelector(".living-nature-layer")) return;
+
+    const layer = document.createElement("div");
+    layer.className = "living-nature-layer";
+    layer.setAttribute("aria-hidden", "true");
+
+    const dust = document.createElement("div");
+    dust.className = "living-dust";
+    layer.appendChild(dust);
+
+    for(let i = 0; i < 4; i += 1){
+      const butterfly = document.createElement("span");
+      butterfly.className = `living-butterfly living-butterfly-${i + 1}`;
+      butterfly.innerHTML = `
+        <span class="monarch-shadow"></span>
+        <img class="monarch-whole" src="images/monarch-cover-realistic.png" alt="" draggable="false" decoding="async">
+        <i></i><b></b>
+      `;
+      layer.appendChild(butterfly);
+    }
+
+    for(let i = 0; i < 8; i += 1){
+      const mote = document.createElement("span");
+      mote.className = "living-spark";
+      mote.style.setProperty("--x", `${8 + Math.random() * 84}vw`);
+      mote.style.setProperty("--delay", `${Math.random() * 9}s`);
+      mote.style.setProperty("--duration", `${8 + Math.random() * 8}s`);
+      layer.appendChild(mote);
+    }
+
+    document.body.appendChild(layer);
+  }
+})();

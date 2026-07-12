@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 140">
+  <defs>
+    <linearGradient id="wingL" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#ffd7f0"/>
+      <stop offset="45%" stop-color="#b93b86"/>
+      <stop offset="100%" stop-color="#34156b"/>
+    </linearGradient>
+    <radialGradient id="spot" cx="45%" cy="35%" r="35%">
+      <stop offset="0%" stop-color="#fff" stop-opacity=".85"/>
+      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softShadow"><feDropShadow dx="0" dy="8" stdDeviation="5" flood-color="#000" flood-opacity=".35"/></filter>
+  </defs>
+  <g filter="url(#softShadow)">
+    <path class="left-wing" d="M84 67 C42 4 0 12 8 58 C17 111 58 115 86 74 Z" fill="url(#wingL)" opacity=".96"/>
+    <path class="left-wing" d="M83 72 C40 84 27 133 67 132 C95 131 99 97 90 75 Z" fill="url(#wingL)" opacity=".9"/>
+    <path class="right-wing" d="M96 67 C138 4 180 12 172 58 C163 111 122 115 94 74 Z" fill="url(#wingL)" opacity=".96"/>
+    <path class="right-wing" d="M97 72 C140 84 153 133 113 132 C85 131 81 97 90 75 Z" fill="url(#wingL)" opacity=".9"/>
+    <ellipse cx="90" cy="72" rx="7" ry="40" fill="#1b0d24"/>
+    <circle cx="90" cy="35" r="8" fill="#1b0d24"/>
+    <circle cx="53" cy="48" r="22" fill="url(#spot)"/>
+    <circle cx="127" cy="48" r="22" fill="url(#spot)"/>
+  </g>
+</svg>

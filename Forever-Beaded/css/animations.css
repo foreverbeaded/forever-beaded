@@ -1,0 +1,19 @@
+@keyframes particleDrift {
+  to { background-position: 140px 110px, -90px 160px; }
+}
+
+@keyframes softWind {
+  from { transform: translateX(-4%) skewX(-6deg); }
+  to { transform: translateX(4%) skewX(5deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}

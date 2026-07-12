@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Kind Words from Forever Beaded customers." />
+  <title>Kind Words | Forever Beaded</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/book.css" />
+  <link rel="stylesheet" href="css/garden.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+</head>
+<body class="storybook-home storybook-page storybook-page-shell">
+  <header class="story-header">
+    <a class="story-brand" href="index.html" aria-label="Forever Beaded home"><span>Forever Beaded</span><small>by Gladlyn</small></a>
+    <button id="storyMenuButton" class="story-menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button>
+    <nav id="storyNav" class="story-nav" aria-label="Main navigation">
+      <a href="collections.html">Collections</a>
+      <a href="treasures.html">Treasures</a>
+      <a href="reviews.html" aria-current="page">Kind Words</a>
+      <a href="maker.html">Meet the Maker</a>
+      <a class="nav-order" href="create.html">Create Yours</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="kindWords" class="story-section review-story kind-words-story chapter-flow-section" aria-labelledby="reviewTitle">
+      <div class="section-heading">
+        <p class="chapter-kicker">Kind Words</p>
+        <h1 id="reviewTitle">Short notes from treasured stories.</h1>
+        <p>As Forever Beaded grows, this chapter holds real words from people who ordered, gifted, and kept their pieces.</p>
+      </div>
+      <div class="review-panels">
+        <article><span>Custom colours</span><p>Customers can request colour palettes, names, initials, and design details before payment is confirmed.</p></article>
+        <article><span>Made to order</span><p>Each piece is handmade, so small differences become part of the charm rather than a flaw.</p></article>
+        <article><span>Personal gifts</span><p>These pieces are made for backpacks, keys, desks, bags, birthdays, school gifts, and everyday memories.</p></article>
+      </div>
+    </section>
+
+    <section class="story-section" id="reviews">
+      <div class="section-heading">
+        <p class="chapter-kicker">Leave a Note</p>
+        <h2>Real customer reviews</h2>
+        <p>Customers can choose stars and write their honest review here.</p>
+      </div>
+      <form class="review-form" id="reviewForm">
+        <label>Your name <input id="reviewName" maxlength="40" placeholder="Example: Sarah" required></label>
+        <label>Stars <select id="reviewStars" required><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select></label>
+        <label>Your review <textarea id="reviewText" maxlength="220" placeholder="Write your honest review here..." required></textarea></label>
+        <button class="gold-button" type="submit">Add Review</button>
+      </form>
+      <div class="review-grid" id="reviewGrid"></div>
+    </section>
+  </main>
+
+  <aside class="cart-panel story-cart" id="cartPanel"><button class="close-btn" id="closeCart" type="button">Close</button><h2>Your Cart</h2><div id="cartItems"></div><h3>Total: <span id="cartTotal">$0 CAD</span></h3><p class="cart-payment-note">Payment is by Canadian e-transfer only. Details will be confirmed by email after your order is reviewed.</p><button id="clearCart" type="button">Clear Cart</button><button id="buyNowBtn" class="checkout-btn" type="button">Order by E-transfer</button></aside>
+  <div class="fb-modal story-modal" id="fbModal" aria-hidden="true"><div class="fb-modal-card"><h2 id="fbModalTitle">Forever Beaded</h2><p id="fbModalMessage"></p><button id="fbModalOk" class="primary-btn" type="button">OK</button></div></div>
+  <footer class="storybook-footer"><p class="chapter-kicker">The End... for now</p><h2>Forever Beaded</h2><p>Handmade treasures with a story, crafted by Gladlyn.</p><nav aria-label="Footer links"><a href="https://www.instagram.com/foreverbeaded1" target="_blank" rel="noopener">Instagram</a><a href="https://www.tiktok.com/@foreverbeaded1" target="_blank" rel="noopener">TikTok</a><a href="https://www.etsy.com/shop/foreverbeaded" target="_blank" rel="noopener">Etsy</a><a href="mailto:foreverbeaded1@gmail.com">Email</a></nav></footer>
+  <button id="backToTop" class="back-to-top" type="button" aria-label="Back to top">Up</button>
+  <script src="js/book.js?v=butterfly-refine-20260711"></script>
+  <script src="js/butterflies.js?v=butterfly-refine-20260711"></script>
+  <script src="js/garden.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

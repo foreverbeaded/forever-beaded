@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Create your own Forever Beaded handmade treasure with Gladlyn." />
+  <title>Create Yours | Forever Beaded</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/book.css" />
+  <link rel="stylesheet" href="css/garden.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+</head>
+<body class="storybook-home storybook-page storybook-page-shell">
+  <header class="story-header">
+    <a class="story-brand" href="index.html" aria-label="Forever Beaded home"><span>Forever Beaded</span><small>by Gladlyn</small></a>
+    <button id="storyMenuButton" class="story-menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button>
+    <nav id="storyNav" class="story-nav" aria-label="Main navigation">
+      <a href="collections.html">Collections</a>
+      <a href="treasures.html">Treasures</a>
+      <a href="reviews.html">Kind Words</a>
+      <a href="maker.html">Meet the Maker</a>
+      <a class="nav-order" href="create.html" aria-current="page">Create Yours</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="chapterThree" class="story-section chapter-two-story custom-story chapter-flow-section" aria-labelledby="customTitle">
+      <div class="create-butterflies" aria-hidden="true">
+        <span class="create-butterfly create-butterfly-one"></span>
+        <span class="create-butterfly create-butterfly-two"></span>
+        <span class="create-butterfly create-butterfly-three"></span>
+        <span class="create-butterfly create-butterfly-four"></span>
+        <span class="create-butterfly create-butterfly-five"></span>
+      </div>
+      <div class="section-heading narrow">
+        <p class="chapter-kicker">Chapter Three</p>
+        <h1 id="customTitle">Create Your Own Treasure</h1>
+        <p>Choose a design, colours, hardware, and quantity. The preview updates as your idea begins to take shape.</p>
+      </div>
+
+      <div class="chapter-two-layout">
+        <div class="workspace-scene" aria-label="Handcrafted beading workspace with flowers, beads, thread, and butterfly charm">
+          <div class="workspace-light" aria-hidden="true"></div>
+          <div class="workspace-dust" aria-hidden="true"></div>
+          <div class="workspace-table-grain" aria-hidden="true"></div>
+          <figure class="workspace-photo workspace-photo-primary"><img src="images/phoenix-butterfly-flower-braided.jpeg" alt="Handmade custom beaded butterfly and flower piece" loading="lazy" decoding="async"></figure>
+          <figure class="workspace-photo workspace-photo-flower"><img src="images/intricated-flower.jpeg" alt="Purple handmade beaded flower" loading="lazy" decoding="async"></figure>
+          <div class="loose-beads" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+          <span class="workspace-thread" aria-hidden="true"></span>
+          <span class="workspace-needle" aria-hidden="true"></span>
+          <span class="unfinished-charm" aria-hidden="true"></span>
+        </div>
+
+        <form id="homeDesignBuilder" class="treasure-builder" aria-label="Forever Beaded custom design builder">
+          <div class="builder-copy">
+            <span class="panel-label">Forever Beaded Custom Design Builder</span>
+            <h3>Begin the request.</h3>
+            <p>Send Gladlyn a clear starting point. Every custom order is reviewed before payment.</p>
+          </div>
+          <div class="builder-grid">
+            <label>Name <input id="homeTreasureName" name="name" type="text" placeholder="Optional name or initials" autocomplete="name"></label>
+            <label>Treasure Type <select id="homeTreasureDesign" name="design"><option value="Butterfly">Butterfly</option><option value="Flower Wristlet">Flower Wristlet</option><option value="Gecko">Gecko</option><option value="Pencil Charm">Pencil Charm</option><option value="Lobster">Lobster</option><option value="Octopus">Octopus</option><option value="Soccer Ball">Soccer Ball</option><option value="Mushroom">Mushroom</option><option value="Sunset Macaw">Sunset Macaw</option><option value="Cross">Cross</option><option value="Custom Treasure">Custom Treasure</option></select></label>
+            <label>Colours <input id="homeTreasureColours" name="colours" type="text" value="Purple, Cream, Gold" autocomplete="off"></label>
+            <label>Hardware <select id="homeTreasureHardware" name="hardware"><option value="Gold">Gold</option><option value="Silver">Silver</option></select></label>
+            <label>Quantity <input id="homeTreasureQuantity" name="quantity" type="number" min="1" max="20" value="1" inputmode="numeric"></label>
+          </div>
+          <label id="customTreasureDetailsWrap" class="custom-treasure-details" hidden>Tell me about your treasure
+            <textarea id="customTreasureDetails" name="customDetails" rows="4" placeholder="Describe your idea, and I’ll bring it to life bead by bead."></textarea>
+          </label>
+          <div class="treasure-preview" aria-live="polite">
+            <div><span class="preview-label">Live Treasure Preview</span><h4 id="homeTreasurePreviewTitle">Butterfly in purple, cream, and gold</h4><p id="homeTreasurePreviewMeta">Gold hardware, quantity 1, no name added.</p></div>
+            <div id="homeTreasurePreview" class="home-preview-beads" aria-label="Live bead pattern preview"></div>
+          </div>
+          <button id="homeTreasureButton" class="gold-button treasure-submit" type="submit">Craft My Treasure</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="storybook-footer"><p class="chapter-kicker">The End... for now</p><h2>Forever Beaded</h2><p>Handmade treasures with a story, crafted by Gladlyn.</p><nav aria-label="Footer links"><a href="https://www.instagram.com/foreverbeaded1" target="_blank" rel="noopener">Instagram</a><a href="https://www.tiktok.com/@foreverbeaded1" target="_blank" rel="noopener">TikTok</a><a href="https://www.etsy.com/shop/foreverbeaded" target="_blank" rel="noopener">Etsy</a><a href="mailto:foreverbeaded1@gmail.com">Email</a></nav></footer>
+  <script src="js/book.js?v=butterfly-refine-20260711"></script>
+  <script src="js/butterflies.js?v=butterfly-refine-20260711"></script>
+  <script src="js/garden.js"></script>
+</body>
+</html>

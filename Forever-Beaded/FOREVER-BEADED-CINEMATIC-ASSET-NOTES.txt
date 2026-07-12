@@ -1,0 +1,1 @@
+Cinematic Chapter One rebuilt with SVG assets for a better book, butterflies, and flowers. Homepage replaced cleanly; other pages preserved. Backend included in /server.

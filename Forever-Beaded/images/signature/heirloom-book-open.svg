@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 820">
+  <defs>
+    <linearGradient id="paperL" x1="0" x2="1">
+      <stop offset="0%" stop-color="#9e6d34"/>
+      <stop offset="14%" stop-color="#e9c991"/>
+      <stop offset="48%" stop-color="#fff0cc"/>
+      <stop offset="100%" stop-color="#d0a66f"/>
+    </linearGradient>
+    <linearGradient id="paperR" x1="0" x2="1">
+      <stop offset="0%" stop-color="#d0a66f"/>
+      <stop offset="48%" stop-color="#fff1cf"/>
+      <stop offset="88%" stop-color="#e4c08a"/>
+      <stop offset="100%" stop-color="#9c6a32"/>
+    </linearGradient>
+    <linearGradient id="spine" y1="0" y2="1">
+      <stop offset="0%" stop-color="#52240d"/>
+      <stop offset="48%" stop-color="#efc577"/>
+      <stop offset="100%" stop-color="#4a1f0b"/>
+    </linearGradient>
+    <filter id="shadow" x="-25%" y="-30%" width="150%" height="170%">
+      <feDropShadow dx="0" dy="34" stdDeviation="30" flood-color="#000" flood-opacity=".62"/>
+    </filter>
+    <pattern id="lines" width="18" height="18" patternUnits="userSpaceOnUse">
+      <path d="M0 17 H18" stroke="#8c5b2b" stroke-opacity=".13"/>
+    </pattern>
+  </defs>
+  <g filter="url(#shadow)">
+    <path d="M105 168 C270 78 490 100 684 198 V696 C480 592 290 600 105 700 Z" fill="url(#paperL)" stroke="#8b5a26" stroke-width="5"/>
+    <path d="M1295 168 C1130 78 910 100 716 198 V696 C920 592 1110 600 1295 700 Z" fill="url(#paperR)" stroke="#8b5a26" stroke-width="5"/>
+    <path d="M105 168 C270 78 490 100 684 198 V696 C480 592 290 600 105 700 Z" fill="url(#lines)" opacity=".45"/>
+    <path d="M1295 168 C1130 78 910 100 716 198 V696 C920 592 1110 600 1295 700 Z" fill="url(#lines)" opacity=".42"/>
+    <rect x="684" y="182" width="32" height="514" rx="16" fill="url(#spine)" opacity=".72"/>
+    <path d="M685 198 C690 340 690 552 684 696" stroke="#6b421e" stroke-width="8" opacity=".5"/>
+    <path d="M716 198 C710 340 710 552 716 696" stroke="#6b421e" stroke-width="8" opacity=".45"/>
+    <path d="M160 222 C315 168 485 174 642 248 M160 288 C318 232 485 238 642 312 M160 354 C318 300 485 302 642 374" stroke="#8e5b2b" opacity=".21" fill="none" stroke-width="5"/>
+    <path d="M758 248 C915 174 1085 168 1240 222 M758 312 C915 238 1082 232 1240 288 M758 374 C915 302 1082 300 1240 354" stroke="#8e5b2b" opacity=".21" fill="none" stroke-width="5"/>
+    <path d="M128 690 C310 640 490 630 684 696" fill="none" stroke="#70451f" stroke-width="7" opacity=".35"/>
+    <path d="M1272 690 C1090 640 910 630 716 696" fill="none" stroke="#70451f" stroke-width="7" opacity=".35"/>
+  </g>
+</svg>

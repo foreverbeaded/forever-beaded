@@ -1,0 +1,101 @@
+.book-butterfly,
+.floating-butterfly {
+  position: absolute;
+  z-index: 6;
+  width: clamp(46px, 7vw, 84px);
+  pointer-events: none;
+  opacity: .92;
+  filter: drop-shadow(0 16px 22px rgba(0, 0, 0, .44));
+}
+
+.book-butterfly-one {
+  left: -10vw;
+  top: 28vh;
+  animation: landOne 4.2s cubic-bezier(.22, .72, .2, 1) .45s forwards;
+}
+
+.book-butterfly-two {
+  right: -12vw;
+  top: 32vh;
+  animation: landTwo 4.6s cubic-bezier(.22, .72, .2, 1) .8s forwards;
+}
+
+.book-butterfly-three {
+  left: 48vw;
+  bottom: -12vh;
+  animation: landThree 4.4s cubic-bezier(.22, .72, .2, 1) 1.05s forwards;
+}
+
+.floating-butterfly {
+  z-index: 1;
+  opacity: .58;
+}
+
+.butterfly-a {
+  animation: floatPathA 28s ease-in-out infinite;
+}
+
+.butterfly-b {
+  animation: floatPathB 34s ease-in-out infinite;
+}
+
+.butterfly-c {
+  animation: floatPathC 40s ease-in-out infinite;
+}
+
+@keyframes openingFade {
+  to {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+@keyframes particleDrift {
+  to {
+    background-position: 140px 110px, -90px 160px;
+  }
+}
+
+@keyframes softWind {
+  from {
+    transform: translateX(-4%) skewX(-6deg);
+  }
+  to {
+    transform: translateX(4%) skewX(5deg);
+  }
+}
+
+@keyframes bookCoverOpen {
+  0% {
+    transform: rotateY(0deg) translateX(0) scale(1);
+    opacity: 1;
+  }
+  42% {
+    transform: rotateY(-44deg) translateX(-2%) scale(1.01);
+    opacity: 1;
+  }
+  76% {
+    transform: rotateY(-108deg) translateX(-8%) scale(.98);
+    opacity: .94;
+  }
+  100% {
+    transform: rotateY(-124deg) translateX(-14%) scale(.92);
+    opacity: 0;
+  }
+}
+
+@keyframes pagesRise {
+  0% {
+    opacity: 0;
+    transform: scale(.9) translateY(30px);
+  }
+  46% {
+    opacity: 1;
+    transform: scale(1.02) translateY(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

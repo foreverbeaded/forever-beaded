@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Forever Beaded is Gladlyn's handmade storybook bead boutique for custom keepsakes, gifts, flowers, butterflies, animals, and one-of-a-kind treasures." />
+  <title>Forever Beaded | A Cinematic Storybook Boutique</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/book.css" />
+  <link rel="stylesheet" href="css/garden.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+</head>
+<body class="storybook-home intro-active">
+  <section id="openingScene" class="opening-scene" aria-label="Cinematic heirloom storybook opening">
+    <div class="webgl-stage">
+      <canvas id="storybookCanvas" class="butterfly-webgl" aria-hidden="true"></canvas>
+      <div id="imageIntroStage" class="image-intro-stage" aria-hidden="true">
+        <div class="intro-camera">
+          <div class="intro-book-element">
+            <img class="intro-book-image" src="images/storybook-intro-base.png" alt="" draggable="false" loading="eager" decoding="async" />
+            <div class="intro-cover-lift"></div>
+            <div class="intro-page-edge-depth"></div>
+            <div class="intro-paper-shadow"></div>
+            <div class="intro-page-compression"></div>
+            <div class="intro-spine-flex"></div>
+            <div class="intro-reflection-sweep"></div>
+            <div class="intro-gold-reflection"></div>
+            <div class="intro-flower-awakening" aria-hidden="true">
+              <span class="bloom bloom-one"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><b></b></span>
+              <span class="bloom bloom-two"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><b></b></span>
+              <span class="bloom bloom-three"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><b></b></span>
+            </div>
+            <div class="intro-page-glow-leak"></div>
+            <div class="intro-title-glow"></div>
+            <div class="intro-cover-light"></div>
+          </div>
+        </div>
+        <div class="intro-book-shadow"></div>
+        <div class="intro-golden-glow"></div>
+        <div class="intro-light-rays"></div>
+        <div class="intro-depth-field"></div>
+        <div class="intro-particles"></div>
+      </div>
+    </div>
+    <div class="opening-caption" aria-live="polite" aria-hidden="true">
+      <p>Forever Beaded</p>
+      <span>An heirloom storybook opens by hand, bead by bead.</span>
+    </div>
+    <div class="chapter-reveal-copy" aria-hidden="true">
+      <p class="chapter-kicker">Chapter One</p>
+      <h2>Every treasured piece begins with a story.</h2>
+      <span>The pages are open. Step inside.</span>
+    </div>
+    <div class="intro-audio-hooks" aria-hidden="true">
+      <audio id="audioPageTurn" preload="none"></audio>
+      <audio id="audioForestAmbience" preload="none" loop></audio>
+      <audio id="audioSoftWind" preload="none" loop></audio>
+      <audio id="audioMagicSparkle" preload="none"></audio>
+    </div>
+  </section>
+
+  <header class="story-header">
+    <a class="story-brand" href="index.html" aria-label="Forever Beaded home">
+      <span>Forever Beaded</span>
+      <small>by Gladlyn</small>
+    </a>
+    <button id="storyMenuButton" class="story-menu-button" type="button" aria-label="Open navigation" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <nav id="storyNav" class="story-nav" aria-label="Main navigation">
+      <a href="collections.html">Collections</a>
+      <a href="treasures.html">Treasures</a>
+      <a href="reviews.html">Kind Words</a>
+      <a href="maker.html">Meet the Maker</a>
+      <a class="nav-order" href="create.html">Create Yours</a>
+    </nav>
+  </header>
+
+  <main id="chapterOne">
+    <div id="ambientNatureLayer" class="ambient-nature-layer" aria-hidden="true">
+      <span class="ambient-butterfly ambient-butterfly-one"><i></i><b></b></span>
+      <span class="ambient-butterfly ambient-butterfly-two"><i></i><b></b></span>
+      <span class="ambient-butterfly ambient-butterfly-three"><i></i><b></b></span>
+      <span class="ambient-particle-field"></span>
+    </div>
+    <div id="chapterTwoButterflyLayer" class="chapter-two-butterfly-layer" aria-hidden="true"></div>
+
+    <section class="chapter-hero" aria-labelledby="heroTitle">
+      <div class="garden-sky" aria-hidden="true"></div>
+      <div class="gold-dust" aria-hidden="true"></div>
+      <div class="wind-field" aria-hidden="true"></div>
+      <div class="floating-hearts" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+
+      <div class="hero-book-scene" aria-hidden="true">
+        <img src="images/storybook-intro-base.png" alt="" draggable="false" loading="eager" decoding="async">
+        <span class="hero-book-glow"></span>
+      </div>
+
+      <div class="hero-copy">
+        <p class="chapter-kicker">Chapter One</p>
+        <h1 id="heroTitle">Every treasured piece begins with a story.</h1>
+        <p>The pages are open. Step into Gladlyn's handmade world of keepsakes, patient detail, custom colours, and small treasures made bead by bead.</p>
+        <div class="hero-actions">
+          <a href="collections.html" class="gold-button">Shop the collection</a>
+          <a href="create.html" class="glass-button">Design your own</a>
+        </div>
+      </div>
+
+      <article class="hero-feature" aria-label="This month's exclusive Sunset Macaw">
+        <p class="chapter-kicker">This Month's Exclusive</p>
+        <img src="images/macaw.jpeg" alt="Handmade beaded Macaw by Forever Beaded" loading="lazy" decoding="async">
+        <h2>Sunset Macaw</h2>
+        <p>Available until July 30. A vivid, detailed keepsake with collector energy.</p>
+        <a href="treasures.html" class="text-link">Discover the Sunset Macaw</a>
+      </article>
+
+      <div class="hero-story-tiles" aria-label="Forever Beaded story paths">
+        <a href="collections.html" class="story-tile tile-story">
+          <img src="images/butterfly.jpeg" alt="Handmade beaded butterfly" loading="lazy" decoding="async">
+          <span>Chapter One</span>
+          <strong>Explore the collection</strong>
+        </a>
+        <a href="create.html" class="story-tile tile-custom">
+          <img src="images/phoenix-butterfly-flower-braided.jpeg" alt="Custom handmade beaded design" loading="lazy" decoding="async">
+          <span>Chapter Two</span>
+          <strong>Create your own treasure</strong>
+        </a>
+        <a href="treasures.html" class="story-tile tile-exclusive">
+          <img src="images/macaw.jpeg" alt="Sunset Macaw handmade beaded exclusive" loading="lazy" decoding="async">
+          <span>This Month's Exclusive</span>
+          <strong>Sunset Macaw</strong>
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="storybook-footer">
+    <p class="chapter-kicker">The End... for now</p>
+    <h2>Forever Beaded</h2>
+    <p>Handmade treasures with a story, crafted by Gladlyn.</p>
+    <nav aria-label="Footer links">
+      <a href="https://www.instagram.com/foreverbeaded1" target="_blank" rel="noopener">Instagram</a>
+      <a href="https://www.tiktok.com/@foreverbeaded1" target="_blank" rel="noopener">TikTok</a>
+      <a href="https://www.etsy.com/shop/foreverbeaded" target="_blank" rel="noopener">Etsy</a>
+      <a href="mailto:foreverbeaded1@gmail.com">Email</a>
+    </nav>
+  </footer>
+
+  <script src="js/book.js?v=butterfly-refine-20260711d"></script>
+  <script src="js/butterflies.js?v=butterfly-refine-20260711d"></script>
+  <script src="js/garden.js"></script>
+</body>
+</html>

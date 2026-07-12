@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 250">
+  <defs>
+    <radialGradient id="petal" cx="50%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#ffd4ed"/>
+      <stop offset="60%" stop-color="#c4458f"/>
+      <stop offset="100%" stop-color="#7a215c"/>
+    </radialGradient>
+    <linearGradient id="stem" y1="0" y2="1">
+      <stop offset="0%" stop-color="#4f9b79"/>
+      <stop offset="100%" stop-color="#123d2e"/>
+    </linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="12" stdDeviation="8" flood-color="#000" flood-opacity=".35"/></filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <path d="M111 118 C107 155 103 196 106 245" stroke="url(#stem)" stroke-width="10" stroke-linecap="round"/>
+    <path d="M109 182 C75 160 55 169 42 199 C72 206 94 197 109 182Z" fill="#2e7d65"/>
+    <path d="M111 205 C147 179 170 187 184 219 C150 225 126 218 111 205Z" fill="#357d62"/>
+    <g class="bloom">
+      <ellipse cx="110" cy="45" rx="28" ry="50" fill="url(#petal)" transform="rotate(0 110 110)"/>
+      <ellipse cx="110" cy="45" rx="28" ry="50" fill="url(#petal)" transform="rotate(45 110 110)"/>
+      <ellipse cx="110" cy="45" rx="28" ry="50" fill="url(#petal)" transform="rotate(90 110 110)"/>
+      <ellipse cx="110" cy="45" rx="28" ry="50" fill="url(#petal)" transform="rotate(135 110 110)"/>
+      <ellipse cx="110" cy="45" rx="28" ry="50" fill="url(#petal)" transform="rotate(180 110 110)"/>
+      <ellipse cx="110" cy="45" rx="28" ry="50" fill="url(#petal)" transform="rotate(225 110 110)"/>
+      <ellipse cx="110" cy="45" rx="28" ry="50" fill="url(#petal)" transform="rotate(270 110 110)"/>
+      <ellipse cx="110" cy="45" rx="28" ry="50" fill="url(#petal)" transform="rotate(315 110 110)"/>
+      <circle cx="110" cy="110" r="24" fill="#f1c45f"/>
+      <circle cx="110" cy="110" r="10" fill="#8a4d18"/>
+    </g>
+  </g>
+</svg>

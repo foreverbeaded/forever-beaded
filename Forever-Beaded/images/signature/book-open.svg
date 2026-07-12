@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720">
+  <defs>
+    <linearGradient id="paper" x1="0" x2="1">
+      <stop offset="0%" stop-color="#d2ad79"/>
+      <stop offset="18%" stop-color="#f6dfb6"/>
+      <stop offset="52%" stop-color="#fff1d0"/>
+      <stop offset="100%" stop-color="#d6b17d"/>
+    </linearGradient>
+    <linearGradient id="spine" y1="0" y2="1">
+      <stop offset="0%" stop-color="#7a481d"/>
+      <stop offset="50%" stop-color="#f4c778"/>
+      <stop offset="100%" stop-color="#7a481d"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-30%" width="140%" height="170%">
+      <feDropShadow dx="0" dy="24" stdDeviation="25" flood-color="#000" flood-opacity=".5"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <path d="M110 125 C260 70 430 90 594 170 V610 C420 535 270 540 110 610 Z" fill="url(#paper)" stroke="#b48543" stroke-width="4"/>
+    <path d="M1090 125 C940 70 770 90 606 170 V610 C780 535 930 540 1090 610 Z" fill="url(#paper)" stroke="#b48543" stroke-width="4"/>
+    <path d="M594 170 C598 320 598 470 594 610" stroke="#8c5b28" stroke-width="7" opacity=".45"/>
+    <path d="M606 170 C602 320 602 470 606 610" stroke="#8c5b28" stroke-width="7" opacity=".45"/>
+    <rect x="588" y="155" width="24" height="465" fill="url(#spine)" opacity=".62"/>
+    <path d="M155 170 C285 135 420 145 560 200 M155 220 C285 185 420 195 560 250 M155 270 C285 235 420 245 560 300" stroke="#a36e34" opacity=".22" fill="none" stroke-width="4"/>
+    <path d="M640 200 C780 145 915 135 1045 170 M640 250 C780 195 915 185 1045 220 M640 300 C780 245 915 235 1045 270" stroke="#a36e34" opacity=".22" fill="none" stroke-width="4"/>
+  </g>
+</svg>

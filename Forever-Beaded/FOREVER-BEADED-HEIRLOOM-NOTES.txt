@@ -1,0 +1,1 @@
+Upgraded the book assets to a more realistic heirloom style and added an end-of-page Etsy/social signpost section. Replace the Etsy href '#' with your actual Etsy shop link when ready.

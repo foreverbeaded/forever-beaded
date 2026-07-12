@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 820">
+  <defs>
+    <radialGradient id="leather" cx="50%" cy="42%" r="75%">
+      <stop offset="0%" stop-color="#783090"/>
+      <stop offset="42%" stop-color="#3a1658"/>
+      <stop offset="100%" stop-color="#12051d"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" x2="1">
+      <stop offset="0%" stop-color="#8a5a1c"/>
+      <stop offset="48%" stop-color="#ffe2a0"/>
+      <stop offset="100%" stop-color="#a56b22"/>
+    </linearGradient>
+    <linearGradient id="pages" x1="0" x2="1">
+      <stop offset="0%" stop-color="#9b6b32"/>
+      <stop offset="12%" stop-color="#f0d3a3"/>
+      <stop offset="50%" stop-color="#fff0c9"/>
+      <stop offset="100%" stop-color="#b47f3c"/>
+    </linearGradient>
+    <filter id="heavyShadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="34" stdDeviation="28" flood-color="#000" flood-opacity=".65"/>
+    </filter>
+    <filter id="emboss">
+      <feDropShadow dx="0" dy="2" stdDeviation="1" flood-color="#000" flood-opacity=".55"/>
+      <feDropShadow dx="0" dy="-1" stdDeviation="1" flood-color="#fff" flood-opacity=".18"/>
+    </filter>
+    <pattern id="grain" width="70" height="70" patternUnits="userSpaceOnUse">
+      <path d="M0 18 C20 5 42 30 70 12 M0 52 C30 70 44 42 70 58" fill="none" stroke="#fff" stroke-opacity=".04" stroke-width="3"/>
+      <circle cx="21" cy="24" r="2" fill="#000" opacity=".08"/>
+      <circle cx="53" cy="48" r="1.8" fill="#fff" opacity=".05"/>
+    </pattern>
+  </defs>
+
+  <g filter="url(#heavyShadow)">
+    <path d="M210 136 h826 c72 0 108 38 108 102 v396 c0 60-38 96-102 96 H210 c-64 0-102-36-102-96 V238 c0-64 36-102 102-102Z" fill="#07020b" opacity=".42"/>
+    <path d="M180 120 h820 c80 0 118 42 118 112 v392 c0 70-44 112-118 112 H180 c-74 0-118-42-118-112 V232 c0-70 38-112 118-112Z" fill="url(#pages)"/>
+    <path d="M196 92 h790 c82 0 122 44 122 116 v374 c0 72-40 116-122 116 H196 c-82 0-122-44-122-116 V208 c0-72 40-116 122-116Z" fill="url(#leather)" stroke="url(#gold)" stroke-width="8"/>
+    <path d="M220 136 h742 c61 0 92 29 92 84 v352 c0 55-31 84-92 84 H220 c-61 0-92-29-92-84 V220 c0-55 31-84 92-84Z" fill="none" stroke="url(#gold)" stroke-width="5" opacity=".82"/>
+    <rect x="74" y="180" width="76" height="430" rx="22" fill="#10051b" opacity=".5"/>
+    <path d="M110 180 C88 255 88 530 110 610" fill="none" stroke="url(#gold)" stroke-width="8" opacity=".7"/>
+    <path d="M178 140 h112 m-112 0 v112 M1005 140 h-112 m112 0 v112 M178 650 h112 m-112 0 v-112 M1005 650 h-112 m112 0 v-112" fill="none" stroke="url(#gold)" stroke-width="16" stroke-linecap="round"/>
+    <rect x="196" y="92" width="790" height="606" rx="82" fill="url(#grain)" opacity=".85"/>
+    <text x="590" y="356" text-anchor="middle" font-family="Georgia, serif" font-size="110" fill="#ffe4a8" filter="url(#emboss)">Forever Beaded</text>
+    <text x="590" y="430" text-anchor="middle" font-family="Georgia, serif" font-size="28" letter-spacing="6" fill="#fff3d6">EVERY TREASURED PIECE BEGINS WITH A STORY</text>
+    <path d="M330 486 C440 548 735 548 850 486" fill="none" stroke="url(#gold)" stroke-width="5" opacity=".7"/>
+  </g>
+</svg>

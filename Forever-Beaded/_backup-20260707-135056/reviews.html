@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reviews | Forever Beaded</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="galleryModal" class="gallery-modal" aria-hidden="true">
+  <button id="prevImage" class="gallery-nav gallery-prev" type="button" aria-label="Previous image">‹</button>
+  <div class="gallery-image-wrap">
+    <img id="galleryModalImage" class="gallery-modal-img" src="" alt="Gallery preview">
+  </div>
+  <button id="nextImage" class="gallery-nav gallery-next" type="button" aria-label="Next image">›</button>
+  <button id="zoomImage" class="gallery-zoom" type="button" aria-label="Zoom image">🔍 Zoom</button>
+  <button id="closeGalleryModal" class="gallery-close" type="button" aria-label="Close gallery">×</button>
+</div>
+
+<header class="header">
+  <a class="logo" href="index.html">Forever Beaded</a>
+  <button class="menu-btn" id="menuBtn" type="button" aria-label="Open menu">☰</button>
+  <nav id="nav">
+    <a href="index.html">Home</a>
+    <a href="shop.html">Shop</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="about.html">About</a>
+    <a href="reviews.html">Reviews</a>
+    <a href="contact.html">Contact</a>
+    <a href="faq.html">FAQ</a>
+    <button class="cart-btn" id="cartBtn" type="button">Cart <span id="cartCount">0</span></button>
+  </nav>
+</header>
+<main>
+
+<section class="hero brand-hero">
+  <div class="hero-copy">
+    <p class="eyebrow">Customer reviews</p>
+    <h1>Real words from real customers</h1>
+    <p class="hero-description">Customers can choose their own stars and write their honest review here.</p>
+  </div>
+  <div class="hero-showcase"><div class="hero-card hero-card-main"><img src="images/big-flower.jpeg" alt="Forever Beaded flower design"></div></div>
+</section>
+<section class="section review-section" id="reviews">
+<p class="eyebrow">Customer love</p>
+<h2>Real customer reviews</h2>
+<p class="section-intro">No fake review words here. Customers can choose stars and write their own review.</p>
+<form class="review-form" id="reviewForm">
+<label>Your name
+          <input id="reviewName" maxlength="40" placeholder="Example: Sarah" required=""/>
+</label>
+<label>Stars
+          <select id="reviewStars" required="">
+<option value="5">★★★★★ 5 stars</option>
+<option value="4">★★★★☆ 4 stars</option>
+<option value="3">★★★☆☆ 3 stars</option>
+<option value="2">★★☆☆☆ 2 stars</option>
+<option value="1">★☆☆☆☆ 1 star</option>
+</select>
+</label>
+<label>Your review
+          <textarea id="reviewText" maxlength="220" placeholder="Write your honest review here..." required=""></textarea>
+</label>
+<button type="submit">Add Review</button>
+</form>
+<div class="review-grid" id="reviewGrid"></div>
+</section>
+
+</main>
+
+<aside class="cart-panel" id="cartPanel">
+  <button class="close-btn" id="closeCart" type="button">×</button>
+  <h2>Your Cart</h2>
+  <div id="cartItems"></div>
+  <h3>Total: <span id="cartTotal">$0 CAD</span></h3>
+  <p class="cart-payment-note">Payment is by Canadian e-transfer only. Details will be confirmed by email after your order is reviewed.</p>
+  <button id="clearCart" type="button">Clear Cart</button>
+  <button id="buyNowBtn" class="checkout-btn" type="button">Order by E-transfer</button>
+</aside>
+
+<div class="fb-modal" id="fbModal" aria-hidden="true">
+  <div class="fb-modal-card">
+    <h2 id="fbModalTitle">🦋 Forever Beaded 💗</h2>
+    <p id="fbModalMessage"></p>
+    <button id="fbModalOk" class="primary-btn" type="button">OK</button>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="footer-flourish" aria-hidden="true"><span>♡</span><span>🦋</span><span>♡</span></div>
+  <h2>Forever Beaded</h2>
+  <p>Handcrafted with love, one bead at a time.</p>
+  <p class="footer-small">© Forever Beaded. Handmade small business.</p>
+</footer>
+
+<button id="backToTop" class="back-to-top" type="button" aria-label="Back to top">↑</button>
+<script src="js/app.js"></script>
+</body>
+</html>

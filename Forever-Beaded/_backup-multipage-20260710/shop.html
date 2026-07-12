@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shop | Forever Beaded</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="galleryModal" class="gallery-modal" aria-hidden="true">
+  <button id="prevImage" class="gallery-nav gallery-prev" type="button" aria-label="Previous image">‹</button>
+  <div class="gallery-image-wrap">
+    <img id="galleryModalImage" class="gallery-modal-img" src="" alt="Gallery preview">
+  </div>
+  <button id="nextImage" class="gallery-nav gallery-next" type="button" aria-label="Next image">›</button>
+  <button id="zoomImage" class="gallery-zoom" type="button" aria-label="Zoom image">Zoom</button>
+  <button id="closeGalleryModal" class="gallery-close" type="button" aria-label="Close gallery">×</button>
+</div>
+
+<header class="header">
+  <a class="logo" href="index.html">Forever Beaded</a>
+  <button class="menu-btn" id="menuBtn" type="button" aria-label="Open menu">☰</button>
+  <nav id="nav">
+    <a href="index.html">Home</a>
+    <a href="shop.html">Shop</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="about.html">About</a>
+    <a href="reviews.html">Reviews</a>
+    <a href="contact.html">Contact</a>
+    <a href="faq.html">FAQ</a>
+    <button class="cart-btn" id="cartBtn" type="button">Cart <span id="cartCount">0</span></button>
+  </nav>
+</header>
+<main>
+
+<section class="hero brand-hero">
+  <div class="hero-copy">
+    <p class="eyebrow">Shop Forever Beaded</p>
+    <h1>Handmade pieces ready to customize</h1>
+    <p class="hero-description">Browse butterflies, geckos, flowers, pencils, faith designs, ocean animals, and custom keepsakes.</p>
+    <div class="hero-actions"><a href="shop.html" class="primary-btn">Browse Products</a><a href="shop.html#designer" class="secondary-btn">Custom Order</a></div>
+  </div>
+  <div class="hero-showcase"><div class="hero-card hero-card-main"><img src="images/butterflies.jpeg" alt="Handmade butterfly bead keychains"></div></div>
+</section>
+<section class="section collections-section" id="collections">
+<p class="eyebrow">Pick your vibe</p>
+<h2>Shop by collection</h2>
+<div class="collection-grid">
+<a data-jump-category="Butterfly" href="shop.html"><span>Butterflies</span></a>
+<a data-jump-category="Animals" href="shop.html"><span>Geckos</span></a>
+<a data-jump-category="Flower" href="shop.html"><span>Flowers</span></a>
+<a data-jump-category="Stationery" href="shop.html"><span>Pencils</span></a>
+<a data-jump-category="Ocean Animals" href="shop.html"><span>Ocean</span></a>
+<a href="shop.html#designer"><span>Custom</span></a>
+</div>
+</section>
+<section class="section" id="shop">
+<p class="eyebrow">Browse the collection</p>
+<h2>Shop Collections</h2>
+<div aria-label="Product search and filters" class="shop-tools">
+<div class="search-wrap">
+<input autocomplete="off" id="productSearch" placeholder="Search butterflies, geckos, flowers..." type="search">
+</input></div>
+<div aria-label="Filter by category" class="shop-filters" id="shopFilters"></div>
+</div>
+<div class="shop-results-row">
+<p id="shopResultsCount">Showing all handmade pieces</p>
+<button class="tiny-link-btn" id="clearShopFilters" type="button">Clear filters</button>
+</div>
+<div class="product-grid" id="productGrid"></div>
+</section>
+<section class="section soft" id="designer">
+<h2>Custom Design Builder</h2>
+<p>Pick a design, colours, and personalization. The price updates automatically. Orders are reviewed by email before Canadian e-transfer payment.</p>
+<div class="designer-box">
+<div class="preview">
+<div class="live-preview-wrap">
+<div class="preview-label">Live Bead Pattern</div>
+<div aria-label="Live bead colour preview" class="live-design-preview" id="liveDesignPreview"></div>
+</div>
+<h3 id="previewTitle">Butterfly Keychain</h3>
+<p id="previewColours">Colours: Purple, White, Gold</p>
+<p id="previewName">Name: None</p>
+<strong id="previewPrice">$25 CAD</strong>
+</div>
+<form id="designForm">
+<label>Design
+            <select id="designType">
+<option value="Butterfly">Butterfly</option>
+<option value="Gecko">Gecko</option>
+<option value="Flower">Flower</option>
+<option value="Macaw">Exclusive Macaw</option>
+<option value="Natalie's Butterfly">Natalie's Butterfly</option>
+<option value="Turtle">Turtle</option>
+<option value="Octopus">Octopus</option>
+<option value="Soccer Ball">Soccer Ball</option>
+<option value="Canada Flag">Canada Flag</option>
+<option value="Cross">Cross</option>
+<option value="Pencil">Pencil</option>
+<option value="Crab">Crab</option>
+<option value="Fish">Fish</option>
+<option value="Tiger">Tiger</option>
+<option value="Penguin">Penguin</option>
+<option value="Mushroom">Mushroom</option>
+<option value="Surprise Me">Surprise Me</option>
+<option value="Custom">Custom Design</option>
+</select>
+</label>
+<label>Colours
+            <input id="colours" value="Purple, White, Gold"/>
+</label>
+<label>Name or initials
+            <input id="customName" placeholder="Optional"/>
+</label>
+<label>Keychain type
+            <select id="keychainType">
+<option value="Regular">Regular keychain</option>
+<option value="Gold">Gold keychain +$5</option>
+<option value="Bag Charm">Bag charm +$3</option>
+</select>
+</label>
+<button id="addCustomBtn" type="button">Add Custom Request to Cart</button>
+</form>
+</div>
+</section>
+
+</main>
+
+<aside class="cart-panel" id="cartPanel">
+  <button class="close-btn" id="closeCart" type="button">×</button>
+  <h2>Your Cart</h2>
+  <div id="cartItems"></div>
+  <h3>Total: <span id="cartTotal">$0 CAD</span></h3>
+  <p class="cart-payment-note">Payment is by Canadian e-transfer only. Details will be confirmed by email after your order is reviewed.</p>
+  <button id="clearCart" type="button">Clear Cart</button>
+  <button id="buyNowBtn" class="checkout-btn" type="button">Order by E-transfer</button>
+</aside>
+
+<div class="fb-modal" id="fbModal" aria-hidden="true">
+  <div class="fb-modal-card">
+    <h2 id="fbModalTitle">Forever Beaded</h2>
+    <p id="fbModalMessage"></p>
+    <button id="fbModalOk" class="primary-btn" type="button">OK</button>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="footer-flourish" aria-hidden="true"><span></span><span></span><span></span></div>
+  <h2>Forever Beaded</h2>
+  <p>Handcrafted with love, one bead at a time.</p>
+  <p class="footer-small">© Forever Beaded. Handmade small business.</p>
+</footer>
+
+<button id="backToTop" class="back-to-top" type="button" aria-label="Back to top">↑</button>
+<script src="js/app.js"></script>
+</body>
+</html>

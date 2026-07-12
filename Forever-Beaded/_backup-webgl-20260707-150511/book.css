@@ -1,0 +1,101 @@
+:root {
+  --night: #050208;
+  --black-plum: #0d0612;
+  --deep-plum: #17091f;
+  --plum: #2a1238;
+  --royal-plum: #4b2368;
+  --wine: #68234f;
+  --antique-gold: #c99a46;
+  --gold-light: #f4d58d;
+  --cream: #fff5df;
+  --paper: #f2dfbd;
+  --ink: #1e1326;
+  --muted: rgba(255, 245, 223, .74);
+  --line: rgba(244, 213, 141, .24);
+  --shadow: rgba(0, 0, 0, .48);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body.storybook-home {
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  color: var(--cream);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(104, 35, 79, .34), transparent 34rem),
+    linear-gradient(180deg, var(--night) 0%, var(--deep-plum) 44%, #100715 100%);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body.storybook-home img {
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.opening-scene {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(244, 213, 141, .2), transparent 14rem),
+    radial-gradient(circle at 25% 20%, rgba(104, 35, 79, .34), transparent 20rem),
+    linear-gradient(135deg, #030106 0%, #15071f 48%, #301242 100%);
+  animation: openingFade 1.1s ease 7.7s forwards;
+}
+
+.opening-scene.is-skipped {
+  display: none;
+}
+
+.opening-atmosphere,
+.opening-particles {
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+}
+
+.opening-atmosphere {
+  background:
+    radial-gradient(circle at 48% 54%, rgba(244, 213, 141, .2), transparent 17rem),
+    radial-gradient(circle at 50% 86%, rgba(0, 0, 0, .72), transparent 22rem);
+  filter: blur(6px);
+}
+
+.opening-particles {
+  opacity: .38;
+  background-image:
+    radial-gradient(circle, rgba(244, 213, 141, .9) 0 1px, transparent 2px),
+    radial-gradient(circle, rgba(255, 255, 255, .42) 0 1px, transparent 2px);
+  background-size: 76px 76px, 132px 132px;
+  animation: particleDrift 16s linear infinite;
+}
+
+.heirloom-book {
+  position: relative;
+  width: min(760px, 86vw);
+  aspect-ratio: 1.42;
+  perspective: 1800px;
+  transform: translateY(2vh);
+  filter: drop-shadow(0 44px 70px rgba(0, 0, 0, .62));
+}
+
+.book-shadow {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: -5%;
+  height: 18%;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .58);
+  filter: blur(22px);
+}

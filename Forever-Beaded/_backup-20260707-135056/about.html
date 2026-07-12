@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About | Forever Beaded</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="galleryModal" class="gallery-modal" aria-hidden="true">
+  <button id="prevImage" class="gallery-nav gallery-prev" type="button" aria-label="Previous image">‹</button>
+  <div class="gallery-image-wrap">
+    <img id="galleryModalImage" class="gallery-modal-img" src="" alt="Gallery preview">
+  </div>
+  <button id="nextImage" class="gallery-nav gallery-next" type="button" aria-label="Next image">›</button>
+  <button id="zoomImage" class="gallery-zoom" type="button" aria-label="Zoom image">🔍 Zoom</button>
+  <button id="closeGalleryModal" class="gallery-close" type="button" aria-label="Close gallery">×</button>
+</div>
+
+<header class="header">
+  <a class="logo" href="index.html">Forever Beaded</a>
+  <button class="menu-btn" id="menuBtn" type="button" aria-label="Open menu">☰</button>
+  <nav id="nav">
+    <a href="index.html">Home</a>
+    <a href="shop.html">Shop</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="about.html">About</a>
+    <a href="reviews.html">Reviews</a>
+    <a href="contact.html">Contact</a>
+    <a href="faq.html">FAQ</a>
+    <button class="cart-btn" id="cartBtn" type="button">Cart <span id="cartCount">0</span></button>
+  </nav>
+</header>
+<main>
+
+<section class="section maker-section" id="about">
+<div class="maker-container">
+<div class="maker-image">
+<img alt="Gladlyn - Forever Beaded" src="images/gladlyn.png"/>
+</div>
+<div class="maker-content">
+<span class="maker-tag">THE STORY BEHIND FOREVER BEADED</span>
+<h2>Hi, I’m <span class="script-name"> Gladlyn </span>!👋</h2>
+<p>
+            Welcome to <strong> Forever Beaded</strong>
+</p>
+<p>
+           Every butterfy, gecko, flower and keepsake that you can see here 
+           hancrafted by me, one bead at a time
+          </p>
+<p>
+            Each piece is made with care, patience and attention to detail.
+            I love creating personalized gifts that become lasting memories.
+          </p>
+<p>
+            Thank you for supporting my small business. It truly means the world to me.
+          </p>
+<h4> 💜 Made with love, one bead at a time. </h4>
+<a class="btn-primary" href="shop.html">
+            Shop Collection
+          </a>
+</div>
+</div>
+</section>
+<section class="section boutique-section">
+  <p class="eyebrow">Small business heart</p>
+  <h2>Made slowly, carefully, and personally</h2>
+  <p class="section-intro">Forever Beaded is built around thoughtful handmade gifts — the kind people keep on keys, backpacks, bags, and desks because they feel personal.</p>
+  <div class="feature-grid">
+    <article class="feature-card"><span>💜</span><h3>Handmade</h3><p>Each piece is made bead by bead with care.</p></article>
+    <article class="feature-card"><span>🎨</span><h3>Custom Colours</h3><p>Customers can request favourite colours, names, and styles.</p></article>
+    <article class="feature-card"><span>🎁</span><h3>Gift Ready</h3><p>Sweet keepsakes for birthdays, school gifts, and everyday surprises.</p></article>
+  </div>
+</section>
+
+</main>
+
+<aside class="cart-panel" id="cartPanel">
+  <button class="close-btn" id="closeCart" type="button">×</button>
+  <h2>Your Cart</h2>
+  <div id="cartItems"></div>
+  <h3>Total: <span id="cartTotal">$0 CAD</span></h3>
+  <p class="cart-payment-note">Payment is by Canadian e-transfer only. Details will be confirmed by email after your order is reviewed.</p>
+  <button id="clearCart" type="button">Clear Cart</button>
+  <button id="buyNowBtn" class="checkout-btn" type="button">Order by E-transfer</button>
+</aside>
+
+<div class="fb-modal" id="fbModal" aria-hidden="true">
+  <div class="fb-modal-card">
+    <h2 id="fbModalTitle">🦋 Forever Beaded 💗</h2>
+    <p id="fbModalMessage"></p>
+    <button id="fbModalOk" class="primary-btn" type="button">OK</button>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="footer-flourish" aria-hidden="true"><span>♡</span><span>🦋</span><span>♡</span></div>
+  <h2>Forever Beaded</h2>
+  <p>Handcrafted with love, one bead at a time.</p>
+  <p class="footer-small">© Forever Beaded. Handmade small business.</p>
+</footer>
+
+<button id="backToTop" class="back-to-top" type="button" aria-label="Back to top">↑</button>
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -27,13 +27,6 @@
 
   <main>
     <section id="chapterThree" class="story-section chapter-two-story custom-story chapter-flow-section" aria-labelledby="customTitle">
-      <div class="create-butterflies" aria-hidden="true">
-        <span class="create-butterfly create-butterfly-one"></span>
-        <span class="create-butterfly create-butterfly-two"></span>
-        <span class="create-butterfly create-butterfly-three"></span>
-        <span class="create-butterfly create-butterfly-four"></span>
-        <span class="create-butterfly create-butterfly-five"></span>
-      </div>
       <div class="section-heading narrow">
         <p class="chapter-kicker">Chapter Three</p>
         <h1 id="customTitle">Create Your Own Treasure</h1>
@@ -45,7 +38,7 @@
           <div class="workspace-light" aria-hidden="true"></div>
           <div class="workspace-dust" aria-hidden="true"></div>
           <div class="workspace-table-grain" aria-hidden="true"></div>
-          <figure class="workspace-photo workspace-photo-primary"><img src="images/phoenix-butterfly-flower-braided.jpeg" alt="Handmade custom beaded butterfly and flower piece" loading="lazy" decoding="async"></figure>
+          <figure class="workspace-photo workspace-photo-primary"><img id="homeReferenceImage" alt="Forever Beaded custom design reference" loading="lazy" decoding="async"></figure>
           <figure class="workspace-photo workspace-photo-flower"><img src="images/intricated-flower.jpeg" alt="Purple handmade beaded flower" loading="lazy" decoding="async"></figure>
           <div class="loose-beads" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
           <span class="workspace-thread" aria-hidden="true"></span>
@@ -60,28 +53,39 @@
             <p>Send Gladlyn a clear starting point. Every custom order is reviewed before payment.</p>
           </div>
           <div class="builder-grid">
+            <label>Your Name <input id="homeCustomerName" name="customerName" type="text" autocomplete="name" required></label>
+            <label>Email <input id="homeCustomerEmail" name="email" type="email" autocomplete="email" required></label>
+            <label>Phone <input id="homeCustomerPhone" name="phone" type="tel" autocomplete="tel"></label>
+            <label>Shipping Address <input id="homeShippingAddress" name="shippingAddress" type="text" autocomplete="street-address"></label>
+            <label>Province <input id="homeProvince" name="province" type="text" autocomplete="address-level1"></label>
+            <label>Postal Code <input id="homePostalCode" name="postalCode" type="text" autocomplete="postal-code"></label>
             <label>Name <input id="homeTreasureName" name="name" type="text" placeholder="Optional name or initials" autocomplete="name"></label>
-            <label>Treasure Type <select id="homeTreasureDesign" name="design"><option value="Butterfly">Butterfly</option><option value="Flower Wristlet">Flower Wristlet</option><option value="Gecko">Gecko</option><option value="Pencil Charm">Pencil Charm</option><option value="Lobster">Lobster</option><option value="Octopus">Octopus</option><option value="Soccer Ball">Soccer Ball</option><option value="Mushroom">Mushroom</option><option value="Sunset Macaw">Sunset Macaw</option><option value="Cross">Cross</option><option value="Custom Treasure">Custom Treasure</option></select></label>
+            <label>Design <select id="homeTreasureDesign" name="design"><option value="">Loading designs...</option></select></label>
+            <label id="homeCustomDescriptionWrap" class="custom-description-field" for="homeCustomDescription" hidden aria-hidden="true">Describe your custom design
+              <textarea id="homeCustomDescription" name="customDescription" minlength="10" maxlength="500" placeholder="Tell me exactly what you would like — shape, colours, pattern, theme, names, initials, flowers, animals, or any special details." aria-describedby="homeCustomDescriptionHelp homeCustomDescriptionCount"></textarea>
+              <span id="homeCustomDescriptionHelp" class="field-help">Required for Custom idea. Minimum 10 characters.</span>
+              <span id="homeCustomDescriptionCount" class="field-help">0 / 500</span>
+            </label>
             <label>Colours <input id="homeTreasureColours" name="colours" type="text" value="Purple, Cream, Gold" autocomplete="off"></label>
             <label>Hardware <select id="homeTreasureHardware" name="hardware"><option value="Gold">Gold</option><option value="Silver">Silver</option></select></label>
             <label>Quantity <input id="homeTreasureQuantity" name="quantity" type="number" min="1" max="20" value="1" inputmode="numeric"></label>
+            <label class="order-honeypot" aria-hidden="true" tabindex="-1">Website <input id="homeOrderWebsite" name="website" type="text" autocomplete="off" tabindex="-1"></label>
           </div>
-          <label id="customTreasureDetailsWrap" class="custom-treasure-details" hidden>Tell me about your treasure
-            <textarea id="customTreasureDetails" name="customDetails" rows="4" placeholder="Describe your idea, and I’ll bring it to life bead by bead."></textarea>
-          </label>
           <div class="treasure-preview" aria-live="polite">
-            <div><span class="preview-label">Live Treasure Preview</span><h4 id="homeTreasurePreviewTitle">Butterfly in purple, cream, and gold</h4><p id="homeTreasurePreviewMeta">Gold hardware, quantity 1, no name added.</p></div>
-            <div id="homeTreasurePreview" class="home-preview-beads" aria-label="Live bead pattern preview"></div>
+            <div><span class="preview-label">Live bead preview</span><h4 id="homeTreasurePreviewTitle">Butterfly in purple, cream, and gold</h4><p id="homeTreasurePreviewMeta">Gold hardware, quantity 1, no name added.</p><p id="homeTreasurePreviewDescription" class="preview-description"></p></div>
+            <div id="homeTreasurePreview" class="home-preview-beads" aria-label="Live bead colour preview"></div>
           </div>
-          <button id="homeTreasureButton" class="gold-button treasure-submit" type="submit">Craft My Treasure</button>
+          <div id="homeOrderStatus" class="cart-payment-note" role="status" aria-live="polite"></div>
+          <button id="homeTreasureButton" class="gold-button treasure-submit" type="submit">Create My Treasure</button>
         </form>
       </div>
     </section>
   </main>
 
-  <footer class="storybook-footer"><p class="chapter-kicker">The End... for now</p><h2>Forever Beaded</h2><p>Handmade treasures with a story, crafted by Gladlyn.</p><nav aria-label="Footer links"><a href="https://www.instagram.com/foreverbeaded1" target="_blank" rel="noopener">Instagram</a><a href="https://www.tiktok.com/@foreverbeaded1" target="_blank" rel="noopener">TikTok</a><a href="https://www.etsy.com/shop/foreverbeaded" target="_blank" rel="noopener">Etsy</a><a href="mailto:foreverbeaded1@gmail.com">Email</a></nav></footer>
+<footer class="storybook-footer"><p class="chapter-kicker">The End... for now</p><h2>Forever Beaded</h2><p>Handmade treasures with a story, crafted by Gladlyn.</p><nav aria-label="Footer links"><a href="https://www.instagram.com/foreverbeaded1" target="_blank" rel="noopener noreferrer">Instagram</a><a href="https://www.tiktok.com/@foreverbeaded1" target="_blank" rel="noopener noreferrer">TikTok</a><a href="https://www.etsy.com/shop/foreverbeaded" target="_blank" rel="noopener noreferrer">Etsy</a><a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=foreverbeaded1@gmail.com&amp;su=Forever%20Beaded%20Inquiry" target="_blank" rel="noopener noreferrer">Email</a></nav></footer>
   <script src="js/book.js?v=butterfly-refine-20260711"></script>
   <script src="js/butterflies.js?v=butterfly-refine-20260711"></script>
-  <script src="js/garden.js"></script>
+  <script src="js/product-catalogue.js?v=accurate-patterns-20260712"></script>
+<script src="js/garden.js?v=api-127-20260713"></script>
 </body>
 </html>

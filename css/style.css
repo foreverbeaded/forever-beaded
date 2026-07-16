@@ -2238,3 +2238,23 @@ img{user-select:none;-webkit-user-drag:none}
   0%,100%{transform:translateY(0)}
   50%{transform:translateY(-3px)}
 }
+
+storybook-footer {
+  position: relative;
+  z-index: 100;
+}
+
+.storybook-footer a {
+  position: relative;
+  z-index: 101;
+  pointer-events: auto !important;
+  cursor: pointer;
+}
+
+canvas,
+.butterfly-webgl,
+.webgl-stage,
+.particles,
+.decorative-layer {
+  pointer-events: none;
+}

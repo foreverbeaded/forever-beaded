@@ -8,83 +8,25 @@
     cream: "#f2dfbd",
     gold: "#c99a46",
     green: "#3f8b4b",
+    grey: "#8f8f8f",
+    gray: "#8f8f8f",
     lavender: "#b77bc0",
+    lime: "#9bd34f",
+    navy: "#172f5f",
     orange: "#e8791f",
     pearl: "#fff5df",
+    peach: "#f4a98b",
     pink: "#d878a4",
     plum: "#5b234f",
     purple: "#8a3f83",
     red: "#c63f35",
     silver: "#c9c8c1",
     teal: "#2b9a91",
+    turquoise: "#2bbfc0",
     white: "#fff5df",
-    yellow: "#f1c85b"
-  };
-
-  const designPatterns = {
-    Butterfly: [
-      "a...a",
-      "aa.aa",
-      ".bcb.",
-      "aa.aa",
-      "a...a"
-    ],
-    Flower: [
-      ".aba.",
-      "abcba",
-      "bcdcb",
-      "abcba",
-      ".aba."
-    ],
-    Gecko: [
-      "..a..",
-      ".aba.",
-      "abcba",
-      ".b.b.",
-      "c...c"
-    ],
-    Macaw: [
-      "..a..",
-      ".aba.",
-      "abcba",
-      ".ddd.",
-      "d...d"
-    ],
-    Turtle: [
-      ".aaa.",
-      "ababa",
-      "abcba",
-      ".aba.",
-      "c...c"
-    ],
-    Octopus: [
-      ".aaa.",
-      "ababa",
-      ".aaa.",
-      "bcbcb",
-      "c.c.c"
-    ],
-    Pencil: [
-      "..a..",
-      ".aba.",
-      ".bcb.",
-      ".bcb.",
-      ".ddd."
-    ],
-    Cross: [
-      "..a..",
-      "aaaaa",
-      "..a..",
-      "..a..",
-      "..a.."
-    ],
-    Custom: [
-      ".aaa.",
-      "abcba",
-      "bcacb",
-      "abcba",
-      ".aaa."
-    ]
+    yellow: "#f1c85b",
+    burgundy: "#7f1d3a",
+    coral: "#ef6f61"
   };
 
   const saveCategoryJump = (event) => {
@@ -99,18 +41,19 @@
 
   const normalizeColour = (value, fallbackIndex) => {
     const clean = String(value || "").trim().toLowerCase();
-    if (!clean) return ["#8a3f83", "#fff5df", "#c99a46", "#5b234f"][fallbackIndex % 4];
+    if (!clean) return ["#8a3f83", "#fff5df", "#c99a46", "#8f8f8f"][fallbackIndex % 4];
     if (/^#[0-9a-f]{3,8}$/i.test(clean)) return clean;
-    return colourNames[clean] || clean;
+    return colourNames[clean] || "#8f8f8f";
   };
 
-  const parseColours = (value) => {
-    const colours = String(value || "")
+  const parseColours = (value, fallbackColours = ["purple", "cream", "gold"]) => {
+    const source = String(value || "").trim() ? value : fallbackColours.join(", ");
+    const colours = String(source || "")
       .split(",")
       .map((part, index) => normalizeColour(part, index))
       .filter(Boolean);
 
-    return colours.length ? colours : ["#8a3f83", "#fff5df", "#c99a46"];
+    return colours.length ? colours : fallbackColours.map(normalizeColour);
   };
 
   const titleCase = (value) => String(value || "")
@@ -119,91 +62,368 @@
     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
 
+  const normalizeProductRecord = (product) => {
+    const imageUrl = product?.imageUrl || product?.referenceImageUrl || product?.previewImageUrl || "";
+    const basePrice = Number(product?.basePrice ?? product?.basePriceCents ?? 0);
+    return {
+      ...product,
+      id: product?.id,
+      slug: String(product?.slug || "").trim(),
+      name: String(product?.name || "").trim(),
+      imageUrl,
+      referenceImageUrl: product?.referenceImageUrl || imageUrl,
+      previewImageUrl: product?.previewImageUrl || imageUrl,
+      previewPattern: Array.isArray(product?.previewPattern) ? product.previewPattern : null,
+      defaultColours: Array.isArray(product?.defaultColours) ? product.defaultColours : ["purple", "cream", "gold"],
+      basePrice,
+      basePriceCents: Number(product?.basePriceCents ?? basePrice)
+    };
+  };
+
+  let productCatalogue = (window.FOREVER_BEADED_PRODUCTS || [])
+    .map(normalizeProductRecord)
+    .filter(product => product && product.active !== false && product.slug && product.referenceImageUrl)
+    .sort((a, b) => (Number(a.sortOrder) || 0) - (Number(b.sortOrder) || 0));
+
+  let fallbackProduct = productCatalogue.find(product => product.slug === "butterfly") || productCatalogue[0] || null;
+
+  const getSelectedProduct = () => {
+    const designDropdown = document.getElementById("homeTreasureDesign");
+    const selectedProduct = productCatalogue.find(product => product.slug === designDropdown?.value) || fallbackProduct;
+    return selectedProduct;
+  };
+
+  const isCustomProduct = (product) => product?.slug === "custom-idea";
+
+  const setProductImage = (image, frame, product, url, label) => {
+    if (!image || !product) return;
+    const placeholderTarget = frame || image;
+    if (placeholderTarget) {
+      placeholderTarget.dataset.placeholder = "";
+      placeholderTarget.classList.remove("image-missing");
+    }
+    if (!url) {
+      image.removeAttribute("src");
+      image.alt = `${product.name} image coming soon`;
+      if (placeholderTarget) {
+        placeholderTarget.dataset.placeholder = `${product.name} image coming soon`;
+        placeholderTarget.classList.add("image-missing");
+      }
+      return;
+    }
+    image.hidden = false;
+    image.onerror = () => {
+      image.removeAttribute("src");
+      image.alt = `${product.name} image coming soon`;
+      if (placeholderTarget) {
+        placeholderTarget.dataset.placeholder = `${product.name} image coming soon`;
+        placeholderTarget.classList.add("image-missing");
+      }
+    };
+    image.src = url;
+    image.alt = `${product.name} ${label}`;
+  };
+
+  const updateProductImages = (product) => {
+    const referenceImage = document.getElementById("homeReferenceImage");
+    const referenceFrame = referenceImage?.closest(".workspace-photo-primary");
+    if (!product) return;
+
+    const referenceUrl = product.referenceImageUrl || product.imageUrl;
+    setProductImage(referenceImage, referenceFrame, product, referenceUrl, "reference image");
+  };
+
+  const renderColourSwatches = (preview, colours) => {
+    preview.className = "home-preview-beads home-preview-swatches";
+    preview.innerHTML = colours.map((colour) => `<span class="preview-colour-swatch" style="--bead:${colour}"></span>`).join("");
+  };
+
+  const renderBeadPattern = (preview, product, colours) => {
+    const pattern = product?.previewPattern;
+    preview.className = "home-preview-beads";
+    preview.removeAttribute("data-placeholder");
+
+    if (isCustomProduct(product)) {
+      renderColourSwatches(preview, colours);
+      return;
+    }
+
+    if (!Array.isArray(pattern) || !pattern.length) {
+      preview.classList.add("preview-coming-soon");
+      preview.textContent = `${product?.name || "This design"} colour preview coming soon`;
+      return;
+    }
+
+    const maxCols = Math.max(...pattern.map(bead => Number(bead.x) || 1));
+    const maxRows = Math.max(...pattern.map(bead => Number(bead.y) || 1));
+    preview.style.setProperty("--home-preview-cols", maxCols);
+    preview.style.setProperty("--home-preview-rows", maxRows);
+    preview.innerHTML = pattern.map((bead) => {
+      const code = String(bead.c || "a").charAt(0).toLowerCase();
+      const colourIndex = Math.max(0, code.charCodeAt(0) - 97);
+      const colour = colours[colourIndex % colours.length] || "#8f8f8f";
+      const x = Math.max(1, Number(bead.x) || 1);
+      const y = Math.max(1, Number(bead.y) || 1);
+      return `<span class="preview-bead" style="--bead:${colour};grid-column:${x};grid-row:${y}"></span>`;
+    }).join("");
+  };
+
+  const populateDesignOptions = () => {
+    const select = document.getElementById("homeTreasureDesign");
+    if (!select || !productCatalogue.length) return;
+    const currentValue = select.value;
+    select.innerHTML = productCatalogue.map(product => (
+      `<option value="${product.slug}">${product.name}</option>`
+    )).join("");
+    const currentProduct = productCatalogue.find(product => product.slug === currentValue);
+    select.value = currentProduct?.slug || fallbackProduct?.slug || productCatalogue[0].slug;
+  };
+
   const renderHomeTreasurePreview = () => {
     const preview = document.getElementById("homeTreasurePreview");
     if (!preview) return;
 
-    const design = document.getElementById("homeTreasureDesign")?.value || "Butterfly";
+    const product = getSelectedProduct();
+    const design = product?.name || "Butterfly";
     const colourInput = document.getElementById("homeTreasureColours")?.value || "Purple, Cream, Gold";
     const hardware = document.getElementById("homeTreasureHardware")?.value || "Gold";
     const quantity = document.getElementById("homeTreasureQuantity")?.value || "1";
     const name = document.getElementById("homeTreasureName")?.value.trim() || "";
-    const colours = parseColours(colourInput);
-    const patternKey = ({"Flower Wristlet":"Flower","Pencil Charm":"Pencil","Sunset Macaw":"Macaw","Custom Treasure":"Custom"})[design] || design;
-    const pattern = designPatterns[patternKey] || designPatterns.Custom;
-    const maxCols = Math.max(...pattern.map(row => row.length));
-
-    preview.style.setProperty("--home-preview-cols", maxCols);
-    preview.style.setProperty("--home-preview-rows", pattern.length);
-
-    preview.innerHTML = pattern.flatMap(row => {
-      const normalizedRow = row.padEnd(maxCols, ".");
-      return [...normalizedRow].map(code => {
-        if (code === ".") return '<span class="preview-bead empty"></span>';
-        const colourIndex = code.charCodeAt(0) - 97;
-        const colour = colours[colourIndex % colours.length];
-        return `<span class="preview-bead" style="--bead:${colour}"></span>`;
-      });
-    }).join("");
-
+    const customDescription = document.getElementById("homeCustomDescription")?.value.trim() || "";
+    const colours = parseColours(colourInput, product?.defaultColours);
     const readableColours = colourInput
       .split(",")
       .map(part => titleCase(part.trim()))
       .filter(Boolean)
-      .join(", ") || "Custom colours";
+      .length
+      ? colourInput.split(",").map(part => titleCase(part.trim())).filter(Boolean).join(", ")
+      : (product?.defaultColours || ["Custom colours"]).map(titleCase).join(", ");
 
     const previewTitle = document.getElementById("homeTreasurePreviewTitle");
     const previewMeta = document.getElementById("homeTreasurePreviewMeta");
+    const previewDescription = document.getElementById("homeTreasurePreviewDescription");
+    updateProductImages(product);
+    renderBeadPattern(preview, product, colours);
 
     if (previewTitle) {
-      previewTitle.textContent = `${design} in ${readableColours.replace(/, ([^,]+)$/, " & $1")}`;
+      previewTitle.textContent = isCustomProduct(product)
+        ? "Custom Design Request"
+        : `${design} in ${readableColours}`;
     }
 
     if (previewMeta) {
-      previewMeta.textContent = `${hardware} hardware, quantity ${quantity || 1}, ${name ? `personalized for ${name}` : "no name added"}.`;
+      if (isCustomProduct(product)) {
+        const price = product ? ` Starting at ${formatCents(product.basePrice)}.` : "";
+        previewMeta.textContent = `${name ? `Personalized for ${name}.` : "No name added."}${price}`;
+      } else {
+        const price = product ? ` Starting at ${formatCents(product.basePrice)}.` : "";
+        previewMeta.textContent = `${hardware} hardware, quantity ${quantity || 1}, ${name ? `personalized for ${name}` : "no name added"}.${price}`;
+      }
+    }
+
+    if (previewDescription) {
+      if (isCustomProduct(product)) {
+        previewDescription.textContent = [
+          "Idea:",
+          customDescription || "Start typing your custom idea...",
+          "",
+          "Colours:",
+          readableColours,
+          "",
+          "Hardware:",
+          hardware,
+          "",
+          "Quantity:",
+          String(quantity || 1)
+        ].join("\n");
+        previewDescription.hidden = false;
+      } else {
+        previewDescription.textContent = "";
+        previewDescription.hidden = true;
+      }
     }
   };
 
-  const buildHomeTreasureMessage = () => {
-    const name = document.getElementById("homeTreasureName")?.value.trim() || "None";
-    const design = document.getElementById("homeTreasureDesign")?.value || "Custom";
-    const colours = document.getElementById("homeTreasureColours")?.value.trim() || "Custom colours";
-    const hardware = document.getElementById("homeTreasureHardware")?.value || "Gold";
-    const quantity = document.getElementById("homeTreasureQuantity")?.value || "1";
-    const customDetails = document.getElementById("customTreasureDetails")?.value.trim() || "None";
+  const getOrderApiBaseUrl = () => {
+    const configured = window.FOREVER_BEADED_API_BASE_URL || "http://127.0.0.1:3000";
+    return configured.replace(/^http:\/\/localhost:3000\/?$/i, "http://127.0.0.1:3000");
+  };
+  const API_BASE_URL = getOrderApiBaseUrl();
+  const isLocalApi = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(API_BASE_URL);
 
-    return `Hello Forever Beaded,\n\nI would like to request a custom treasured piece.\n\nName or initials: ${name}\nDesign: ${design}\nColours: ${colours}\nHardware: ${hardware}\nQuantity: ${quantity}\nCustom treasure details: ${customDetails}\n\nNotes:\n\nThank you!`;
+  const formatCents = (cents, currency = "CAD") => {
+    const amount = Number(cents || 0) / 100;
+    return new Intl.NumberFormat("en-CA", {
+      style: "currency",
+      currency
+    }).format(amount);
   };
 
-  const openCustomRequestEmail = () => {
-    const email = "foreverbeaded1@gmail.com";
-    const subject = "Forever Beaded Custom Treasure Request";
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(buildHomeTreasureMessage())}`;
-    window.location.href = gmailUrl;
+  const setOrderStatus = (message, isError = false) => {
+    const status = document.getElementById("homeOrderStatus");
+    if (!status) return;
+    status.textContent = message;
+    status.dataset.state = isError ? "error" : "ok";
+  };
+
+  const syncCustomDescriptionField = () => {
+    const product = getSelectedProduct();
+    const wrap = document.getElementById("homeCustomDescriptionWrap");
+    const textarea = document.getElementById("homeCustomDescription");
+    const count = document.getElementById("homeCustomDescriptionCount");
+    if (!wrap || !textarea) return;
+
+    const isCustom = isCustomProduct(product);
+    textarea.required = isCustom;
+    textarea.disabled = !isCustom;
+    wrap.setAttribute("aria-hidden", String(!isCustom));
+
+    if (isCustom) {
+      wrap.hidden = false;
+      window.requestAnimationFrame(() => wrap.classList.add("is-visible"));
+    } else {
+      wrap.classList.remove("is-visible");
+      textarea.value = "";
+      textarea.setCustomValidity("");
+      window.setTimeout(() => {
+        if (!isCustomProduct(getSelectedProduct())) {
+          wrap.hidden = true;
+        }
+      }, 320);
+    }
+    if (count) count.textContent = `${textarea.value.length} / 500`;
+  };
+
+  const validateCustomDescription = () => {
+    const product = getSelectedProduct();
+    const textarea = document.getElementById("homeCustomDescription");
+    if (!textarea || !isCustomProduct(product)) return true;
+
+    const value = textarea.value.trim();
+    let message = "";
+    if (!value) {
+      message = "Please describe your custom design.";
+    } else if (value.length < 10) {
+      message = "Please describe your custom design in at least 10 characters.";
+    } else if (value.length > 500) {
+      message = "Please keep your custom design description under 500 characters.";
+    }
+    textarea.setCustomValidity(message);
+    if (message) {
+      textarea.reportValidity();
+      setOrderStatus(message, true);
+      return false;
+    }
+    return true;
+  };
+
+  const buildHomeTreasureOrder = () => {
+    const product = getSelectedProduct();
+    const design = product?.name || "Custom idea";
+    const colours = document.getElementById("homeTreasureColours")?.value.trim() || "Custom colours";
+    const hardware = document.getElementById("homeTreasureHardware")?.value || "Gold";
+    const quantity = Number(document.getElementById("homeTreasureQuantity")?.value || 1);
+    const personalization = document.getElementById("homeTreasureName")?.value.trim() || "";
+    const customDescription = isCustomProduct(product) ? (document.getElementById("homeCustomDescription")?.value.trim() || "") : "";
+
+    return {
+      customer: {
+        name: document.getElementById("homeCustomerName")?.value.trim() || "",
+        email: document.getElementById("homeCustomerEmail")?.value.trim() || "",
+        phone: document.getElementById("homeCustomerPhone")?.value.trim() || ""
+      },
+      shipping: {
+        address: document.getElementById("homeShippingAddress")?.value.trim() || "",
+        province: document.getElementById("homeProvince")?.value.trim() || "",
+        postalCode: document.getElementById("homePostalCode")?.value.trim() || ""
+      },
+      notes: "",
+      website: document.getElementById("homeOrderWebsite")?.value || "",
+      items: [{
+        productId: product?.slug || "custom-idea",
+        design,
+        colours,
+        hardware,
+        personalization,
+        customDescription,
+        quantity
+      }]
+    };
+  };
+
+  const submitHomeTreasureOrder = async (form) => {
+    const button = document.getElementById("homeTreasureButton");
+    if (form.dataset.submitting === "true") return;
+    syncCustomDescriptionField();
+    if (!validateCustomDescription()) return;
+
+    form.dataset.submitting = "true";
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Submitting...";
+    }
+    setOrderStatus("Submitting your order securely...");
+
+    try {
+      const submittedOrder = buildHomeTreasureOrder();
+      const orderApiUrl = `${API_BASE_URL.replace(/\/$/, "")}/api/orders`;
+      console.info("Submitting order to:", orderApiUrl);
+      const response = await fetch(orderApiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(submittedOrder)
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || `Order could not be submitted. API returned HTTP ${response.status}.`);
+      }
+
+      const customSummary = submittedOrder.items?.[0]?.customDescription
+        ? ` Custom idea: ${submittedOrder.items[0].customDescription}`
+        : "";
+      setOrderStatus(`Thank you! Your Forever Beaded order has been received. Order number: ${data.orderNumber}. Total: ${formatCents(data.total, data.currency)}.${customSummary} Please send your Interac e-Transfer to ${data.etransferEmail} and include your order number in the e-transfer message. Your treasure will begin after payment has been received and verified.`);
+      form.reset();
+      syncCustomDescriptionField();
+      renderHomeTreasurePreview();
+    } catch (error) {
+      console.error(error);
+      const message = error instanceof TypeError && /fetch/i.test(error.message)
+        ? `Could not reach the order API at ${API_BASE_URL.replace(/\/$/, "")}/api/orders. Make sure the Forever Beaded backend is running.`
+        : (error?.message || "Unknown order submission error.");
+      setOrderStatus(isLocalApi
+        ? `Order submission failed: ${message}`
+        : "Your order could not be submitted right now. Please check your details and try again, or contact Forever Beaded at foreverbeaded1@gmail.com.",
+        true);
+    } finally {
+      form.dataset.submitting = "false";
+      if (button) {
+        button.disabled = false;
+        button.textContent = "Create My Treasure";
+      }
+    }
   };
 
   const setupHomeDesignBuilder = () => {
     const form = document.getElementById("homeDesignBuilder");
     if (!form) return;
 
+    populateDesignOptions();
     form.addEventListener("input", renderHomeTreasurePreview);
     form.addEventListener("change", () => {
-      const design = document.getElementById("homeTreasureDesign")?.value;
-      const customWrap = document.getElementById("customTreasureDetailsWrap");
-      const customField = document.getElementById("customTreasureDetails");
-      const isCustom = design === "Custom Treasure";
-      if (customWrap) customWrap.hidden = !isCustom;
-      if (customField) customField.required = isCustom;
+      syncCustomDescriptionField();
+      renderHomeTreasurePreview();
+    });
+    document.getElementById("homeCustomDescription")?.addEventListener("input", () => {
+      syncCustomDescriptionField();
+      validateCustomDescription();
       renderHomeTreasurePreview();
     });
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      openCustomRequestEmail();
+      submitHomeTreasureOrder(form);
     });
 
-    const design = document.getElementById("homeTreasureDesign")?.value;
-    const customWrap = document.getElementById("customTreasureDetailsWrap");
-    if (customWrap) customWrap.hidden = design !== "Custom Treasure";
+    syncCustomDescriptionField();
     renderHomeTreasurePreview();
   };
 

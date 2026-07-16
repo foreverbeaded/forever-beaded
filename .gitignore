@@ -1,0 +1,11 @@
+.env
+.env.*
+!.env.example
+*.db
+*.db-shm
+*.db-wal
+orders.db
+server/data/
+server/node_modules/
+node_modules/
+*.log

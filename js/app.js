@@ -689,53 +689,139 @@ function escapeHtml(value) {
   }[character]));
 }
 
-function openEmailCompose(subject = "Forever Beaded Inquiry", body = "Hello Forever Beaded,\n\n") {
-  const email = "foreverbeaded1@gmail.com";
-  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+const getForeverBeadedApiBaseUrl = () => {
+  const configured = window.FOREVER_BEADED_API_BASE_URL || "http://127.0.0.1:3000";
+  return configured.replace(/^http:\/\/localhost:3000\/?$/i, "http://127.0.0.1:3000");
+};
+const FOREVER_BEADED_API_BASE_URL = getForeverBeadedApiBaseUrl();
 
-  // Gmail web compose is more reliable than mailto on phones/computers that do not have a default mail app set up.
-  window.location.href = gmailUrl;
+function centsDisplay(cents, currency = "CAD") {
+  return new Intl.NumberFormat("en-CA", {
+    style: "currency",
+    currency
+  }).format(Number(cents || 0) / 100);
 }
 
-function saveOrderToDatabase(orderItems, total) {
-  // Fire-and-forget: email checkout still works even if the local server is not running.
-  fetch("http://localhost:3000/orders", {
+function productIdForOrderItem(item) {
+  const legacyMap = {
+    1: "macaw",
+    2: "butterfly",
+    3: "butterfly",
+    4: "butterfly",
+    5: "flower",
+    6: "flower",
+    7: "flower",
+    8: "butterfly-with-flowers",
+    9: "gecko",
+    10: "gecko",
+    11: "butterfly-with-flowers",
+    12: "custom-idea",
+    13: "sports-design",
+    14: "ocean-animal",
+    15: "ocean-animal",
+    16: "ocean-animal",
+    17: "pencil",
+    18: "pencil",
+    19: "cross"
+  };
+  if (item.id && legacyMap[item.id]) return legacyMap[item.id];
+  const design = String(item.name || item.description || "").toLowerCase();
+  if (design.includes("macaw")) return "macaw";
+  if (design.includes("butterfly") && design.includes("flower")) return "butterfly-with-flowers";
+  if (design.includes("butterfly")) return "butterfly";
+  if (design.includes("flower")) return "flower";
+  if (design.includes("gecko")) return "gecko";
+  if (design.includes("turtle") || design.includes("octopus") || design.includes("fish") || design.includes("crab") || design.includes("penguin")) return "ocean-animal";
+  if (design.includes("soccer") || design.includes("sport")) return "sports-design";
+  if (design.includes("pencil")) return "pencil";
+  if (design.includes("cross")) return "cross";
+  return "custom-idea";
+}
+
+function customerDetailsFromPrompt() {
+  const customerName = window.prompt("Name for your order:");
+  if (customerName === null) return null;
+  const email = window.prompt("Email for your order confirmation:");
+  if (email === null) return null;
+  const shippingAddress = window.prompt("Shipping address, or leave blank if you will arrange pickup:");
+  if (shippingAddress === null) return null;
+  const phone = window.prompt("Phone number, optional:") || "";
+  const notes = window.prompt("Order notes, optional:") || "";
+  return { customerName, email, shippingAddress, phone, notes };
+}
+
+async function saveOrderToDatabase(orderItems, customerDetails) {
+  const payload = {
+    customer: {
+      name: customerDetails.customerName,
+      email: customerDetails.email,
+      phone: customerDetails.phone
+    },
+    shipping: {
+      address: customerDetails.shippingAddress
+    },
+    notes: customerDetails.notes,
+    website: "",
+    items: orderItems.map(item => ({
+      productId: productIdForOrderItem(item),
+      design: item.name,
+      colours: item.colours || item.colors || "",
+      personalization: item.personalization || item.description || "",
+      customDescription: item.customDescription || item.description || item.name || "",
+      hardware: item.hardware || item.keychainType || "",
+      quantity: item.quantity || 1
+    })),
+    browserTotal: calculateCartTotal()
+  };
+
+  const response = await fetch(`${FOREVER_BEADED_API_BASE_URL.replace(/\/$/, "")}/api/orders`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      customerName: "Website Customer",
-      email: "",
-      phone: "",
-      items: orderItems,
-      total,
-      notes: ""
-    })
-  })
-    .then(response => response.json())
-    .then(data => console.log("Order saved:", data))
-    .catch(error => console.warn("Order email opened, but local database save failed:", error));
+    body: JSON.stringify(payload)
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.success) {
+    throw new Error(data.error || "Order could not be submitted.");
+  }
+  return data;
 }
 
-function buyNow() {
+async function buyNow() {
   if (cart.length === 0) {
     showForeverBeadedMessage("Your cart is empty. Please add an item first.");
     return;
   }
 
   const orderItems = cart.map(item => ({ ...item }));
-  const total = calculateCartTotal();
-  const body = buildOrderMessage();
+  const customerDetails = customerDetailsFromPrompt();
+  if (!customerDetails) return;
+  if (!customerDetails.customerName.trim() || !customerDetails.email.trim()) {
+    showForeverBeadedMessage("Please enter your name and a valid email address before submitting your order.");
+    return;
+  }
 
-  saveOrderToDatabase(orderItems, total);
+  const button = document.getElementById("buyNowBtn");
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Submitting...";
+  }
 
-  cart = [];
-  localStorage.removeItem("foreverBeadedCart");
-  renderCart();
-  if (cartPanel) cartPanel.classList.remove("open");
+  try {
+    const data = await saveOrderToDatabase(orderItems, customerDetails);
+    cart = [];
+    localStorage.removeItem("foreverBeadedCart");
+    renderCart();
+    if (cartPanel) cartPanel.classList.remove("open");
 
-  showForeverBeadedMessage(`Thank you for shopping with Forever Beaded!\n\nA Gmail draft has been prepared with your order details.\n\nPlease review it, add your shipping information if needed, and press Send to complete your order.\n\nThank you for supporting a small handmade business.`);
-
-  setTimeout(() => openEmailCompose("Forever Beaded E-transfer Order", body), 600);
+    showForeverBeadedMessage(`Thank you for your order.\n\nOrder number: ${data.orderNumber}\nTotal: ${centsDisplay(data.total, data.currency)}\n\nPlease send your Interac e-Transfer to:\n${data.etransferEmail}\n\nInclude your order number in the e-transfer message.\n\nYour treasure will begin after payment has been received and verified.`);
+  } catch (error) {
+    showForeverBeadedMessage("Your order could not be submitted right now. Please try again, or contact Forever Beaded at foreverbeaded1@gmail.com.");
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Order by E-transfer";
+    }
+  }
 }
 
 if (menuBtn) {
@@ -759,14 +845,6 @@ const buyNowButton = document.getElementById("buyNowBtn");
 if (buyNowButton) buyNowButton.addEventListener("click", buyNow);
 const addCustomBtn = document.getElementById("addCustomBtn");
 if (addCustomBtn) addCustomBtn.addEventListener("click", addCustomToCart);
-
-const emailMeButton = document.getElementById("emailMeBtn");
-if (emailMeButton) {
-  emailMeButton.addEventListener("click", (event) => {
-    event.preventDefault();
-    openEmailCompose();
-  });
-}
 
 const copyEmailButton = document.getElementById("copyEmailBtn");
 if (copyEmailButton) {

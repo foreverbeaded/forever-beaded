@@ -15,7 +15,8 @@ async function withServer(options = {}, callback) {
     databasePath: tempDbPath(),
     allowedOrigins: "https://foreverbeaded.github.io,http://localhost,http://127.0.0.1",
     apiRateLimit: options.apiRateLimit || 200,
-    orderRateLimit: options.orderRateLimit || 20
+    orderRateLimit: options.orderRateLimit || 20,
+    emailSender: options.emailSender
   });
   const server = await new Promise((resolve) => {
     const instance = app.listen(0, () => resolve(instance));
@@ -38,8 +39,12 @@ function validOrder(overrides = {}) {
     },
     shipping: {
       address: "123 Bead Lane",
+      street: "123 Bead Lane",
+      city: "Vancouver",
       province: "BC",
-      postalCode: "V6B 1A1"
+      postalCode: "v6b1a1",
+      country: "Canada",
+      addressAsEntered: "123 Bead Lane\nVancouver, BC v6b1a1\nCanada"
     },
     notes: "Please use warm colours.",
     items: [
@@ -83,12 +88,109 @@ test("creates a valid Interac e-Transfer order", async () => {
     assert.equal(body.confirmationEmail.messageId, null);
     assert.match(body.confirmationEmail.providerResponse, /Missing email environment variables/);
     assert.match(body.message, /^Thank you! Your Forever Beaded order has been received\./);
+    assert.match(body.message, /Order number: FB-\d{8}-0001/);
+    assert.match(body.message, /Total: 45\.00 CAD/);
+    assert.match(body.message, /Shipping address:\n123 Bead Lane\nVancouver, BC V6B 1A1\nCanada/);
+    assert.match(body.message, /Send your Interac e-Transfer to:\nforeverbeaded1@gmail\.com/);
+    assert.doesNotMatch(body.message, /saved|email notification|SMTP|server|backend/i);
+    assert.doesNotMatch(body.message, /confirmation email has been sent/i);
 
-    const row = await dbGet(app.locals.db, "SELECT total_cents, payment_status, order_status FROM orders WHERE order_number = ?", [body.orderNumber]);
-    assert.deepEqual(row, { total_cents: 4500, payment_status: "AWAITING_PAYMENT", order_status: "NEW" });
+    const row = await dbGet(app.locals.db, "SELECT total_cents, payment_status, order_status, address_as_entered, normalized_address, city, province, postal_code, country FROM orders WHERE order_number = ?", [body.orderNumber]);
+    assert.deepEqual(row, {
+      total_cents: 4500,
+      payment_status: "AWAITING_PAYMENT",
+      order_status: "NEW",
+      address_as_entered: "123 Bead Lane\nVancouver, BC v6b1a1\nCanada",
+      normalized_address: "123 Bead Lane\nVancouver, BC V6B 1A1\nCanada",
+      city: "Vancouver",
+      province: "BC",
+      postal_code: "V6B 1A1",
+      country: "Canada"
+    });
     assert.ok(fs.existsSync(path.join(__dirname, "..", "data", "orders.xls")));
     const emailFiles = fs.readdirSync(path.join(__dirname, "..", "data", "email-outbox"));
     assert.ok(emailFiles.some((file) => file.startsWith(`${body.orderNumber}-`) && file.endsWith(".eml")));
+  });
+});
+
+test("adds another treasure to the same order number", async () => {
+  await withServer({}, async ({ app, baseUrl }) => {
+    const first = await postOrder(baseUrl, validOrder({
+      items: [{ productId: "butterfly", quantity: 1, colours: "Purple, Cream, Gold", hardware: "Gold" }]
+    }));
+    const firstBody = await first.json();
+    assert.equal(first.status, 200);
+    assert.match(firstBody.orderNumber, /^FB-\d{8}-0001$/);
+    assert.equal(firstBody.items.length, 1);
+
+    const appendTreasure = (item) => fetch(`${baseUrl}/api/orders/${encodeURIComponent(firstBody.orderNumber)}/items`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Origin: "https://foreverbeaded.github.io" },
+      body: JSON.stringify({ item })
+    });
+    const second = await appendTreasure({
+      productId: "gecko",
+      quantity: 1,
+      colours: "Green, Blue, Black",
+      hardware: "Silver",
+      personalizationType: "none",
+      personalizationText: ""
+    });
+    const secondBody = await second.json();
+    assert.equal(second.status, 200);
+    assert.equal(secondBody.success, true);
+    assert.equal(secondBody.orderNumber, firstBody.orderNumber);
+    assert.equal(secondBody.items.length, 2);
+    assert.deepEqual(secondBody.items.map((item) => item.productName), ["Butterfly", "Gecko"]);
+    assert.deepEqual(secondBody.items.map((item) => item.lineTotalCents), [2000, 2000]);
+    assert.equal(secondBody.total, 4500);
+
+    const third = await appendTreasure({
+      productId: "macaw",
+      quantity: 1,
+      colours: "Red, Yellow, Blue",
+      hardware: "Gold",
+      personalizationType: "none",
+      personalizationText: ""
+    });
+    const thirdBody = await third.json();
+    assert.equal(third.status, 200);
+    assert.equal(thirdBody.success, true);
+    assert.equal(thirdBody.orderNumber, firstBody.orderNumber);
+    assert.equal(thirdBody.items.length, 3);
+    assert.deepEqual(thirdBody.items.map((item) => item.productName), ["Butterfly", "Gecko", "Macaw"]);
+    assert.equal(thirdBody.total, 8700);
+
+    const orderCount = await dbGet(app.locals.db, "SELECT COUNT(*) AS count FROM orders WHERE order_number = ?", [firstBody.orderNumber]);
+    const itemCount = await dbGet(app.locals.db, `SELECT COUNT(*) AS count
+      FROM order_items
+      JOIN orders ON orders.id = order_items.order_id
+      WHERE orders.order_number = ?`, [firstBody.orderNumber]);
+    const savedTotal = await dbGet(app.locals.db, "SELECT total_cents FROM orders WHERE order_number = ?", [firstBody.orderNumber]);
+    assert.equal(orderCount.count, 1);
+    assert.equal(itemCount.count, 3);
+    assert.equal(savedTotal.total_cents, 8700);
+  });
+});
+
+test("includes customer confirmation email line only when provider accepts email", async () => {
+  await withServer({
+    emailSender: async () => ({
+      emailSent: true,
+      to: "foreverbeaded1@gmail.com",
+      provider: "smtp",
+      providerResponse: "250 2.0.0 OK queued",
+      messageId: "<test-message@forever-beaded.local>"
+    })
+  }, async ({ baseUrl }) => {
+    const response = await postOrder(baseUrl, validOrder());
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(body.success, true);
+    assert.equal(body.emailSent, true);
+    assert.equal(body.confirmationEmail.messageId, "<test-message@forever-beaded.local>");
+    assert.match(body.message, /A confirmation email has been sent to your inbox\./);
+    assert.doesNotMatch(body.message, /SMTP|backend|server|email notification failed/i);
   });
 });
 
@@ -252,9 +354,37 @@ test("requires and stores custom idea descriptions with line breaks", async () =
     const body = await response.json();
     assert.equal(response.status, 200);
     assert.equal(body.items[0].customDescription, description);
-    assert.match(body.message, /Custom idea:\nA tiny garden charm\n  with purple flowers and initials AG\./);
+    assert.match(body.message, /^Thank you! Your Forever Beaded order has been received\./);
+    assert.doesNotMatch(body.message, /Custom idea:/);
     const row = await dbGet(app.locals.db, "SELECT custom_description FROM order_items JOIN orders ON orders.id = order_items.order_id WHERE orders.order_number = ?", [body.orderNumber]);
     assert.equal(row.custom_description, description);
+  });
+});
+
+test("stores personalization type and text with orders", async () => {
+  await withServer({}, async ({ app, baseUrl }) => {
+    const response = await postOrder(baseUrl, validOrder({
+      items: [{
+        productId: 1,
+        quantity: 1,
+        colours: "Purple, Cream, Gold",
+        hardware: "Gold",
+        personalizationType: "initials",
+        personalizationText: "B.T."
+      }]
+    }));
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(body.items[0].personalizationType, "initials");
+    assert.equal(body.items[0].personalizationText, "B.T.");
+    assert.match(body.message, /^Thank you! Your Forever Beaded order has been received\./);
+    assert.doesNotMatch(body.message, /Personalization:/);
+
+    const row = await dbGet(app.locals.db, `SELECT personalization_type, personalization
+      FROM order_items
+      JOIN orders ON orders.id = order_items.order_id
+      WHERE orders.order_number = ?`, [body.orderNumber]);
+    assert.deepEqual(row, { personalization_type: "initials", personalization: "B.T." });
   });
 });
 

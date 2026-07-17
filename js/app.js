@@ -762,15 +762,21 @@ async function saveOrderToDatabase(orderItems, customerDetails) {
     },
     notes: customerDetails.notes,
     website: "",
-    items: orderItems.map(item => ({
-      productId: productIdForOrderItem(item),
-      design: item.name,
-      colours: item.colours || item.colors || "",
-      personalization: item.personalization || item.description || "",
-      customDescription: item.customDescription || item.description || item.name || "",
-      hardware: item.hardware || item.keychainType || "",
-      quantity: item.quantity || 1
-    })),
+    items: orderItems.map(item => {
+      const personalizationText = item.personalizationText || item.personalization || "";
+      const personalizationType = item.personalizationType || (personalizationText ? "name" : "none");
+      return {
+        productId: productIdForOrderItem(item),
+        design: item.name,
+        colours: item.colours || item.colors || "",
+        personalization: personalizationText,
+        personalizationType,
+        personalizationText,
+        customDescription: item.customDescription || item.description || item.name || "",
+        hardware: item.hardware || item.keychainType || "",
+        quantity: item.quantity || 1
+      };
+    }),
     browserTotal: calculateCartTotal()
   };
 
@@ -1063,10 +1069,15 @@ if (reviewForm) {
 
 const backToTop = document.getElementById("backToTop");
 if (backToTop) {
+  backToTop.textContent = "\u2191 Back to Top";
+  backToTop.setAttribute("aria-label", "Back to top");
   window.addEventListener("scroll", () => {
     backToTop.classList.toggle("show", window.scrollY > 500);
   });
-  backToTop.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+  backToTop.addEventListener("click", () => {
+    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+    window.scrollTo({ top: 0, behavior });
+  });
 }
 
 renderReviews();

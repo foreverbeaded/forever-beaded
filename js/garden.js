@@ -39,6 +39,65 @@
     }
   };
 
+  const setupBackToTop = () => {
+    let button = document.getElementById("backToTop");
+    if (!button) {
+      button = document.createElement("button");
+      button.id = "backToTop";
+      button.className = "back-to-top";
+      button.type = "button";
+      document.documentElement.append(button);
+    } else if (document.body.classList.contains("storybook-home") || document.body.classList.contains("storybook-page")) {
+      document.documentElement.append(button);
+    }
+
+    button.textContent = "\u2191 Back to Top";
+    button.setAttribute("aria-label", "Back to top");
+    Object.assign(button.style, {
+      position: "fixed",
+      zIndex: "9000",
+      display: "inline-grid",
+      placeItems: "center",
+      minHeight: "44px",
+      padding: window.innerWidth < 640 ? "0 13px" : "0 18px",
+      border: "1px solid rgba(212, 175, 55, .72)",
+      borderRadius: "999px",
+      background: "rgba(48, 25, 55, .94)",
+      color: "#f8ead0",
+      font: "800 .88rem/1 Inter, system-ui, sans-serif",
+      letterSpacing: "0",
+      fontWeight: "800",
+      boxShadow: "0 14px 34px rgba(20, 10, 24, .32)",
+      cursor: "pointer",
+      right: window.innerWidth < 640 ? "14px" : "20px",
+      bottom: window.innerWidth < 640 ? "14px" : "20px"
+    });
+
+    const syncPosition = () => {
+      button.style.right = window.innerWidth < 640 ? "14px" : "20px";
+      button.style.bottom = window.innerWidth < 640 ? "14px" : "20px";
+      button.style.padding = window.innerWidth < 640 ? "0 13px" : "0 18px";
+    };
+
+    const syncVisibility = () => {
+      const visible = window.scrollY > 500;
+      button.classList.toggle("show", visible);
+      button.style.opacity = visible ? "1" : "0";
+      button.style.visibility = visible ? "visible" : "hidden";
+      button.style.pointerEvents = visible ? "auto" : "none";
+      button.style.transform = visible ? "translateY(0)" : "translateY(12px)";
+    };
+
+    button.addEventListener("click", () => {
+      const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+      window.scrollTo({ top: 0, behavior });
+    });
+    window.addEventListener("scroll", syncVisibility, { passive: true });
+    window.addEventListener("resize", syncPosition, { passive: true });
+    syncPosition();
+    syncVisibility();
+  };
+
   const normalizeColour = (value, fallbackIndex) => {
     const clean = String(value || "").trim().toLowerCase();
     if (!clean) return ["#8a3f83", "#fff5df", "#c99a46", "#8f8f8f"][fallbackIndex % 4];
@@ -179,6 +238,67 @@
     select.value = currentProduct?.slug || fallbackProduct?.slug || productCatalogue[0].slug;
   };
 
+  const getPersonalizationState = () => {
+    const enabled = document.getElementById("homePersonalizationEnabled")?.value === "yes";
+    const type = enabled ? (document.getElementById("homePersonalizationKind")?.value || "name") : "none";
+    const text = document.getElementById("homePersonalizationText")?.value.trim() || "";
+    if (type === "name") {
+      return { type, text, phrase: text ? `personalized for ${text}` : "personalized for" };
+    }
+    if (type === "initials") {
+      return { type, text, phrase: text ? `personalized with ${text}` : "personalized with initials" };
+    }
+    return { type: "none", text: "", phrase: "no personalization" };
+  };
+
+  const syncPersonalizationField = () => {
+    const enabledSelect = document.getElementById("homePersonalizationEnabled");
+    const kindSelect = document.getElementById("homePersonalizationKind");
+    const kindWrap = document.getElementById("homePersonalizationKindWrap");
+    const textWrap = document.getElementById("homePersonalizationTextWrap");
+    const input = document.getElementById("homePersonalizationText");
+    if (!enabledSelect || !kindSelect || !kindWrap || !textWrap || !input) return;
+
+    const enabled = enabledSelect.value === "yes";
+    const type = enabled ? (kindSelect.value || "name") : "none";
+    kindWrap.hidden = !enabled;
+    kindWrap.setAttribute("aria-hidden", enabled ? "false" : "true");
+    kindWrap.classList.toggle("is-visible", enabled);
+    textWrap.hidden = !enabled;
+    textWrap.setAttribute("aria-hidden", enabled ? "false" : "true");
+    textWrap.classList.toggle("is-visible", enabled);
+    kindSelect.disabled = !enabled;
+    input.required = enabled;
+    input.maxLength = type === "initials" ? 8 : 40;
+    textWrap.firstChild.textContent = type === "initials" ? "Initials to add" : "Name to add";
+    input.placeholder = type === "initials" ? "e.g. B.T." : "e.g. Becky";
+    if (!enabled) {
+      input.value = "";
+      kindSelect.value = "name";
+      input.setCustomValidity("");
+    }
+  };
+
+  const validatePersonalization = (report = true) => {
+    const input = document.getElementById("homePersonalizationText");
+    const state = getPersonalizationState();
+    if (!input || state.type === "none") return true;
+
+    let message = "";
+    if (!state.text) {
+      message = state.type === "initials" ? "Please enter the initials to add." : "Please enter the name to add.";
+    } else if (state.type === "initials" && state.text.length > 8) {
+      message = "Please keep initials to 8 characters or fewer.";
+    }
+    input.setCustomValidity(message);
+    if (message && report) {
+      input.reportValidity();
+      setOrderStatus(message, true);
+      return false;
+    }
+    return !message;
+  };
+
   const renderHomeTreasurePreview = () => {
     const preview = document.getElementById("homeTreasurePreview");
     if (!preview) return;
@@ -188,7 +308,7 @@
     const colourInput = document.getElementById("homeTreasureColours")?.value || "Purple, Cream, Gold";
     const hardware = document.getElementById("homeTreasureHardware")?.value || "Gold";
     const quantity = document.getElementById("homeTreasureQuantity")?.value || "1";
-    const name = document.getElementById("homeTreasureName")?.value.trim() || "";
+    const personalization = getPersonalizationState();
     const customDescription = document.getElementById("homeCustomDescription")?.value.trim() || "";
     const colours = parseColours(colourInput, product?.defaultColours);
     const readableColours = colourInput
@@ -202,6 +322,7 @@
     const previewTitle = document.getElementById("homeTreasurePreviewTitle");
     const previewMeta = document.getElementById("homeTreasurePreviewMeta");
     const previewDescription = document.getElementById("homeTreasurePreviewDescription");
+    const previewPersonalization = document.getElementById("homeTreasurePreviewPersonalization");
     updateProductImages(product);
     renderBeadPattern(preview, product, colours);
 
@@ -214,10 +335,24 @@
     if (previewMeta) {
       if (isCustomProduct(product)) {
         const price = product ? ` Starting at ${formatCents(product.basePrice)}.` : "";
-        previewMeta.textContent = `${name ? `Personalized for ${name}.` : "No name added."}${price}`;
+        const personalizationSentence = personalization.phrase === "no personalization"
+            ? "No personalization"
+            : `${personalization.phrase}${/[.!?]$/.test(personalization.phrase) ? "" : "."}`;
+        previewMeta.textContent = `${personalizationSentence}${price}`;
       } else {
         const price = product ? ` Starting at ${formatCents(product.basePrice)}.` : "";
-        previewMeta.textContent = `${hardware} hardware, quantity ${quantity || 1}, ${name ? `personalized for ${name}` : "no name added"}.${price}`;
+        const personalizationSentence = `${personalization.phrase}${/[.!?]$/.test(personalization.phrase) ? "" : "."}`;
+        previewMeta.textContent = `${hardware} hardware, quantity ${quantity || 1}, ${personalizationSentence}${price}`;
+      }
+    }
+
+    if (previewPersonalization) {
+      if (personalization.type === "none" || !personalization.text) {
+        previewPersonalization.textContent = "";
+        previewPersonalization.hidden = true;
+      } else {
+        previewPersonalization.textContent = personalization.text;
+        previewPersonalization.hidden = false;
       }
     }
 
@@ -259,11 +394,793 @@
     }).format(amount);
   };
 
+  const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[character]);
+
+  const checkoutTrace = (step, details = {}) => {
+    console.info(`[checkout] ${step}`, details);
+  };
+
+  const provinceAliases = {
+    ALBERTA: "AB",
+    "BRITISH COLUMBIA": "BC",
+    MANITOBA: "MB",
+    "NEW BRUNSWICK": "NB",
+    "NEWFOUNDLAND AND LABRADOR": "NL",
+    "NOVA SCOTIA": "NS",
+    "NORTHWEST TERRITORIES": "NT",
+    NUNAVUT: "NU",
+    ONTARIO: "ON",
+    "PRINCE EDWARD ISLAND": "PE",
+    QUEBEC: "QC",
+    SASKATCHEWAN: "SK",
+    YUKON: "YT"
+  };
+
+  const postalProvincePrefixes = {
+    A: "NL",
+    B: "NS",
+    C: "PE",
+    E: "NB",
+    G: "QC",
+    H: "QC",
+    J: "QC",
+    K: "ON",
+    L: "ON",
+    M: "ON",
+    N: "ON",
+    P: "ON",
+    R: "MB",
+    S: "SK",
+    T: "AB",
+    V: "BC",
+    X: "NT",
+    Y: "YT"
+  };
+
+  let pendingConfirmedAddress = null;
+  let pendingOrderForm = null;
+  let addressReturnFocus = null;
+  let previousBodyOverflow = "";
+  let addressConfirmed = false;
+  let activeTreasureOrder = null;
+
+  const toTitleCase = (value) => value
+    .toLowerCase()
+    .replace(/\b([a-z])/g, (match) => match.toUpperCase())
+    .replace(/\b(PO|P\.O)\b/gi, "PO");
+
+  const normalizeWhitespace = (value) => String(value || "").replace(/\s+/g, " ").trim();
+
+  const normalizeProvince = (value) => {
+    const cleaned = normalizeWhitespace(value).replace(/\./g, "").toUpperCase();
+    return provinceAliases[cleaned] || cleaned;
+  };
+
+  const normalizeCanadianPostalCode = (value) => {
+    const compact = normalizeWhitespace(value).toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (!/^[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z]\d[ABCEGHJ-NPRSTV-Z]\d$/.test(compact)) return "";
+    return `${compact.slice(0, 3)} ${compact.slice(3)}`;
+  };
+
+  const looksPlaceholder = (value) => /\b(test|sample|placeholder|unknown|none|n\/a|asdf|qwerty|123 main|fake)\b/i.test(value);
+  const malformedPunctuation = (value) => {
+    const punctuation = (value.match(/[!@#$%^*_+=<>?{}[\]|\\]/g) || []).length;
+    return punctuation > 2 || /([,.;:])\1{2,}/.test(value);
+  };
+
+  const getAddressAsEntered = () => ({
+    street: document.getElementById("homeShippingAddress")?.value || "",
+    city: document.getElementById("homeCity")?.value || "",
+    province: document.getElementById("homeProvince")?.value || "",
+    postalCode: document.getElementById("homePostalCode")?.value || "",
+    country: document.getElementById("homeCountry")?.value || ""
+  });
+
+  const validateAndNormalizeAddress = () => {
+    const entered = getAddressAsEntered();
+    const street = normalizeWhitespace(entered.street);
+    const city = normalizeWhitespace(entered.city);
+    const province = normalizeProvince(entered.province);
+    const postalCode = normalizeCanadianPostalCode(entered.postalCode);
+    const country = normalizeWhitespace(entered.country || "Canada");
+    const errors = [];
+
+    if (!street) errors.push("Please enter a street address.");
+    if (street && !/\d/.test(street)) errors.push("Please include a street number.");
+    if (street && !/[A-Za-z]{2,}/.test(street.replace(/\d+/g, ""))) errors.push("Please include a street name.");
+    if (!city) errors.push("Please enter a city.");
+    if (!province) errors.push("Please enter a province.");
+    if (province && !Object.values(provinceAliases).includes(province)) errors.push("Please use a valid Canadian province or territory.");
+    if (!postalCode) errors.push("Please enter a valid Canadian postal code, like A1A 1A1.");
+    if (country && !/^canada$/i.test(country)) errors.push("This checkout currently validates Canadian shipping addresses only.");
+    [street, city, province, entered.postalCode, country].forEach((value) => {
+      if (looksPlaceholder(value)) errors.push("Please replace placeholder address text with your real shipping address.");
+      if (malformedPunctuation(value)) errors.push("Please remove unusual punctuation from the shipping address.");
+    });
+
+    const postalProvince = postalProvincePrefixes[postalCode.charAt(0)];
+    if (postalProvince && province && postalProvince !== province) {
+      errors.push(`The postal code appears to belong to ${postalProvince}, but the province is ${province}.`);
+    }
+
+    const normalized = {
+      street: toTitleCase(street),
+      city: toTitleCase(city),
+      province,
+      postalCode,
+      country: "Canada"
+    };
+    const normalizedAddress = `${normalized.street}\n${normalized.city}, ${normalized.province} ${normalized.postalCode}\n${normalized.country}`;
+    const addressAsEntered = `${normalizeWhitespace(entered.street)}\n${normalizeWhitespace(entered.city)}, ${normalizeWhitespace(entered.province)} ${normalizeWhitespace(entered.postalCode)}\n${normalizeWhitespace(entered.country || "Canada")}`;
+
+    return {
+      valid: errors.length === 0,
+      errors: [...new Set(errors)],
+      entered,
+      normalized,
+      normalizedAddress,
+      addressAsEntered
+    };
+  };
+
   const setOrderStatus = (message, isError = false) => {
     const status = document.getElementById("homeOrderStatus");
     if (!status) return;
     status.textContent = message;
     status.dataset.state = isError ? "error" : "ok";
+  };
+
+  const clearOrderStatus = () => {
+    const status = document.getElementById("homeOrderStatus");
+    if (!status) return;
+    status.textContent = "";
+    delete status.dataset.state;
+  };
+
+  const applySuccessOverlayStyles = (overlay) => {
+    Object.assign(overlay.style, {
+      position: "fixed",
+      inset: "0",
+      zIndex: "999999",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "24px",
+      background: "rgba(20, 10, 24, 0.92)",
+      boxSizing: "border-box"
+    });
+  };
+
+  const applySuccessPanelStyles = (panel) => {
+    Object.assign(panel.style, {
+      position: "relative",
+      zIndex: "1000000",
+      display: "block",
+      opacity: "1",
+      visibility: "visible",
+      transform: "none",
+      width: "min(720px, 92vw)",
+      maxHeight: "88vh",
+      overflowY: "auto",
+      padding: "32px",
+      background: "#301937",
+      color: "#fff",
+      border: "2px solid #d4af37",
+      borderRadius: "20px",
+      boxShadow: "0 24px 80px rgba(0, 0, 0, 0.45)",
+      boxSizing: "border-box",
+      margin: "auto"
+    });
+  };
+
+  const applySuccessCelebrationLayerStyles = (layer) => {
+    Object.assign(layer.style, {
+      position: "absolute",
+      inset: "0",
+      zIndex: "2",
+      pointerEvents: "none",
+      overflow: "hidden"
+    });
+  };
+
+  const ensureSuccessCelebrationStyles = () => {
+    if (document.getElementById("successCelebrationStyles")) return;
+    const style = document.createElement("style");
+    style.id = "successCelebrationStyles";
+    style.textContent = `
+      .success-celebration-layer,
+      .success-confetti-layer,
+      .success-butterfly-layer {
+        pointer-events: none;
+      }
+
+      .success-small-business-line {
+        animation: successLineGlow 3.8s ease both;
+      }
+
+      .success-storybook-line {
+        animation: successStoryReveal 4.2s ease .45s both;
+      }
+
+      .success-confetti-piece,
+      .success-bead-particle,
+      .success-butterfly {
+        position: absolute;
+        pointer-events: none;
+        will-change: transform, opacity;
+      }
+
+      .success-confetti-piece {
+        width: 7px;
+        height: 14px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, #fff1a6, #d4af37 58%, #8d6d1f);
+        box-shadow: 0 0 12px rgba(212, 175, 55, .5);
+        opacity: 0;
+        animation: successConfettiFall var(--duration, 3.9s) ease-out var(--delay, 0s) forwards;
+      }
+
+      .success-bead-particle {
+        width: var(--size, 8px);
+        height: var(--size, 8px);
+        border-radius: 999px;
+        background: radial-gradient(circle at 35% 30%, #fff8cf, #d4af37 52%, #6f4a18 100%);
+        box-shadow: 0 0 14px rgba(212, 175, 55, .6);
+        opacity: 0;
+        animation: successBeadFloat var(--duration, 4.2s) ease-in-out var(--delay, 0s) forwards;
+      }
+
+      .success-butterfly {
+        width: var(--size, 74px);
+        height: auto;
+        filter: saturate(1.18) brightness(1.12) drop-shadow(0 8px 14px rgba(0,0,0,.28));
+        opacity: 0;
+        animation: successButterflyDrift var(--duration, 4.6s) cubic-bezier(.32,.02,.22,1) var(--delay, 0s) forwards;
+      }
+
+      @keyframes successLineGlow {
+        0% { opacity: 0; transform: translateY(-6px); text-shadow: none; }
+        28% { opacity: 1; transform: translateY(0); text-shadow: 0 0 18px rgba(212,175,55,.45); }
+        100% { opacity: 1; transform: translateY(0); text-shadow: 0 0 10px rgba(212,175,55,.22); }
+      }
+
+      @keyframes successStoryReveal {
+        0% { opacity: 0; transform: translateY(8px); }
+        100% { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes successConfettiFall {
+        0% { opacity: 0; transform: translate3d(var(--x, 50vw), -12vh, 0) rotate(0deg); }
+        12% { opacity: .9; }
+        76% { opacity: .86; }
+        100% { opacity: 0; transform: translate3d(calc(var(--x, 50vw) + var(--drift, 0px)), 108vh, 0) rotate(var(--spin, 220deg)); }
+      }
+
+      @keyframes successBeadFloat {
+        0% { opacity: 0; transform: translate3d(var(--x, 50vw), 94vh, 0) scale(.7); }
+        16% { opacity: .85; }
+        76% { opacity: .78; }
+        100% { opacity: 0; transform: translate3d(calc(var(--x, 50vw) + var(--drift, 0px)), 20vh, 0) scale(1.04); }
+      }
+
+      @keyframes successButterflyDrift {
+        0% { opacity: 0; transform: translate3d(var(--start-x, -12vw), var(--start-y, 72vh), 0) rotate(var(--start-rotate, -10deg)) scale(.82); }
+        16% { opacity: .92; }
+        68% { opacity: .92; }
+        100% { opacity: 0; transform: translate3d(var(--end-x, 112vw), var(--end-y, 26vh), 0) rotate(var(--end-rotate, 12deg)) scale(1); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .success-small-business-line,
+        .success-storybook-line,
+        .success-confetti-piece,
+        .success-bead-particle,
+        .success-butterfly {
+          animation: none !important;
+        }
+      }
+    `;
+    document.head.append(style);
+  };
+
+  const isSuccessPanelVisible = () => {
+    const panel = document.getElementById("successPanel");
+    if (!panel) return false;
+    const styles = window.getComputedStyle(panel);
+    const rect = panel.getBoundingClientRect();
+    console.info("Success panel computed CSS:", {
+      display: styles.display,
+      visibility: styles.visibility,
+      opacity: styles.opacity,
+      transform: styles.transform,
+      position: styles.position,
+      zIndex: styles.zIndex,
+      width: rect.width,
+      height: rect.height
+    });
+    return styles.display !== "none"
+      && styles.visibility !== "hidden"
+      && Number(styles.opacity) > 0
+      && rect.width > 0
+      && rect.height > 0;
+  };
+
+  const createSuccessOverlay = () => {
+    checkoutTrace("Creating success modal");
+    document.getElementById("successOverlay")?.remove();
+    const overlay = document.createElement("div");
+    overlay.id = "successOverlay";
+    overlay.setAttribute("role", "presentation");
+    applySuccessOverlayStyles(overlay);
+
+    const celebrationLayer = document.createElement("div");
+    celebrationLayer.className = "success-celebration-layer";
+    celebrationLayer.setAttribute("aria-hidden", "true");
+    applySuccessCelebrationLayerStyles(celebrationLayer);
+
+    const confettiLayer = document.createElement("div");
+    confettiLayer.className = "success-confetti-layer";
+    confettiLayer.setAttribute("aria-hidden", "true");
+    applySuccessCelebrationLayerStyles(confettiLayer);
+
+    const butterflyLayer = document.createElement("div");
+    butterflyLayer.className = "success-butterfly-layer";
+    butterflyLayer.setAttribute("aria-hidden", "true");
+    applySuccessCelebrationLayerStyles(butterflyLayer);
+
+    const panel = document.createElement("section");
+    panel.id = "successPanel";
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-modal", "true");
+    panel.setAttribute("aria-labelledby", "orderSuccessTitle");
+    panel.tabIndex = -1;
+    applySuccessPanelStyles(panel);
+
+    overlay.append(celebrationLayer, confettiLayer, butterflyLayer);
+    overlay.append(panel);
+    document.body.append(overlay);
+    return { overlay, panel, celebrationLayer, confettiLayer, butterflyLayer };
+  };
+
+  const playSuccessCelebration = (overlay) => {
+    if (!overlay || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const panel = overlay.querySelector("#successPanel");
+    if (!panel || !isSuccessPanelVisible()) return;
+    ensureSuccessCelebrationStyles();
+
+    const celebrationLayer = overlay.querySelector(".success-celebration-layer");
+    const confettiLayer = overlay.querySelector(".success-confetti-layer");
+    const butterflyLayer = overlay.querySelector(".success-butterfly-layer");
+    if (!celebrationLayer || !confettiLayer || !butterflyLayer) return;
+
+    const confettiCount = window.innerWidth < 700 ? 18 : 32;
+    const beadCount = window.innerWidth < 700 ? 10 : 18;
+    const butterflyCount = window.innerWidth < 700 ? 3 : 4;
+
+    for (let index = 0; index < confettiCount; index += 1) {
+      const piece = document.createElement("span");
+      piece.className = "success-confetti-piece";
+      piece.style.setProperty("--x", `${8 + Math.random() * 84}vw`);
+      piece.style.setProperty("--drift", `${Math.round(-70 + Math.random() * 140)}px`);
+      piece.style.setProperty("--spin", `${Math.round(160 + Math.random() * 340)}deg`);
+      piece.style.setProperty("--delay", `${(Math.random() * .75).toFixed(2)}s`);
+      piece.style.setProperty("--duration", `${(3.1 + Math.random() * 1.4).toFixed(2)}s`);
+      confettiLayer.append(piece);
+    }
+
+    for (let index = 0; index < beadCount; index += 1) {
+      const bead = document.createElement("span");
+      bead.className = "success-bead-particle";
+      bead.style.setProperty("--x", `${10 + Math.random() * 80}vw`);
+      bead.style.setProperty("--drift", `${Math.round(-48 + Math.random() * 96)}px`);
+      bead.style.setProperty("--size", `${Math.round(5 + Math.random() * 7)}px`);
+      bead.style.setProperty("--delay", `${(.18 + Math.random() * .85).toFixed(2)}s`);
+      bead.style.setProperty("--duration", `${(3.3 + Math.random() * 1.2).toFixed(2)}s`);
+      celebrationLayer.append(bead);
+    }
+
+    for (let index = 0; index < butterflyCount; index += 1) {
+      const butterfly = document.createElement("img");
+      butterfly.className = "success-butterfly";
+      butterfly.src = "images/monarch-cover-realistic.png";
+      butterfly.alt = "";
+      butterfly.decoding = "async";
+      butterfly.draggable = false;
+      const fromLeft = index % 2 === 0;
+      butterfly.style.setProperty("--size", `${window.innerWidth < 700 ? 48 + index * 4 : 62 + index * 8}px`);
+      butterfly.style.setProperty("--start-x", fromLeft ? "-12vw" : "112vw");
+      butterfly.style.setProperty("--end-x", fromLeft ? "112vw" : "-12vw");
+      butterfly.style.setProperty("--start-y", `${28 + Math.random() * 48}vh`);
+      butterfly.style.setProperty("--end-y", `${18 + Math.random() * 58}vh`);
+      butterfly.style.setProperty("--start-rotate", fromLeft ? "-12deg" : "14deg");
+      butterfly.style.setProperty("--end-rotate", fromLeft ? "13deg" : "-12deg");
+      butterfly.style.setProperty("--delay", `${(.15 + index * .32).toFixed(2)}s`);
+      butterfly.style.setProperty("--duration", `${(3.6 + Math.random() * .9).toFixed(2)}s`);
+      butterflyLayer.append(butterfly);
+    }
+
+    window.setTimeout(() => {
+      celebrationLayer.replaceChildren();
+      confettiLayer.replaceChildren();
+      butterflyLayer.replaceChildren();
+    }, 5200);
+  };
+
+  const showOrderSuccessScreen = (data) => {
+    checkoutTrace("Showing success modal", {
+      orderNumber: data.orderNumber || data.orderId || "",
+      total: data.total,
+      emailSent: data.emailSent === true
+    });
+    const orderNumber = data.orderNumber || data.orderId || "";
+    const etransferEmail = data.etransferEmail || "foreverbeaded1@gmail.com";
+    const total = formatCents(data.total, data.currency);
+    const customerName = document.getElementById("homeCustomerName")?.value.trim() || "";
+    const orderItems = Array.isArray(data.items) ? data.items : [];
+    const itemSummaryHtml = orderItems.length ? `
+      <div style="margin:18px 0;padding:14px;border:1px solid rgba(212,175,55,.45);border-radius:14px;background:rgba(255,255,255,.06);">
+        <h3 style="margin:0 0 10px;color:#d4af37;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.55rem;">Treasures in This Order</h3>
+        <ol style="margin:0;padding-left:22px;color:#f8ead0;line-height:1.55;">
+          ${orderItems.map((item) => {
+            const design = escapeHtml(item.productName || item.design || "Treasure");
+            const colours = escapeHtml(item.colours || "Custom colours");
+            const hardware = escapeHtml(item.hardware || "Hardware selected");
+            const quantity = Number(item.quantity || 1);
+            const personalization = item.personalizationType && item.personalizationType !== "none"
+              ? `${escapeHtml(item.personalizationType)}: ${escapeHtml(item.personalizationText || "")}`
+              : "No personalization";
+            const lineTotal = formatCents(item.lineTotalCents || item.unitPriceCents || 0, data.currency);
+            const unitPrice = quantity > 1 && item.unitPriceCents ? ` <span style="opacity:.82;">(${formatCents(item.unitPriceCents, data.currency)} each)</span>` : "";
+            return `<li style="margin:0 0 10px;"><strong style="color:#fff;">${design}</strong> — ${lineTotal}${unitPrice}<br><span style="font-size:.92rem;">Colours: ${colours}; Hardware: ${hardware}; Quantity: ${quantity}; ${personalization}</span></li>`;
+          }).join("")}
+        </ol>
+      </div>
+    ` : "";
+    const gmailItemLines = orderItems.length
+      ? orderItems.map((item, index) => {
+        const design = item.productName || item.design || "Treasure";
+        const quantity = Number(item.quantity || 1);
+        const lineTotal = formatCents(item.lineTotalCents || item.unitPriceCents || 0, data.currency);
+        const personalization = item.personalizationType && item.personalizationType !== "none"
+          ? `${item.personalizationType}: ${item.personalizationText || ""}`
+          : "No personalization";
+        return `${index + 1}. ${design} — ${lineTotal}\n   Colours: ${item.colours || ""}\n   Hardware: ${item.hardware || ""}\n   Quantity: ${quantity}\n   Personalization: ${personalization}`;
+      }).join("\n\n")
+      : "Order item details are listed in the Forever Beaded order record.";
+    const gmailSubject = `Forever Beaded Order ${orderNumber}`;
+    const gmailBody = [
+      "Hi Forever Beaded,",
+      "",
+      `I have sent the Interac e-Transfer for order ${orderNumber}.`,
+      "",
+      `Customer name: ${customerName}`,
+      `Order total: ${total}`,
+      "",
+      "Items:",
+      gmailItemLines,
+      "",
+      "Thank you."
+    ].join("\n");
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(etransferEmail)}&su=${encodeURIComponent(gmailSubject)}&body=${encodeURIComponent(gmailBody)}`;
+    const mailtoFallback = `mailto:${etransferEmail}?subject=${encodeURIComponent(gmailSubject)}&body=${encodeURIComponent(gmailBody)}`;
+    const { overlay, panel } = createSuccessOverlay();
+
+    panel.innerHTML = `
+      <p style="margin:0 0 10px;color:#d4af37;font-size:0.78rem;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;">Thank You for Supporting a Small Business</p>
+      <p class="success-small-business-line" style="margin:0 0 12px;color:#f8ead0;font-size:.95rem;font-weight:700;">Thank you for supporting a small business.</p>
+      <h2 id="orderSuccessTitle" tabindex="-1" style="margin:0 0 16px;color:#fff;font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(2rem,5vw,3.5rem);line-height:1;">Your Treasure Journey Begins</h2>
+      <p style="margin:0 0 18px;line-height:1.6;color:#f8ead0;">Thank you for your order! Your handmade treasure has been received successfully.</p>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0;">
+        <div style="padding:14px;border:1px solid rgba(212,175,55,.65);border-radius:12px;background:rgba(255,255,255,.08);">
+          <span style="display:block;color:#d4af37;font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;">Order Number</span>
+          <strong id="orderSuccessNumber" style="display:block;margin-top:6px;color:#fff;font-size:1.35rem;overflow-wrap:anywhere;">${orderNumber}</strong>
+        </div>
+        <div style="padding:14px;border:1px solid rgba(212,175,55,.65);border-radius:12px;background:rgba(255,255,255,.08);">
+          <span style="display:block;color:#d4af37;font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;">Order Total</span>
+          <strong id="orderSuccessTotal" style="display:block;margin-top:6px;color:#fff;font-size:1.35rem;">${total}</strong>
+        </div>
+      </div>
+      ${itemSummaryHtml}
+      <div style="margin:18px 0;padding-top:18px;border-top:1px solid rgba(212,175,55,.45);">
+        <h3 style="margin:0 0 10px;color:#d4af37;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.8rem;">Next Chapter</h3>
+        <p style="margin:0 0 8px;line-height:1.55;color:#f8ead0;">Please send your Interac e-Transfer to:</p>
+        <strong id="orderSuccessEmail" style="display:block;margin:8px 0 12px;padding:10px 12px;border-radius:10px;background:rgba(212,175,55,.16);color:#fff;font-size:1.25rem;overflow-wrap:anywhere;">${etransferEmail}</strong>
+        <p style="margin:0 0 8px;line-height:1.55;color:#f8ead0;">Include your Order Number in the e-Transfer message so the payment can be matched correctly.</p>
+        <p style="margin:0;line-height:1.55;color:#f8ead0;">We'll begin creating your handmade treasure once payment has been received and verified.</p>
+      </div>
+      <p class="success-storybook-line" style="margin:18px 0 0;color:#f8ead0;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.25rem;line-height:1.35;font-style:italic;">Every treasured piece begins with a story...<br>Thank you for becoming part of ours.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:22px;">
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start;">
+          <button id="addAnotherTreasure" type="button" style="min-height:48px;padding:0 18px;border:0;border-radius:999px;background:#d4af37;color:#1f1026;font-weight:900;cursor:pointer;">Add a Friend for My Treasure</button>
+          <span style="color:#f8ead0;font-size:.88rem;line-height:1.35;">Because every gecko, butterfly, and little treasure deserves a friend.</span>
+        </div>
+        <button id="openGmailTransferConfirmation" type="button" style="min-height:48px;padding:0 18px;border:1px solid rgba(212,175,55,.8);border-radius:999px;background:rgba(212,175,55,.16);color:#fff;font-weight:900;cursor:pointer;">Finish and Send Payment Confirmation</button>
+        <a href="index.html" style="min-height:48px;display:inline-flex;align-items:center;justify-content:center;padding:0 18px;border:1px solid rgba(212,175,55,.75);border-radius:999px;color:#fff;text-decoration:none;font-weight:900;">Return to the Storybook</a>
+      </div>
+    `;
+
+    clearOrderStatus();
+    document.getElementById("orderSuccessTitle")?.focus({ preventScroll: true });
+    const successPanelVisible = isSuccessPanelVisible();
+    checkoutTrace("Success modal visibility checked", { visible: successPanelVisible });
+    if (successPanelVisible) {
+      window.requestAnimationFrame(() => playSuccessCelebration(overlay));
+    }
+    document.getElementById("openGmailTransferConfirmation")?.addEventListener("click", () => {
+      const gmailWindow = window.open(gmailUrl, "_blank", "noopener,noreferrer");
+      if (!gmailWindow) {
+        window.location.href = mailtoFallback;
+      }
+    });
+    document.getElementById("addAnotherTreasure")?.addEventListener("click", () => {
+      const form = document.getElementById("homeDesignBuilder");
+      if (form) form.dataset.submitting = "false";
+      pendingConfirmedAddress = null;
+      addressConfirmed = false;
+      hideAddressReview();
+      hideOrderSuccessScreen();
+      clearOrderStatus();
+      const personalizationEnabled = document.getElementById("homePersonalizationEnabled");
+      const personalizationKind = document.getElementById("homePersonalizationKind");
+      const personalizationText = document.getElementById("homePersonalizationText");
+      const design = document.getElementById("homeTreasureDesign");
+      const colours = document.getElementById("homeTreasureColours");
+      const hardware = document.getElementById("homeTreasureHardware");
+      const quantity = document.getElementById("homeTreasureQuantity");
+      const customDescription = document.getElementById("homeCustomDescription");
+
+      if (personalizationEnabled) personalizationEnabled.value = "no";
+      if (personalizationKind) personalizationKind.value = "name";
+      if (personalizationText) personalizationText.value = "";
+      if (design) design.value = fallbackProduct?.slug || productCatalogue[0]?.slug || "";
+      if (colours) colours.value = "Purple, Cream, Gold";
+      if (hardware) hardware.value = "Gold";
+      if (quantity) quantity.value = "1";
+      if (customDescription) {
+        customDescription.value = "";
+        customDescription.setCustomValidity("");
+      }
+
+      const button = document.getElementById("homeTreasureButton");
+      if (button) {
+        button.disabled = false;
+        button.textContent = "Create My Treasure";
+      }
+      syncCustomDescriptionField();
+      syncPersonalizationField();
+      renderHomeTreasurePreview();
+      if (activeTreasureOrder?.orderNumber) {
+        setOrderStatus(`Add the next treasure for order ${activeTreasureOrder.orderNumber}. It will stay in the same order.`);
+      }
+      const designField = document.getElementById("homeTreasureDesign");
+      const scrollTarget = designField?.closest("label") || document.getElementById("homeDesignBuilder");
+      scrollTarget?.scrollIntoView({
+        block: "start",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
+      });
+      designField?.focus({ preventScroll: true });
+    });
+  };
+
+  const hideOrderSuccessScreen = () => {
+    const screen = document.getElementById("successOverlay");
+    const form = document.getElementById("homeDesignBuilder");
+    screen?.remove();
+    form?.classList.remove("is-order-complete");
+  };
+
+  const showAddressReview = (address) => {
+    document.getElementById("addressReviewDialog")?.remove();
+    const dialog = document.createElement("section");
+    dialog.id = "addressReviewDialog";
+    dialog.className = "address-confirmation-overlay address-review-dialog is-visible";
+    dialog.setAttribute("aria-labelledby", "addressReviewTitle");
+    dialog.setAttribute("aria-live", "polite");
+    Object.assign(dialog.style, {
+      position: "fixed",
+      inset: "0",
+      zIndex: "99999",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "20px",
+      background: "rgba(20, 10, 24, 0.72)",
+      overflowY: "auto",
+      boxSizing: "border-box"
+    });
+    dialog.style.setProperty("position", "fixed", "important");
+    dialog.style.setProperty("inset", "0", "important");
+    dialog.style.setProperty("z-index", "99999", "important");
+    dialog.style.setProperty("display", "flex", "important");
+    dialog.style.setProperty("align-items", "center", "important");
+    dialog.style.setProperty("justify-content", "center", "important");
+    dialog.style.setProperty("min-height", "100dvh", "important");
+
+    const panel = document.createElement("div");
+    panel.className = "address-confirmation-panel address-review-panel";
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-modal", "true");
+    panel.setAttribute("aria-describedby", "addressReviewText");
+    Object.assign(panel.style, {
+      position: "relative",
+      margin: "auto",
+      width: "min(680px, 94vw)",
+      maxHeight: "90vh",
+      overflowY: "auto"
+    });
+    panel.style.setProperty("position", "relative", "important");
+    panel.style.setProperty("margin", "auto", "important");
+    panel.style.setProperty("width", "min(680px, 94vw)", "important");
+    panel.style.setProperty("max-height", "90vh", "important");
+    panel.style.setProperty("overflow-y", "auto", "important");
+    panel.innerHTML = `
+      <p class="order-success-kicker">Shipping Address</p>
+      <h2 id="addressReviewTitle" tabindex="-1">Please confirm your shipping address</h2>
+      <p id="addressReviewText">This is a local format check, not an official delivery guarantee.</p>
+      <address id="addressReviewAddress"></address>
+      <div class="address-review-actions">
+        <button id="confirmAddressButton" class="gold-button" type="button">Confirm Address</button>
+        <button id="editAddressButton" class="glass-button" type="button">Edit Address</button>
+      </div>
+    `;
+    dialog.append(panel);
+    document.body.append(dialog);
+
+    checkoutTrace("Showing address confirmation", {
+      normalizedAddress: address.normalizedAddress
+    });
+    pendingConfirmedAddress = address;
+    addressReturnFocus = document.activeElement;
+    previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    document.getElementById("addressReviewAddress").textContent = address.normalizedAddress;
+    document.getElementById("confirmAddressButton").onclick = handleConfirmedOrderSubmission;
+    document.getElementById("editAddressButton").onclick = () => {
+      pendingConfirmedAddress = null;
+      addressConfirmed = false;
+      hideAddressReview({ returnFocus: true });
+    };
+    window.requestAnimationFrame(() => {
+      centerAddressReviewInViewport();
+      document.getElementById("addressReviewTitle")?.focus({ preventScroll: true });
+    });
+  };
+
+  const centerAddressReviewInViewport = () => {
+    const panel = document.querySelector("#addressReviewDialog .address-review-panel");
+    if (!panel) return;
+    panel.style.setProperty("transform", "none", "important");
+    const rect = panel.getBoundingClientRect();
+    const viewportPadding = 20;
+    const desiredTop = Math.max(viewportPadding, (window.innerHeight - rect.height) / 2);
+    const deltaY = desiredTop - rect.top;
+    if (Math.abs(deltaY) > 1) {
+      panel.style.setProperty("transform", `translateY(${Math.round(deltaY)}px)`, "important");
+    }
+  };
+
+  const hideAddressReview = ({ returnFocus = false } = {}) => {
+    document.getElementById("addressReviewDialog")?.remove();
+    document.body.style.overflow = previousBodyOverflow;
+    if (returnFocus) {
+      const focusTarget = addressReturnFocus && typeof addressReturnFocus.focus === "function"
+        ? addressReturnFocus
+        : document.getElementById("homeShippingAddress");
+      focusTarget?.focus();
+    }
+  };
+
+  async function handleConfirmedOrderSubmission() {
+    console.info("CONFIRM ADDRESS CLICKED");
+    checkoutTrace("Confirm Address clicked", {
+      hasPendingAddress: Boolean(pendingConfirmedAddress)
+    });
+    if (!pendingConfirmedAddress) return;
+    addressConfirmed = true;
+    const confirmed = pendingConfirmedAddress;
+    const form = pendingOrderForm || document.getElementById("homeDesignBuilder");
+    if (!form) {
+      console.error("[checkout] Cannot submit order because the Create Yours form was not found.");
+      return;
+    }
+    const confirmButton = document.getElementById("confirmAddressButton");
+    if (confirmButton) {
+      confirmButton.disabled = true;
+      confirmButton.textContent = "Submitting Order...";
+    }
+    hideAddressReview();
+    console.info("ADDRESS MODAL CLOSED");
+    checkoutTrace("Address confirmed; calling submitHomeTreasureOrder");
+    await submitHomeTreasureOrder(form, confirmed);
+  }
+
+  const beginHomeTreasureOrder = (form) => {
+    checkoutTrace("Create My Treasure submitted");
+    if (form.dataset.submitting === "true") return;
+    syncCustomDescriptionField();
+    syncPersonalizationField();
+    if (!validatePersonalization()) return;
+    if (!validateCustomDescription()) return;
+
+    const address = validateAndNormalizeAddress();
+    if (!address.valid) {
+      checkoutTrace("Address validation failed", { errors: address.errors });
+      setOrderStatus(address.errors[0], true);
+      const firstField = !normalizeWhitespace(address.entered.street)
+        ? "homeShippingAddress"
+        : !normalizeWhitespace(address.entered.city)
+          ? "homeCity"
+          : !normalizeWhitespace(address.entered.province)
+            ? "homeProvince"
+            : !normalizeCanadianPostalCode(address.entered.postalCode)
+              ? "homePostalCode"
+              : "homeShippingAddress";
+      document.getElementById(firstField)?.focus();
+      return;
+    }
+
+    clearOrderStatus();
+    checkoutTrace("Address validation passed", {
+      normalizedAddress: address.normalizedAddress
+    });
+    pendingOrderForm = form;
+    addressConfirmed = false;
+    showAddressReview(address);
+  };
+
+  const postJson = async (url, payload) => {
+    checkoutTrace("POST started", { url });
+    if (typeof window.fetch === "function") {
+      const response = await window.fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json().catch(() => ({}));
+      console.info("API RESPONSE RECEIVED");
+      console.info("Order API response received", { status: response.status, success: data.success === true });
+      checkoutTrace("POST finished", {
+        ok: response.ok,
+        status: response.status,
+        success: data.success === true,
+        orderNumber: data.orderNumber || data.orderId || ""
+      });
+      return { ok: response.ok, status: response.status, data };
+    }
+
+    return new Promise((resolve, reject) => {
+      const request = new XMLHttpRequest();
+      request.open("POST", url, true);
+      request.setRequestHeader("Content-Type", "application/json");
+      request.onload = () => {
+        let data = {};
+        try {
+          data = request.responseText ? JSON.parse(request.responseText) : {};
+        } catch (error) {
+          data = {};
+        }
+        console.info("API RESPONSE RECEIVED");
+        checkoutTrace("XHR POST finished", {
+          ok: request.status >= 200 && request.status < 300,
+          status: request.status,
+          success: data.success === true,
+          orderNumber: data.orderNumber || data.orderId || ""
+        });
+        console.info("Order API response received", { status: request.status, success: data.success === true });
+        resolve({ ok: request.status >= 200 && request.status < 300, status: request.status, data });
+      };
+      request.onerror = () => reject(new TypeError(`Could not reach ${url}`));
+      request.ontimeout = () => reject(new TypeError(`Timed out reaching ${url}`));
+      request.timeout = 20000;
+      request.send(JSON.stringify(payload));
+    });
   };
 
   const syncCustomDescriptionField = () => {
@@ -317,14 +1234,16 @@
     return true;
   };
 
-  const buildHomeTreasureOrder = () => {
+  const buildHomeTreasureOrder = (confirmedAddress) => {
+    checkoutTrace("Building order payload");
     const product = getSelectedProduct();
     const design = product?.name || "Custom idea";
     const colours = document.getElementById("homeTreasureColours")?.value.trim() || "Custom colours";
     const hardware = document.getElementById("homeTreasureHardware")?.value || "Gold";
     const quantity = Number(document.getElementById("homeTreasureQuantity")?.value || 1);
-    const personalization = document.getElementById("homeTreasureName")?.value.trim() || "";
+    const personalization = getPersonalizationState();
     const customDescription = isCustomProduct(product) ? (document.getElementById("homeCustomDescription")?.value.trim() || "") : "";
+    const address = confirmedAddress || validateAndNormalizeAddress();
 
     return {
       customer: {
@@ -333,9 +1252,14 @@
         phone: document.getElementById("homeCustomerPhone")?.value.trim() || ""
       },
       shipping: {
-        address: document.getElementById("homeShippingAddress")?.value.trim() || "",
-        province: document.getElementById("homeProvince")?.value.trim() || "",
-        postalCode: document.getElementById("homePostalCode")?.value.trim() || ""
+        address: address.normalizedAddress || document.getElementById("homeShippingAddress")?.value.trim() || "",
+        street: address.normalized?.street || document.getElementById("homeShippingAddress")?.value.trim() || "",
+        city: address.normalized?.city || document.getElementById("homeCity")?.value.trim() || "",
+        province: address.normalized?.province || document.getElementById("homeProvince")?.value.trim() || "",
+        postalCode: address.normalized?.postalCode || document.getElementById("homePostalCode")?.value.trim() || "",
+        country: address.normalized?.country || document.getElementById("homeCountry")?.value.trim() || "Canada",
+        addressAsEntered: address.addressAsEntered || "",
+        normalizedAddress: address.normalizedAddress || ""
       },
       notes: "",
       website: document.getElementById("homeOrderWebsite")?.value || "",
@@ -344,18 +1268,23 @@
         design,
         colours,
         hardware,
-        personalization,
+        personalization: personalization.text,
+        personalizationType: personalization.type,
+        personalizationText: personalization.text,
         customDescription,
         quantity
       }]
     };
   };
 
-  const submitHomeTreasureOrder = async (form) => {
+  const submitHomeTreasureOrder = async (form, confirmedAddress) => {
     const button = document.getElementById("homeTreasureButton");
+    checkoutTrace("submitHomeTreasureOrder called", {
+      hasConfirmedAddress: Boolean(confirmedAddress),
+      alreadySubmitting: form.dataset.submitting === "true"
+    });
     if (form.dataset.submitting === "true") return;
-    syncCustomDescriptionField();
-    if (!validateCustomDescription()) return;
+    if (!confirmedAddress) return beginHomeTreasureOrder(form);
 
     form.dataset.submitting = "true";
     if (button) {
@@ -364,29 +1293,64 @@
     }
     setOrderStatus("Submitting your order securely...");
 
+    let orderSucceeded = false;
     try {
-      const submittedOrder = buildHomeTreasureOrder();
-      const orderApiUrl = `${API_BASE_URL.replace(/\/$/, "")}/api/orders`;
-      console.info("Submitting order to:", orderApiUrl);
-      const response = await fetch(orderApiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(submittedOrder)
+      const submittedOrder = buildHomeTreasureOrder(confirmedAddress);
+      const extendingOrderNumber = activeTreasureOrder?.orderNumber || "";
+      const orderApiUrl = extendingOrderNumber
+        ? `${API_BASE_URL.replace(/\/$/, "")}/api/orders/${encodeURIComponent(extendingOrderNumber)}/items`
+        : `${API_BASE_URL.replace(/\/$/, "")}/api/orders`;
+      const orderPayload = extendingOrderNumber
+        ? {
+          item: submittedOrder.items[0],
+          website: submittedOrder.website
+        }
+        : submittedOrder;
+      console.info("SUBMIT ORDER STARTED");
+      console.info("Submitting order");
+      checkoutTrace("Submitting order to API", {
+        orderApiUrl,
+        productId: submittedOrder.items?.[0]?.productId,
+        normalizedAddress: submittedOrder.shipping?.normalizedAddress,
+        extendingOrderNumber: extendingOrderNumber || null
       });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || `Order could not be submitted. API returned HTTP ${response.status}.`);
+      const { ok, status, data } = await postJson(orderApiUrl, orderPayload);
+      if (!ok || !data.success) {
+        checkoutTrace("Order API rejected submission", { ok, status, error: data.error });
+        throw new Error(data.error || `Order could not be submitted. API returned HTTP ${status}.`);
       }
 
-      const customSummary = submittedOrder.items?.[0]?.customDescription
-        ? ` Custom idea: ${submittedOrder.items[0].customDescription}`
-        : "";
-      setOrderStatus(`Thank you! Your Forever Beaded order has been received. Order number: ${data.orderNumber}. Total: ${formatCents(data.total, data.currency)}.${customSummary} Please send your Interac e-Transfer to ${data.etransferEmail} and include your order number in the e-transfer message. Your treasure will begin after payment has been received and verified.`);
-      form.reset();
-      syncCustomDescriptionField();
-      renderHomeTreasurePreview();
+      orderSucceeded = true;
+      activeTreasureOrder = {
+        orderNumber: data.orderNumber || data.orderId || extendingOrderNumber,
+        total: data.total,
+        currency: data.currency || "CAD",
+        items: Array.isArray(data.items) ? data.items : [],
+        etransferEmail: data.etransferEmail || "foreverbeaded1@gmail.com"
+      };
+      console.info("ORDER SAVED");
+      console.info("Order saved");
+      console.info("Email result received", { emailSent: data.emailSent === true });
+      checkoutTrace("Order saved; opening success modal", {
+        orderNumber: data.orderNumber || data.orderId || "",
+        emailSent: data.emailSent === true
+      });
+      try {
+        console.info("SHOW SUCCESS PANEL");
+        console.info("Showing success screen");
+        showOrderSuccessScreen(data);
+      } catch (modalError) {
+        console.error("[checkout] Success modal failed; showing emergency fallback", modalError);
+        const { panel } = createSuccessOverlay();
+        panel.textContent = `SUCCESS PANEL TEST\nOrder ${data.orderNumber || data.orderId || ""} received. Total ${formatCents(data.total, data.currency)}. Send e-Transfer to ${data.etransferEmail || "foreverbeaded1@gmail.com"}.`;
+      }
+      if (button) {
+        button.disabled = true;
+        button.textContent = "Order Received";
+      }
+      checkoutTrace("Checkout complete; success modal displayed");
     } catch (error) {
-      console.error(error);
+      console.error("[checkout] Order submission failed", error);
       const message = error instanceof TypeError && /fetch/i.test(error.message)
         ? `Could not reach the order API at ${API_BASE_URL.replace(/\/$/, "")}/api/orders. Make sure the Forever Beaded backend is running.`
         : (error?.message || "Unknown order submission error.");
@@ -396,7 +1360,7 @@
         true);
     } finally {
       form.dataset.submitting = "false";
-      if (button) {
+      if (button && !orderSucceeded) {
         button.disabled = false;
         button.textContent = "Create My Treasure";
       }
@@ -411,6 +1375,21 @@
     form.addEventListener("input", renderHomeTreasurePreview);
     form.addEventListener("change", () => {
       syncCustomDescriptionField();
+      syncPersonalizationField();
+      renderHomeTreasurePreview();
+    });
+    document.getElementById("homePersonalizationEnabled")?.addEventListener("change", () => {
+      syncPersonalizationField();
+      validatePersonalization(false);
+      renderHomeTreasurePreview();
+    });
+    document.getElementById("homePersonalizationKind")?.addEventListener("change", () => {
+      syncPersonalizationField();
+      validatePersonalization(false);
+      renderHomeTreasurePreview();
+    });
+    document.getElementById("homePersonalizationText")?.addEventListener("input", () => {
+      validatePersonalization(false);
       renderHomeTreasurePreview();
     });
     document.getElementById("homeCustomDescription")?.addEventListener("input", () => {
@@ -420,10 +1399,10 @@
     });
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      submitHomeTreasureOrder(form);
+      beginHomeTreasureOrder(form);
     });
-
     syncCustomDescriptionField();
+    syncPersonalizationField();
     renderHomeTreasurePreview();
   };
 
@@ -719,6 +1698,7 @@
   };
 
   const setupPage = () => {
+    setupBackToTop();
     setupHomeDesignBuilder();
     setupChapterTwoButterflies();
     setupPageTransitions();

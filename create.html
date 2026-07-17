@@ -56,10 +56,26 @@
             <label>Your Name <input id="homeCustomerName" name="customerName" type="text" autocomplete="name" required></label>
             <label>Email <input id="homeCustomerEmail" name="email" type="email" autocomplete="email" required></label>
             <label>Phone <input id="homeCustomerPhone" name="phone" type="tel" autocomplete="tel"></label>
-            <label>Shipping Address <input id="homeShippingAddress" name="shippingAddress" type="text" autocomplete="street-address"></label>
+            <label>Street Address <input id="homeShippingAddress" name="shippingAddress" type="text" autocomplete="street-address"></label>
+            <label>City <input id="homeCity" name="city" type="text" autocomplete="address-level2"></label>
             <label>Province <input id="homeProvince" name="province" type="text" autocomplete="address-level1"></label>
             <label>Postal Code <input id="homePostalCode" name="postalCode" type="text" autocomplete="postal-code"></label>
-            <label>Name <input id="homeTreasureName" name="name" type="text" placeholder="Optional name or initials" autocomplete="name"></label>
+            <label>Country <input id="homeCountry" name="country" type="text" autocomplete="country-name" value="Canada"></label>
+            <label>Would you like personalization?
+              <select id="homePersonalizationEnabled" name="personalizationEnabled">
+                <option value="no" selected>No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </label>
+            <label id="homePersonalizationKindWrap" class="personalization-text-field" for="homePersonalizationKind" hidden aria-hidden="true">What would you like to add?
+              <select id="homePersonalizationKind" name="personalizationType">
+                <option value="name" selected>Name</option>
+                <option value="initials">Initials</option>
+              </select>
+            </label>
+            <label id="homePersonalizationTextWrap" class="personalization-text-field" for="homePersonalizationText" hidden aria-hidden="true">Name to add
+              <input id="homePersonalizationText" name="personalizationText" type="text" placeholder="e.g. Becky" autocomplete="off" maxlength="40">
+            </label>
             <label>Design <select id="homeTreasureDesign" name="design"><option value="">Loading designs...</option></select></label>
             <label id="homeCustomDescriptionWrap" class="custom-description-field" for="homeCustomDescription" hidden aria-hidden="true">Describe your custom design
               <textarea id="homeCustomDescription" name="customDescription" minlength="10" maxlength="500" placeholder="Tell me exactly what you would like — shape, colours, pattern, theme, names, initials, flowers, animals, or any special details." aria-describedby="homeCustomDescriptionHelp homeCustomDescriptionCount"></textarea>
@@ -72,8 +88,8 @@
             <label class="order-honeypot" aria-hidden="true" tabindex="-1">Website <input id="homeOrderWebsite" name="website" type="text" autocomplete="off" tabindex="-1"></label>
           </div>
           <div class="treasure-preview" aria-live="polite">
-            <div><span class="preview-label">Live bead preview</span><h4 id="homeTreasurePreviewTitle">Butterfly in purple, cream, and gold</h4><p id="homeTreasurePreviewMeta">Gold hardware, quantity 1, no name added.</p><p id="homeTreasurePreviewDescription" class="preview-description"></p></div>
-            <div id="homeTreasurePreview" class="home-preview-beads" aria-label="Live bead colour preview"></div>
+            <div><span class="preview-label">Live bead preview</span><h4 id="homeTreasurePreviewTitle">Butterfly in purple, cream, and gold</h4><p id="homeTreasurePreviewMeta">Gold hardware, quantity 1, no personalization.</p><p id="homeTreasurePreviewDescription" class="preview-description"></p></div>
+            <div class="home-preview-art-wrap"><div id="homeTreasurePreview" class="home-preview-beads" aria-label="Live bead colour preview"></div><p id="homeTreasurePreviewPersonalization" class="preview-personalization" hidden></p></div>
           </div>
           <div id="homeOrderStatus" class="cart-payment-note" role="status" aria-live="polite"></div>
           <button id="homeTreasureButton" class="gold-button treasure-submit" type="submit">Create My Treasure</button>
@@ -86,6 +102,6 @@
   <script src="js/book.js?v=butterfly-refine-20260711"></script>
   <script src="js/butterflies.js?v=butterfly-refine-20260711"></script>
   <script src="js/product-catalogue.js?v=accurate-patterns-20260712"></script>
-<script src="js/garden.js?v=api-127-20260713"></script>
+<script src="js/garden.js?v=final-polish-20260716"></script>
 </body>
 </html>

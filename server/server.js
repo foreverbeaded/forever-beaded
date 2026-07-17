@@ -20,6 +20,43 @@ const DEFAULT_ALLOWED_ORIGINS = [
   "http://localhost",
   "http://127.0.0.1"
 ];
+
+const PROVINCE_ALIASES = {
+  ALBERTA: "AB",
+  "BRITISH COLUMBIA": "BC",
+  MANITOBA: "MB",
+  "NEW BRUNSWICK": "NB",
+  "NEWFOUNDLAND AND LABRADOR": "NL",
+  "NOVA SCOTIA": "NS",
+  "NORTHWEST TERRITORIES": "NT",
+  NUNAVUT: "NU",
+  ONTARIO: "ON",
+  "PRINCE EDWARD ISLAND": "PE",
+  QUEBEC: "QC",
+  SASKATCHEWAN: "SK",
+  YUKON: "YT"
+};
+const POSTAL_PROVINCE_PREFIXES = {
+  A: "NL",
+  B: "NS",
+  C: "PE",
+  E: "NB",
+  G: "QC",
+  H: "QC",
+  J: "QC",
+  K: "ON",
+  L: "ON",
+  M: "ON",
+  N: "ON",
+  P: "ON",
+  R: "MB",
+  S: "SK",
+  T: "AB",
+  V: "BC",
+  X: "NT",
+  Y: "YT"
+};
+
 function getEtransferEmail() {
   return process.env.ETRANSFER_EMAIL || "foreverbeaded1@gmail.com";
 }
@@ -71,6 +108,12 @@ function normalizeText(value, maxLength, field, { required = false } = {}) {
   return text;
 }
 
+function normalizePersonalizationType(value) {
+  const type = normalizeText(value || "none", 20, "Personalization type").toLowerCase();
+  if (["none", "name", "initials"].includes(type)) return type;
+  throw new PublicError(400, "Personalization type is invalid.");
+}
+
 function normalizeMultilineText(value, maxLength, field, { required = false, minLength = 0 } = {}) {
   const text = typeof value === "string"
     ? value.replace(/\r\n?/g, "\n").trim()
@@ -88,7 +131,67 @@ function normalizeEmail(value) {
 }
 
 function normalizePostalCode(value) {
-  return normalizeText(value, 20, "Postal code").toUpperCase();
+  const compact = normalizeText(value, 20, "Postal code", { required: true }).toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (!/^[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z]\d[ABCEGHJ-NPRSTV-Z]\d$/.test(compact)) {
+    throw new PublicError(400, "Please enter a valid Canadian postal code.");
+  }
+  return `${compact.slice(0, 3)} ${compact.slice(3)}`;
+}
+
+function toTitleCase(value) {
+  return normalizeText(value, 160, "Address").toLowerCase().replace(/\b([a-z])/g, (match) => match.toUpperCase());
+}
+
+function normalizeProvince(value) {
+  const cleaned = normalizeText(value, 60, "Province", { required: true }).replace(/\./g, "").toUpperCase();
+  const province = PROVINCE_ALIASES[cleaned] || cleaned;
+  if (!Object.values(PROVINCE_ALIASES).includes(province)) throw new PublicError(400, "Please enter a valid Canadian province or territory.");
+  return province;
+}
+
+function rejectMalformedAddressPart(value, field) {
+  if (/\b(test|sample|placeholder|unknown|none|n\/a|asdf|qwerty|123 main|fake)\b/i.test(value)) {
+    throw new PublicError(400, `Please replace placeholder text in ${field}.`);
+  }
+  const punctuation = (value.match(/[!@#$%^*_+=<>?{}[\]|\\]/g) || []).length;
+  if (punctuation > 2 || /([,.;:])\1{2,}/.test(value)) {
+    throw new PublicError(400, `${field} appears malformed.`);
+  }
+}
+
+function normalizeShippingAddress(shipping = {}, body = {}) {
+  const streetRaw = shipping.street || shipping.addressLine1 || shipping.address || body.shippingAddress;
+  const cityRaw = shipping.city || body.city;
+  const province = normalizeProvince(shipping.province || body.province);
+  const postalCode = normalizePostalCode(shipping.postalCode || body.postalCode);
+  const country = normalizeText(shipping.country || body.country || "Canada", 80, "Country", { required: true });
+  const street = normalizeText(streetRaw, 160, "Street address", { required: true });
+  const city = normalizeText(cityRaw, 100, "City", { required: true });
+
+  [street, city, province, postalCode, country].forEach((value) => rejectMalformedAddressPart(value, "shipping address"));
+  if (!/\d/.test(street)) throw new PublicError(400, "Please include a street number.");
+  if (!/[A-Za-z]{2,}/.test(street.replace(/\d+/g, ""))) throw new PublicError(400, "Please include a street name.");
+  if (!/^canada$/i.test(country)) throw new PublicError(400, "This checkout currently validates Canadian shipping addresses only.");
+
+  const expectedProvince = POSTAL_PROVINCE_PREFIXES[postalCode.charAt(0)];
+  if (expectedProvince && expectedProvince !== province) {
+    throw new PublicError(400, `The postal code appears to belong to ${expectedProvince}, but the province is ${province}.`);
+  }
+
+  const normalized = {
+    street: toTitleCase(street),
+    city: toTitleCase(city),
+    province,
+    postalCode,
+    country: "Canada"
+  };
+  const normalizedAddress = `${normalized.street}\n${normalized.city}, ${normalized.province} ${normalized.postalCode}\n${normalized.country}`;
+  const addressAsEntered = normalizeMultilineText(
+    shipping.addressAsEntered || `${streetRaw || ""}\n${cityRaw || ""}, ${shipping.province || body.province || ""} ${shipping.postalCode || body.postalCode || ""}\n${shipping.country || body.country || "Canada"}`,
+    700,
+    "Address as entered"
+  );
+  return { ...normalized, normalizedAddress, addressAsEntered };
 }
 
 function escapeXml(value) {
@@ -111,16 +214,21 @@ function getOrderNotificationEmail() {
 function getEmailConfig() {
   const required = ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "EMAIL_FROM", "ORDER_NOTIFICATION_EMAIL"];
   const missing = required.filter((name) => !process.env[name]);
-  if (missing.length) return { configured: false, missing };
-  return {
-    configured: true,
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-    from: process.env.EMAIL_FROM,
-    to: process.env.ORDER_NOTIFICATION_EMAIL,
+  const baseConfig = {
+    configured: missing.length === 0,
+    missing,
+    host: process.env.SMTP_HOST || "",
+    port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : null,
+    user: process.env.SMTP_USER || "",
+    pass: process.env.SMTP_PASS || "",
+    from: process.env.EMAIL_FROM || "",
+    to: process.env.ORDER_NOTIFICATION_EMAIL || "",
     secure: String(process.env.SMTP_SECURE || "").toLowerCase() === "true" || Number(process.env.SMTP_PORT) === 465
+  };
+  if (missing.length) return baseConfig;
+  return {
+    ...baseConfig,
+    configured: true
   };
 }
 
@@ -169,7 +277,9 @@ function smtpConnect(config) {
 }
 
 async function sendSmtpMail(config, { from, to, subject, text }) {
+  console.info(`[email] SMTP connection: connecting to ${config.host}:${config.port}`);
   let socket = await smtpConnect(config);
+  console.info("[email] SMTP connection: connected");
   try {
     await smtpCommand(socket, null, [220]);
     let response = await smtpCommand(socket, `EHLO ${process.env.SMTP_HELO_NAME || "forever-beaded.local"}`, [250]);
@@ -199,6 +309,7 @@ async function sendSmtpMail(config, { from, to, subject, text }) {
     const code = Number(providerResponse.slice(0, 3));
     if (code !== 250) throw new Error(`SMTP DATA failed: ${providerResponse.trim()}`);
     await smtpCommand(socket, "QUIT", [221]);
+    console.info("[email] success: SMTP provider accepted the message");
     return { messageId, providerResponse: providerResponse.trim() };
   } finally {
     socket.end();
@@ -261,12 +372,19 @@ async function normalizeItem(db, rawItem) {
     required: isCustomIdea,
     minLength: isCustomIdea ? 10 : 0
   });
+  const personalizationType = normalizePersonalizationType(rawItem.personalizationType);
+  const personalizationText = personalizationType === "none"
+    ? ""
+    : normalizeText(rawItem.personalizationText || rawItem.personalization || rawItem.name, personalizationType === "initials" ? 8 : 40, "Personalization", { required: true });
+
   return {
     productId: String(product.id),
     productName: product.name,
     design,
     colours: normalizeText(rawItem.colours || rawItem.colors, 180, "Colours"),
-    personalization: normalizeText(rawItem.personalization || rawItem.name, 120, "Personalization"),
+    personalizationType,
+    personalization: personalizationText,
+    personalizationText,
     customDescription,
     hardware: normalizeText(rawItem.hardware || rawItem.keychainType, 80, "Hardware"),
     quantity,
@@ -282,10 +400,10 @@ async function normalizeOrderPayload(db, body) {
 
   const items = Array.isArray(body.items) ? await Promise.all(body.items.map((item) => normalizeItem(db, item))) : [];
   if (!items.length) throw new PublicError(400, "Please add at least one item.");
-  if (items.length > 25) throw new PublicError(400, "Too many items in one order.");
 
   const customer = body.customer || {};
   const shipping = body.shipping || {};
+  const address = normalizeShippingAddress(shipping, body);
   const subtotalCents = items.reduce((sum, item) => sum + item.lineTotalCents, 0);
   const shippingCents = subtotalCents >= 7500 ? 0 : 500;
 
@@ -293,9 +411,13 @@ async function normalizeOrderPayload(db, body) {
     customerName: normalizeText(customer.name || body.customerName || body.name, 120, "Customer name", { required: true }),
     customerEmail: normalizeEmail(customer.email || body.email),
     customerPhone: normalizeText(customer.phone || body.phone, 40, "Phone"),
-    shippingAddress: normalizeText(shipping.address || body.shippingAddress, 500, "Shipping address"),
-    province: normalizeText(shipping.province || body.province, 60, "Province"),
-    postalCode: normalizePostalCode(shipping.postalCode || body.postalCode),
+    shippingAddress: address.normalizedAddress,
+    addressAsEntered: address.addressAsEntered,
+    normalizedAddress: address.normalizedAddress,
+    city: address.city,
+    province: address.province,
+    postalCode: address.postalCode,
+    country: address.country,
     notes: normalizeText(body.notes, 1000, "Notes"),
     subtotalCents,
     shippingCents,
@@ -308,6 +430,22 @@ async function normalizeOrderPayload(db, body) {
   };
 }
 
+function serializeOrderItem(item) {
+  return {
+    productId: item.productId,
+    productName: item.productName,
+    design: item.design,
+    colours: item.colours,
+    hardware: item.hardware,
+    quantity: item.quantity,
+    personalizationType: item.personalizationType,
+    personalizationText: item.personalizationText,
+    customDescription: item.customDescription,
+    unitPriceCents: item.unitPriceCents,
+    lineTotalCents: item.lineTotalCents
+  };
+}
+
 function getAllowedOrigins(value) {
   const configured = String(value || "").split(",").map((origin) => origin.trim()).filter(Boolean);
   return configured.length ? configured : DEFAULT_ALLOWED_ORIGINS;
@@ -315,6 +453,7 @@ function getAllowedOrigins(value) {
 
 function isOriginAllowed(origin, allowedOrigins) {
   if (!origin) return true;
+  if (origin === "null") return true;
   return allowedOrigins.some((allowed) => {
     if (origin === allowed) return true;
     return (allowed === "http://localhost" && origin.startsWith("http://localhost:")) ||
@@ -335,7 +474,7 @@ async function migrateSchema(db) {
   });
   const requiredOrderColumns = new Set([
     "id", "order_number", "created_at", "updated_at", "customer_name", "customer_email",
-    "customer_phone", "shipping_address", "province", "postal_code", "notes",
+    "customer_phone", "shipping_address", "address_as_entered", "normalized_address", "city", "province", "postal_code", "country", "notes",
     "subtotal_cents", "shipping_cents", "total_cents", "currency", "payment_method",
     "payment_status", "order_status", "etransfer_reference", "tracking_number"
   ]);
@@ -428,8 +567,12 @@ async function migrateSchema(db) {
     customer_email TEXT NOT NULL,
     customer_phone TEXT,
     shipping_address TEXT,
+    address_as_entered TEXT,
+    normalized_address TEXT,
+    city TEXT,
     province TEXT,
     postal_code TEXT,
+    country TEXT,
     notes TEXT,
     subtotal_cents INTEGER NOT NULL,
     shipping_cents INTEGER NOT NULL DEFAULT 0,
@@ -442,6 +585,24 @@ async function migrateSchema(db) {
     tracking_number TEXT
   )`);
 
+  const orderColumns = await new Promise((resolve, reject) => {
+    db.all("PRAGMA table_info(orders)", [], (error, rows) => {
+      if (error) reject(error);
+      else resolve(rows || []);
+    });
+  });
+  const existingOrderColumns = new Set(orderColumns.map((column) => column.name));
+  for (const [name, definition] of [
+    ["address_as_entered", "TEXT"],
+    ["normalized_address", "TEXT"],
+    ["city", "TEXT"],
+    ["country", "TEXT"]
+  ]) {
+    if (!existingOrderColumns.has(name)) {
+      await dbRun(db, `ALTER TABLE orders ADD COLUMN ${name} ${definition}`);
+    }
+  }
+
   await dbRun(db, `CREATE TABLE IF NOT EXISTS order_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_id INTEGER NOT NULL,
@@ -449,6 +610,7 @@ async function migrateSchema(db) {
     product_name TEXT NOT NULL,
     design TEXT,
     colours TEXT,
+    personalization_type TEXT NOT NULL DEFAULT 'none',
     personalization TEXT,
     custom_description TEXT,
     hardware TEXT,
@@ -466,6 +628,9 @@ async function migrateSchema(db) {
   });
   if (itemColumns.length && !itemColumns.some((column) => column.name === "custom_description")) {
     await dbRun(db, "ALTER TABLE order_items ADD COLUMN custom_description TEXT");
+  }
+  if (itemColumns.length && !itemColumns.some((column) => column.name === "personalization_type")) {
+    await dbRun(db, "ALTER TABLE order_items ADD COLUMN personalization_type TEXT NOT NULL DEFAULT 'none'");
   }
 
   await dbRun(db, `CREATE TABLE IF NOT EXISTS order_events (
@@ -491,22 +656,22 @@ async function createOrder(db, order) {
     const orderNumber = await generateOrderNumber(db, now);
     const result = await dbRun(db, `INSERT INTO orders (
       order_number, created_at, updated_at, customer_name, customer_email, customer_phone,
-      shipping_address, province, postal_code, notes, subtotal_cents, shipping_cents,
-      total_cents, currency, payment_method, payment_status, order_status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+      shipping_address, address_as_entered, normalized_address, city, province, postal_code, country,
+      notes, subtotal_cents, shipping_cents, total_cents, currency, payment_method, payment_status, order_status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
       orderNumber, now, now, order.customerName, order.customerEmail, order.customerPhone,
-      order.shippingAddress, order.province, order.postalCode, order.notes,
+      order.shippingAddress, order.addressAsEntered, order.normalizedAddress, order.city, order.province, order.postalCode, order.country, order.notes,
       order.subtotalCents, order.shippingCents, order.totalCents, order.currency,
       order.paymentMethod, order.paymentStatus, order.orderStatus
     ]);
 
     for (const item of order.items) {
       await dbRun(db, `INSERT INTO order_items (
-        order_id, product_id, product_name, design, colours, personalization, custom_description, hardware,
+        order_id, product_id, product_name, design, colours, personalization_type, personalization, custom_description, hardware,
         quantity, unit_price_cents, line_total_cents
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
         result.lastID, item.productId, item.productName, item.design, item.colours,
-        item.personalization, item.customDescription, item.hardware, item.quantity, item.unitPriceCents, item.lineTotalCents
+        item.personalizationType, item.personalizationText, item.customDescription, item.hardware, item.quantity, item.unitPriceCents, item.lineTotalCents
       ]);
     }
 
@@ -524,13 +689,112 @@ async function createOrder(db, order) {
   }
 }
 
+async function getOrderWithItems(db, orderNumber) {
+  const orderRow = await dbGet(db, `SELECT id, order_number, created_at, updated_at, customer_name, customer_email, customer_phone,
+    shipping_address, address_as_entered, normalized_address, city, province, postal_code, country, notes,
+    subtotal_cents, shipping_cents, total_cents, currency, payment_method, payment_status, order_status
+    FROM orders
+    WHERE order_number = ?`, [orderNumber]);
+  if (!orderRow) throw new PublicError(404, "Order was not found.");
+
+  const itemRows = await new Promise((resolve, reject) => {
+    db.all(`SELECT product_id, product_name, design, colours, personalization_type, personalization,
+      custom_description, hardware, quantity, unit_price_cents, line_total_cents
+      FROM order_items
+      WHERE order_id = ?
+      ORDER BY id ASC`, [orderRow.id], (error, rows) => {
+      if (error) reject(error);
+      else resolve(rows || []);
+    });
+  });
+
+  return {
+    orderId: orderRow.id,
+    orderNumber: orderRow.order_number,
+    customerName: orderRow.customer_name,
+    customerEmail: orderRow.customer_email,
+    customerPhone: orderRow.customer_phone,
+    shippingAddress: orderRow.shipping_address,
+    addressAsEntered: orderRow.address_as_entered,
+    normalizedAddress: orderRow.normalized_address,
+    city: orderRow.city,
+    province: orderRow.province,
+    postalCode: orderRow.postal_code,
+    country: orderRow.country,
+    notes: orderRow.notes,
+    subtotalCents: orderRow.subtotal_cents,
+    shippingCents: orderRow.shipping_cents,
+    totalCents: orderRow.total_cents,
+    currency: orderRow.currency,
+    paymentMethod: orderRow.payment_method,
+    paymentStatus: orderRow.payment_status,
+    orderStatus: orderRow.order_status,
+    items: itemRows.map((item) => ({
+      productId: item.product_id,
+      productName: item.product_name,
+      design: item.design,
+      colours: item.colours,
+      personalizationType: item.personalization_type,
+      personalization: item.personalization,
+      personalizationText: item.personalization,
+      customDescription: item.custom_description,
+      hardware: item.hardware,
+      quantity: item.quantity,
+      unitPriceCents: item.unit_price_cents,
+      lineTotalCents: item.line_total_cents
+    }))
+  };
+}
+
+async function appendItemToOrder(db, orderNumber, rawItem) {
+  const item = await normalizeItem(db, rawItem);
+  await dbRun(db, "BEGIN IMMEDIATE TRANSACTION");
+  try {
+    const orderRow = await dbGet(db, `SELECT id, subtotal_cents, order_status
+      FROM orders
+      WHERE order_number = ?`, [orderNumber]);
+    if (!orderRow) throw new PublicError(404, "Order was not found.");
+    if (orderRow.order_status === "CANCELLED" || orderRow.order_status === "COMPLETED") {
+      throw new PublicError(400, "This order can no longer be updated.");
+    }
+
+    await dbRun(db, `INSERT INTO order_items (
+      order_id, product_id, product_name, design, colours, personalization_type, personalization, custom_description, hardware,
+      quantity, unit_price_cents, line_total_cents
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+      orderRow.id, item.productId, item.productName, item.design, item.colours,
+      item.personalizationType, item.personalizationText, item.customDescription, item.hardware, item.quantity, item.unitPriceCents, item.lineTotalCents
+    ]);
+
+    const subtotalCents = Number(orderRow.subtotal_cents || 0) + item.lineTotalCents;
+    const shippingCents = subtotalCents >= 7500 ? 0 : 500;
+    const totalCents = subtotalCents + shippingCents;
+    const now = new Date().toISOString();
+    await dbRun(db, `UPDATE orders
+      SET updated_at = ?, subtotal_cents = ?, shipping_cents = ?, total_cents = ?
+      WHERE id = ?`, [now, subtotalCents, shippingCents, totalCents, orderRow.id]);
+    await dbRun(db, "INSERT INTO order_events(order_id, created_at, event_type, details) VALUES (?, ?, ?, ?)", [
+      orderRow.id,
+      now,
+      "ORDER_ITEM_ADDED",
+      JSON.stringify({ productId: item.productId, productName: item.productName, quantity: item.quantity })
+    ]);
+    await dbRun(db, "COMMIT");
+    return getOrderWithItems(db, orderNumber);
+  } catch (error) {
+    await dbRun(db, "ROLLBACK").catch(() => {});
+    throw error;
+  }
+}
+
 async function writeOrdersWorkbook(db, workbookPath = process.env.EXCEL_WORKBOOK_PATH || getDataPath("orders.xls")) {
   const resolvedPath = path.resolve(workbookPath);
   fs.mkdirSync(path.dirname(resolvedPath), { recursive: true });
 
   const orders = await new Promise((resolve, reject) => {
     db.all(`SELECT order_number, created_at, customer_name, customer_email, customer_phone,
-      province, postal_code, subtotal_cents, shipping_cents, total_cents, currency,
+      shipping_address, address_as_entered, normalized_address, city, province, postal_code, country,
+      subtotal_cents, shipping_cents, total_cents, currency,
       payment_status, order_status
       FROM orders
       ORDER BY created_at DESC`, [], (error, rows) => {
@@ -540,7 +804,7 @@ async function writeOrdersWorkbook(db, workbookPath = process.env.EXCEL_WORKBOOK
   });
   const items = await new Promise((resolve, reject) => {
     db.all(`SELECT orders.order_number, order_items.product_name, order_items.design,
-      order_items.colours, order_items.personalization, order_items.custom_description,
+      order_items.colours, order_items.personalization_type, order_items.personalization, order_items.custom_description,
       order_items.hardware, order_items.quantity, order_items.unit_price_cents,
       order_items.line_total_cents
       FROM order_items
@@ -552,18 +816,19 @@ async function writeOrdersWorkbook(db, workbookPath = process.env.EXCEL_WORKBOOK
   });
 
   const orderRows = [
-    ["Order Number", "Created", "Customer", "Email", "Phone", "Province", "Postal Code", "Subtotal", "Shipping", "Total", "Currency", "Payment Status", "Order Status"],
+    ["Order Number", "Created", "Customer", "Email", "Phone", "Shipping Address", "Address As Entered", "Normalized Address", "City", "Province", "Postal Code", "Country", "Subtotal", "Shipping", "Total", "Currency", "Payment Status", "Order Status"],
     ...orders.map((order) => [
       order.order_number, order.created_at, order.customer_name, order.customer_email, order.customer_phone,
-      order.province, order.postal_code, order.subtotal_cents, order.shipping_cents, order.total_cents,
+      order.shipping_address, order.address_as_entered, order.normalized_address, order.city, order.province, order.postal_code, order.country,
+      order.subtotal_cents, order.shipping_cents, order.total_cents,
       order.currency, order.payment_status, order.order_status
     ])
   ];
   const itemRows = [
-    ["Order Number", "Product", "Design", "Colours", "Personalization", "Custom Description", "Hardware", "Quantity", "Unit Price", "Line Total"],
+    ["Order Number", "Product", "Design", "Colours", "Personalization Type", "Personalization Text", "Custom Description", "Hardware", "Quantity", "Unit Price", "Line Total"],
     ...items.map((item) => [
-      item.order_number, item.product_name, item.design, item.colours, item.personalization,
-      item.custom_description, item.hardware, item.quantity, item.unit_price_cents, item.line_total_cents
+      item.order_number, item.product_name, item.design, item.colours, item.personalization_type,
+      item.personalization, item.custom_description, item.hardware, item.quantity, item.unit_price_cents, item.line_total_cents
     ])
   ];
 
@@ -577,7 +842,7 @@ async function writeOrdersWorkbook(db, workbookPath = process.env.EXCEL_WORKBOOK
     <Table>
       ${orderRows.map((row) => spreadsheetRow(row.map((value, index) => ({
         value,
-        type: index >= 7 && index <= 9 && row !== orderRows[0] ? "Number" : "String"
+        type: index >= 12 && index <= 14 && row !== orderRows[0] ? "Number" : "String"
       })))).join("\n      ")}
     </Table>
   </Worksheet>
@@ -585,7 +850,7 @@ async function writeOrdersWorkbook(db, workbookPath = process.env.EXCEL_WORKBOOK
     <Table>
       ${itemRows.map((row) => spreadsheetRow(row.map((value, index) => ({
         value,
-        type: index >= 7 && row !== itemRows[0] ? "Number" : "String"
+        type: index >= 8 && row !== itemRows[0] ? "Number" : "String"
       })))).join("\n      ")}
     </Table>
   </Worksheet>
@@ -602,7 +867,8 @@ function buildOrderNotification(order, saved, etransferEmail) {
     `Colours: ${item.colours || ""}`,
     `Hardware: ${item.hardware || ""}`,
     `Quantity: ${item.quantity}`,
-    `Personalization: ${item.personalization || ""}`,
+    `Personalization choice: ${item.personalizationType || "none"}`,
+    `Name or initials entered: ${item.personalizationText || item.personalization || ""}`,
     item.customDescription ? `Custom-design description: ${item.customDescription}` : ""
   ].filter(Boolean).join("\n")).join("\n\n");
 
@@ -613,8 +879,12 @@ Customer name: ${order.customerName}
 Customer email: ${order.customerEmail}
 Phone: ${order.customerPhone || ""}
 Shipping address: ${order.shippingAddress || ""}
+Address as entered: ${order.addressAsEntered || ""}
+Normalized address: ${order.normalizedAddress || ""}
+City: ${order.city || ""}
 Province: ${order.province || ""}
 Postal code: ${order.postalCode || ""}
+Country: ${order.country || ""}
 
 Items:
 ${itemLines}
@@ -628,6 +898,30 @@ E-transfer email: ${etransferEmail}
 Notes:
 ${order.notes || ""}
 `;
+}
+
+function buildCustomerConfirmationMessage(order, saved, etransferEmail, emailSent) {
+  const lines = [
+    "Thank you! Your Forever Beaded order has been received.",
+    "",
+    `Order number: ${saved.orderNumber}`,
+    "",
+    `Total: ${(order.totalCents / 100).toFixed(2)} ${order.currency}`,
+    "",
+    "Shipping address:",
+    order.normalizedAddress || order.shippingAddress || "",
+    "",
+    "Send your Interac e-Transfer to:",
+    etransferEmail,
+    "",
+    "Include your order number in the e-Transfer message.",
+    "",
+    "We'll begin creating your handmade treasure after payment has been received and verified."
+  ];
+  if (emailSent) {
+    lines.push("", "A confirmation email has been sent to your inbox.");
+  }
+  return lines.join("\n");
 }
 
 function writeConfirmationEmail(order, saved, etransferEmail, outboxDir = process.env.EMAIL_OUTBOX_PATH || getDataPath("email-outbox")) {
@@ -658,8 +952,13 @@ async function sendOrderNotificationEmail(order, saved, etransferEmail) {
   const subject = `Forever Beaded order ${saved.orderNumber}`;
   const text = buildOrderNotification(order, saved, etransferEmail);
 
-  console.info("[email] email function started");
+  console.info("[email] EMAIL STARTED");
   console.info(`[email] recipient address: ${to}`);
+  console.info(`[email] SMTP host: ${config.host || "(missing)"}`);
+  console.info(`[email] SMTP port: ${config.port || "(missing)"}`);
+  console.info(`[email] SMTP_USER exists: ${Boolean(config.user)}`);
+  console.info(`[email] SMTP_PASS exists: ${Boolean(config.pass)}`);
+  console.info(`[email] SMTP configuration: ${config.configured ? "present" : `missing ${config.missing.join(", ")}`}`);
 
   if (!config.configured) {
     const outboxPath = writeConfirmationEmail(order, saved, etransferEmail);
@@ -694,7 +993,7 @@ async function sendOrderNotificationEmail(order, saved, etransferEmail) {
     };
   } catch (error) {
     const outboxPath = writeConfirmationEmail(order, saved, etransferEmail);
-    console.error("[email] full error:", error);
+    console.error("[email] complete error message:", error?.stack || error?.message || error);
     return {
       emailSent: false,
       to,
@@ -732,7 +1031,7 @@ async function createApp(options = {}) {
 
   const allowedOrigins = getAllowedOrigins(options.allowedOrigins || process.env.ALLOWED_ORIGINS);
   const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: options.apiRateLimit || 100, standardHeaders: true, legacyHeaders: false });
-  const orderLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: options.orderRateLimit || 5, standardHeaders: true, legacyHeaders: false });
+  const orderLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: options.orderRateLimit || 40, standardHeaders: true, legacyHeaders: false });
 
   app.disable("x-powered-by");
   app.locals.db = db;
@@ -804,7 +1103,9 @@ async function createApp(options = {}) {
       const saved = await createOrder(db, order);
       const etransferEmail = getEtransferEmail();
       await writeOrdersWorkbook(db);
-      const emailResult = await sendOrderNotificationEmail(order, saved, etransferEmail);
+      const emailResult = options.emailSender
+        ? await options.emailSender(order, saved, etransferEmail)
+        : await sendOrderNotificationEmail(order, saved, etransferEmail);
       res.status(200).json({
         success: true,
         orderSaved: true,
@@ -816,19 +1117,55 @@ async function createApp(options = {}) {
         paymentMethod: order.paymentMethod,
         paymentStatus: order.paymentStatus,
         etransferEmail,
-        items: order.items.map((item) => ({
-          productId: item.productId,
-          productName: item.productName,
-          design: item.design,
-          colours: item.colours,
-          hardware: item.hardware,
-          quantity: item.quantity,
-          customDescription: item.customDescription
-        })),
+        shippingAddress: order.shippingAddress,
+        addressAsEntered: order.addressAsEntered,
+        normalizedAddress: order.normalizedAddress,
+        items: order.items.map(serializeOrderItem),
         workbookUpdated: true,
         email: emailResult,
         confirmationEmail: emailResult,
-        message: `Thank you! Your Forever Beaded order has been received.\n\n${order.items.map((item) => item.customDescription ? `Custom idea:\n${item.customDescription}\n\n` : "").join("")}Please send your Interac e-Transfer to:\n${etransferEmail}\n\nInclude your order number in the e-transfer message.\n\nYour treasure will begin after payment has been received and verified.`
+        message: buildCustomerConfirmationMessage(order, saved, etransferEmail, emailResult.emailSent)
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/orders/:orderNumber/items", orderLimiter, async (req, res, next) => {
+    try {
+      if (normalizeText(req.body?.website || req.body?.company || req.body?.honeypot, 200, "Honeypot")) {
+        throw new PublicError(400, "Order could not be submitted.");
+      }
+      const rawItem = req.body?.item || (Array.isArray(req.body?.items) ? req.body.items[0] : null);
+      const orderNumber = normalizeText(req.params.orderNumber, 40, "Order number", { required: true });
+      const order = await appendItemToOrder(db, orderNumber, rawItem);
+      const saved = { orderId: order.orderId, orderNumber: order.orderNumber };
+      const etransferEmail = getEtransferEmail();
+      await writeOrdersWorkbook(db);
+      const emailResult = options.emailSender
+        ? await options.emailSender(order, saved, etransferEmail)
+        : await sendOrderNotificationEmail(order, saved, etransferEmail);
+      res.status(200).json({
+        success: true,
+        orderSaved: true,
+        emailSent: emailResult.emailSent,
+        orderId: order.orderNumber,
+        orderNumber: order.orderNumber,
+        total: order.totalCents,
+        subtotal: order.subtotalCents,
+        shipping: order.shippingCents,
+        currency: order.currency,
+        paymentMethod: order.paymentMethod,
+        paymentStatus: order.paymentStatus,
+        etransferEmail,
+        shippingAddress: order.shippingAddress,
+        addressAsEntered: order.addressAsEntered,
+        normalizedAddress: order.normalizedAddress,
+        items: order.items.map(serializeOrderItem),
+        workbookUpdated: true,
+        email: emailResult,
+        confirmationEmail: emailResult,
+        message: buildCustomerConfirmationMessage(order, saved, etransferEmail, emailResult.emailSent)
       });
     } catch (error) {
       next(error);

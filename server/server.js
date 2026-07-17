@@ -1023,6 +1023,11 @@ function requireAdminAuth(req, res, next) {
   return next();
 }
 
+function rejectUnsupportedOrderMethod(req, res) {
+  res.set("Allow", "POST, OPTIONS");
+  return res.status(405).json({ error: "Method is not allowed." });
+}
+
 async function createApp(options = {}) {
   readEnvFile(path.join(__dirname, ".env"));
   const app = express();
@@ -1171,6 +1176,9 @@ async function createApp(options = {}) {
       next(error);
     }
   });
+
+  app.all("/api/orders/:orderNumber/items", rejectUnsupportedOrderMethod);
+  app.all("/api/orders", rejectUnsupportedOrderMethod);
 
   app.use("/api/admin", requireAdminAuth);
   app.get("/api/admin/health", (req, res) => {

@@ -416,6 +416,28 @@ test("rejects disallowed CORS origins", async () => {
   });
 });
 
+test("returns JSON 405 errors for unsupported order methods", async () => {
+  await withServer({}, async ({ baseUrl }) => {
+    const ordersGet = await fetch(`${baseUrl}/api/orders`, {
+      headers: { Origin: "https://foreverbeaded.github.io" }
+    });
+    const ordersGetBody = await ordersGet.json();
+    assert.equal(ordersGet.status, 405);
+    assert.equal(ordersGet.headers.get("allow"), "POST, OPTIONS");
+    assert.equal(ordersGetBody.error, "Method is not allowed.");
+
+    const itemPut = await fetch(`${baseUrl}/api/orders/FB-20260717-0001/items`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Origin: "https://foreverbeaded.github.io" },
+      body: JSON.stringify({ item: { productId: "gecko", quantity: 1 } })
+    });
+    const itemPutBody = await itemPut.json();
+    assert.equal(itemPut.status, 405);
+    assert.equal(itemPut.headers.get("allow"), "POST, OPTIONS");
+    assert.equal(itemPutBody.error, "Method is not allowed.");
+  });
+});
+
 test("rolls back the transaction when item insertion fails", async () => {
   await withServer({}, async ({ app, baseUrl }) => {
     await dbRun(app.locals.db, "CREATE TRIGGER fail_items BEFORE INSERT ON order_items BEGIN SELECT RAISE(ABORT, 'forced item failure'); END");

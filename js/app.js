@@ -3,7 +3,7 @@ const products = [
     id: 1,
     name: "Exclusive Macaw",
     price: 47,
-    category: "exclusive",
+    category: "Macaw",
     image: "images/macaw.jpeg",
     description: "Forever Beaded Exclusive:A vibrant macaw design, perfect for bird lovers."
   },
@@ -125,7 +125,31 @@ const products = [
     price: 30,
     category: "Ocean Animals",
     image: "images/fish-crab-penguin.jpeg",
-    description: "A delightful combination of fish, crab, and penguin designs, perfect for ocean enthusiasts."
+    description: "A delightful combination of fish, crab, and penguin designs, perfect for ocean enthusiasts.",
+    requiresVariantSelection: true,
+    variants: [
+      {
+        id: "fish",
+        name: "Fish",
+        productId: "fish",
+        image: "images/fish-crab-penguin.jpeg",
+        focusClass: "focus-fish"
+      },
+      {
+        id: "crab",
+        name: "Crab",
+        productId: "crab",
+        image: "images/fish-crab-penguin.jpeg",
+        focusClass: "focus-crab"
+      },
+      {
+        id: "penguin",
+        name: "Penguin",
+        productId: "penguin",
+        image: "images/fish-crab-penguin.jpeg",
+        focusClass: "focus-penguin"
+      }
+    ]
   },
   {
     id: 17,
@@ -153,7 +177,12 @@ const products = [
   }
 ];
 
-let cart = JSON.parse(localStorage.getItem("foreverBeadedCart")) || [];
+const CART_STORAGE_KEY = "foreverBeadedCart";
+const CART_CHECKOUT_FLAG_KEY = "foreverBeadedCartCheckout";
+const MAX_CART_QUANTITY = 20;
+const productById = new Map(products.map(product => [String(product.id), product]));
+
+let cart = loadCart();
 
 const productGrid = document.getElementById("productGrid");
 const productSearch = document.getElementById("productSearch");
@@ -171,9 +200,104 @@ const galleryFilters = document.getElementById("galleryFilters");
 const fbModal = document.getElementById("fbModal");
 const fbModalMessage = document.getElementById("fbModalMessage");
 const fbModalOk = document.getElementById("fbModalOk");
+let cartAddLocked = false;
+let lastCartAdd = { productId: "", time: 0 };
 
 function money(amount) {
   return `$${amount} CAD`;
+}
+
+function safeQuantity(value) {
+  const quantity = Number.parseInt(value, 10);
+  if (!Number.isFinite(quantity)) return 1;
+  return Math.min(MAX_CART_QUANTITY, Math.max(1, quantity));
+}
+
+function stableOptionsKey(options = {}) {
+  const cleaned = {};
+  Object.keys(options || {}).sort().forEach(key => {
+    const value = options[key];
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
+      cleaned[key] = String(value).trim();
+    }
+  });
+  return JSON.stringify(cleaned);
+}
+
+function cartItemSignature(item) {
+  if (item.isCustom) {
+    return `custom:${item.name}:${item.price}:${stableOptionsKey(item.options)}:${item.description}`;
+  }
+  return `product:${item.productId || item.id}:${item.variantId || ""}:${stableOptionsKey(item.options)}`;
+}
+
+function findProductVariant(product, variantId) {
+  if (!product || !Array.isArray(product.variants)) return null;
+  return product.variants.find(variant => String(variant.id) === String(variantId)) || null;
+}
+
+function normalizeStoredCartItem(item) {
+  if (!item || typeof item !== "object") return null;
+
+  if (item.isCustom) {
+    const price = Number(item.price);
+    if (!Number.isFinite(price) || price <= 0) return null;
+    return {
+      isCustom: true,
+      name: String(item.name || "Custom Treasure").slice(0, 80),
+      price,
+      image: String(item.image || "images/custom-idea.jpeg"),
+      description: String(item.description || "").slice(0, 280),
+      quantity: safeQuantity(item.quantity),
+      options: item.options && typeof item.options === "object" ? item.options : {},
+      availability: "made to order"
+    };
+  }
+
+  if (item.variantOf && item.variantId) {
+    const baseProduct = productById.get(String(item.variantOf));
+    const variant = findProductVariant(baseProduct, item.variantId);
+    if (!baseProduct || !variant) return null;
+    return {
+      id: `${baseProduct.id}:${variant.id}`,
+      productId: variant.productId,
+      variantOf: baseProduct.id,
+      variantId: variant.id,
+      name: variant.name,
+      price: baseProduct.price,
+      category: baseProduct.category,
+      image: variant.image || baseProduct.image,
+      imageFocusClass: variant.focusClass || "",
+      description: `${variant.name} from the Fish, Crab and Penguin collection.`,
+      quantity: safeQuantity(item.quantity),
+      options: {
+        ...(item.options && typeof item.options === "object" ? item.options : {}),
+        animal: variant.name
+      },
+      availability: "made to order"
+    };
+  }
+
+  const product = productById.get(String(item.productId || item.id));
+  if (!product) return null;
+  return {
+    ...product,
+    productId: product.id,
+    quantity: safeQuantity(item.quantity),
+    options: item.options && typeof item.options === "object" ? item.options : {},
+    availability: "made to order"
+  };
+}
+
+function loadCart() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map(normalizeStoredCartItem).filter(Boolean);
+  } catch (error) {
+    localStorage.removeItem(CART_STORAGE_KEY);
+    return [];
+  }
 }
 
 let activeShopCategory = "All";
@@ -188,6 +312,27 @@ function productMatchesShopFilters(product) {
   const searchText = `${product.name} ${product.category} ${product.description}`.toLowerCase();
   const searchMatch = !activeShopSearch || searchText.includes(activeShopSearch.toLowerCase());
   return categoryMatch && searchMatch;
+}
+
+function productImageClass(product) {
+  return [
+    "product-image",
+    product.requiresVariantSelection ? "variant-product-image" : "",
+    product.defaultFocusClass || ""
+  ].filter(Boolean).join(" ");
+}
+
+function variantSelectorMarkup(product) {
+  if (!product.requiresVariantSelection || !Array.isArray(product.variants)) return "";
+  return `
+    <label class="product-variant-field">
+      <span>Choose your animal</span>
+      <select class="product-variant-select" data-product-id="${product.id}" required>
+        <option value="">Choose your animal</option>
+        ${product.variants.map(variant => `<option value="${variant.id}">${escapeHtml(variant.name)}</option>`).join("")}
+      </select>
+    </label>
+  `;
 }
 
 function renderShopFilters() {
@@ -206,7 +351,7 @@ function productSocialStats(product) {
 
 function showForeverBeadedMessage(message) {
   if (!fbModal || !fbModalMessage) {
-    alert(message);
+    console.info(message);
     return;
   }
 
@@ -222,12 +367,50 @@ function closeForeverBeadedMessage() {
 }
 
 function saveCart() {
-  localStorage.setItem("foreverBeadedCart", JSON.stringify(cart));
+  cart = cart.map(normalizeStoredCartItem).filter(Boolean);
+  localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+}
+
+function setPageScrollLocked(locked) {
+  document.body.classList.toggle("cart-open", Boolean(locked));
 }
 
 function openCart() {
   if (!cartPanel) return;
   cartPanel.classList.add("open");
+  cartPanel.setAttribute("aria-hidden", "false");
+  setPageScrollLocked(true);
+}
+
+function closeCart() {
+  if (!cartPanel) return;
+  cartPanel.classList.remove("open");
+  cartPanel.setAttribute("aria-hidden", "true");
+  setPageScrollLocked(false);
+}
+
+function setCartFeedback(message) {
+  if (!cartPanel) return;
+  let feedback = cartPanel.querySelector(".cart-feedback");
+  if (!feedback) {
+    feedback = document.createElement("p");
+    feedback.className = "cart-feedback";
+    feedback.setAttribute("role", "status");
+    feedback.setAttribute("aria-live", "polite");
+    cartPanel.insertBefore(feedback, cartItems || cartPanel.firstChild);
+  }
+  feedback.textContent = message || "";
+}
+
+function ensureCartActions() {
+  if (!cartPanel || cartPanel.querySelector("#continueShoppingBtn")) return;
+  const continueButton = document.createElement("button");
+  continueButton.id = "continueShoppingBtn";
+  continueButton.className = "continue-shopping-btn";
+  continueButton.type = "button";
+  continueButton.textContent = "Continue Shopping";
+  const checkoutButton = document.getElementById("buyNowBtn");
+  cartPanel.insertBefore(continueButton, checkoutButton || null);
 }
 
 function renderProducts() {
@@ -261,13 +444,14 @@ function renderProducts() {
     const stats = productSocialStats(product);
     return `
       <article class="product-card" data-category="${product.category}">
-        <img src="${product.image}" alt="${product.name}" class="product-image">
+        <img src="${product.image}" alt="${product.name}" class="${productImageClass(product)}" data-product-card-image="${product.id}">
         <span class="badge">${product.id === 1 ? "Exclusive" : "Handmade"}</span>
         <h3>${product.name}</h3>
         <div class="social-row">${stats.rating} · ${stats.likes} saved · Made to order</div>
         <p>${product.description}</p>
         <strong>${money(product.price)}</strong><br><br>
-        <button class="add-to-cart-btn" data-index="${index}">Add to Cart</button>
+        ${variantSelectorMarkup(product)}
+        <button class="add-to-cart-btn" data-product-id="${product.id}"${product.requiresVariantSelection ? " disabled" : ""}>Add to My Request</button>
       </article>
     `;
   }).join("");
@@ -293,7 +477,7 @@ function renderGallery(category = "All") {
     const stats = productSocialStats(product);
     return `
       <article class="gallery-card">
-        <img src="${product.image}" alt="${product.name}" class="gallery-image">
+        <img src="${product.image}" alt="${product.name}" class="${productImageClass(product).replace("product-image", "gallery-image")}" data-product-card-image="${product.id}">
         <div class="gallery-info">
           <span class="badge">${product.id === 1 ? "Most Loved" : "Customer Favorite"}</span>
           <h3>${product.name}</h3>
@@ -301,22 +485,125 @@ function renderGallery(category = "All") {
           <div class="social-row">${stats.likes} saved · Handmade</div>
           <p>${product.description}</p>
           <strong>${money(product.price)}</strong>
-          <button class="add-to-cart-btn" data-index="${originalIndex}">Add to Cart</button>
+          ${variantSelectorMarkup(product)}
+          <button class="add-to-cart-btn" data-product-id="${product.id}"${product.requiresVariantSelection ? " disabled" : ""}>Add to My Request</button>
         </div>
       </article>
     `;
   }).join("");
 }
 
-function addToCart(index) {
-  const product = products[index];
-  if (!product) return;
+function cartItemFromProduct(product, variant = null) {
+  if (variant) {
+    return {
+      id: `${product.id}:${variant.id}`,
+      productId: variant.productId,
+      variantOf: product.id,
+      variantId: variant.id,
+      name: variant.name,
+      price: product.price,
+      category: product.category,
+      image: variant.image || product.image,
+      imageFocusClass: variant.focusClass || "",
+      description: `${variant.name} from the Fish, Crab and Penguin collection.`,
+      quantity: 1,
+      options: { animal: variant.name },
+      availability: "made to order"
+    };
+  }
 
-  cart.push({ ...product, quantity: 1 });
+  return {
+    ...product,
+    productId: product.id,
+    quantity: 1,
+    options: {},
+    availability: "made to order"
+  };
+}
+
+function mergeCartItem(item) {
+  const signature = cartItemSignature(item);
+  const existing = cart.find(cartItem => cartItemSignature(cartItem) === signature);
+  if (existing) {
+    existing.quantity = safeQuantity((existing.quantity || 1) + (item.quantity || 1));
+    return existing;
+  }
+  cart.push(item);
+  return item;
+}
+
+function getSelectedVariantForButton(product, button) {
+  if (!product?.requiresVariantSelection) return null;
+  const card = button?.closest(".product-card, .gallery-card");
+  const select = card?.querySelector(`.product-variant-select[data-product-id="${product.id}"]`);
+  const variant = findProductVariant(product, select?.value);
+  if (!variant) {
+    setCartFeedback("Please choose Fish, Crab, or Penguin before adding to cart.");
+    return null;
+  }
+  return variant;
+}
+
+function addProductToCart(product, button) {
+  if (!product) return;
+  const selectedVariant = getSelectedVariantForButton(product, button);
+  if (product.requiresVariantSelection && !selectedVariant) return;
+
+  const addKey = selectedVariant ? `${product.id}:${selectedVariant.id}` : String(product.id);
+  const now = Date.now();
+  if (lastCartAdd.productId === addKey && now - lastCartAdd.time < 1400) return;
+  if (cartAddLocked) return;
+
+  cartAddLocked = true;
+  lastCartAdd = { productId: addKey, time: now };
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Added to My Request";
+  }
+
+  const addedItem = mergeCartItem(cartItemFromProduct(product, selectedVariant));
   saveCart();
   renderCart();
-  openCart();
-  console.log("Add to cart:", product.name);
+  sessionStorage.setItem(CART_CHECKOUT_FLAG_KEY, "true");
+  setCartFeedback(product.id === 1 ? "Macaw added to your treasure request" : `${addedItem.name} added to your treasure request`);
+  console.log("Add to request:", addedItem.name);
+  const checkoutUrl = new URL("create.html", window.location.href);
+  checkoutUrl.searchParams.set("checkout", "cart");
+  checkoutUrl.hash = "homeDesignBuilder";
+
+  window.setTimeout(() => {
+    cartAddLocked = false;
+    if (button) button.disabled = false;
+    window.location.assign(checkoutUrl.href);
+  }, 550);
+}
+
+function addToCartByProductId(productId, button) {
+  const product = products.find(item => String(item.id) === String(productId));
+  addProductToCart(product, button);
+}
+
+function addToCart(index, button) {
+  addProductToCart(products[index], button);
+}
+
+function syncVariantSelection(select) {
+  if (!select) return;
+  const product = products.find(item => String(item.id) === String(select.dataset.productId));
+  const variant = findProductVariant(product, select.value);
+  const card = select.closest(".product-card, .gallery-card");
+  const button = card?.querySelector(".add-to-cart-btn");
+  const image = card?.querySelector(`[data-product-card-image="${product?.id}"]`);
+
+  if (button) button.disabled = !variant;
+  if (image && product) {
+    image.src = variant?.image || product.image;
+    image.alt = variant ? variant.name : product.name;
+    Array.from(image.classList)
+      .filter(className => className.startsWith("focus-"))
+      .forEach(className => image.classList.remove(className));
+    if (variant?.focusClass) image.classList.add(variant.focusClass);
+  }
 }
 
 function addCustomToCart() {
@@ -327,25 +614,27 @@ function addCustomToCart() {
   const keychain = document.getElementById("keychainType").value;
   const price = calculateCustomPrice();
 
-  // Keep only one custom request in the cart at a time.
-  cart = cart.filter(item => !item.isCustom);
-
-  cart.push({
+  const customItem = {
     isCustom: true,
     name: `Custom ${design}`,
     price,
+    image: "images/custom-idea.jpeg",
     description: `Colours: ${colours}. Name: ${name}. Type: ${keychain}.`,
-    quantity: 1
-  });
+    quantity: 1,
+    availability: "made to order",
+    options: { design, colours, personalizationText: name, hardware: keychain }
+  };
 
+  mergeCartItem(customItem);
   saveCart();
   renderCart();
   openCart();
+  setCartFeedback(`${customItem.name} added to your treasure order`);
 }
 
 function renderCart() {
-  if (!cartCount || !cartItems || !cartTotal) return;
-  cartCount.textContent = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  if (!cartItems || !cartTotal) return;
+  if (cartCount) cartCount.textContent = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
   if (cart.length === 0) {
     cartItems.innerHTML = "<p>Your cart is empty.</p>";
@@ -355,14 +644,17 @@ function renderCart() {
 
   cartItems.innerHTML = cart.map((item, index) => `
     <div class="cart-item">
-      <strong>${item.name}</strong>
-      <p>${item.description}</p>
-      <p>${money(item.price)}</p>
+      ${item.image ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" class="cart-item-image ${escapeHtml(item.imageFocusClass || "")}">` : ""}
+      <strong>${escapeHtml(item.name)}</strong>
+      ${item.id === 1 ? `<span class="badge">Exclusive</span>` : ""}
+      <p>${escapeHtml(item.description)}</p>
+      <p>${escapeHtml(item.availability || "Made to order")} · Quantity: ${item.quantity || 1}</p>
+      <p>${money(item.price * (item.quantity || 1))}</p>
       <button class="remove-btn" data-index="${index}">Remove</button>
     </div>
   `).join("");
 
-  const total = cart.reduce((sum, item) => sum + item.price, 0);
+  const total = calculateCartTotal();
   cartTotal.textContent = money(total);
 }
 
@@ -376,6 +668,59 @@ function clearCart() {
   cart = [];
   localStorage.removeItem("foreverBeadedCart");
   renderCart();
+}
+
+function renderCart() {
+  if (!cartItems || !cartTotal) return;
+  ensureCartActions();
+  if (cartCount) cartCount.textContent = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+
+  if (cart.length === 0) {
+    cartItems.innerHTML = "<p>Your cart is empty.</p>";
+    cartTotal.textContent = money(0);
+    return;
+  }
+
+  cartItems.innerHTML = cart.map((item, index) => `
+    <div class="cart-item">
+      ${item.image ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" class="cart-item-image ${escapeHtml(item.imageFocusClass || "")}">` : ""}
+      <strong>${escapeHtml(item.name)}</strong>
+      ${item.id === 1 ? `<span class="badge">Exclusive</span>` : ""}
+      <p>${escapeHtml(item.description)}</p>
+      ${item.options && Object.keys(item.options).length ? `<p>${escapeHtml(Object.entries(item.options).map(([key, value]) => `${key}: ${value}`).join(" | "))}</p>` : ""}
+      <p>${escapeHtml(item.availability || "Made to order")}</p>
+      <p>Unit price: ${money(item.price)}</p>
+      <div class="cart-quantity-controls" aria-label="Quantity controls for ${escapeHtml(item.name)}">
+        <button class="quantity-btn" type="button" data-cart-action="decrease" data-index="${index}" aria-label="Decrease ${escapeHtml(item.name)} quantity">-</button>
+        <span>Quantity: ${item.quantity || 1}</span>
+        <button class="quantity-btn" type="button" data-cart-action="increase" data-index="${index}" aria-label="Increase ${escapeHtml(item.name)} quantity">+</button>
+      </div>
+      <p>Line total: ${money(item.price * (item.quantity || 1))}</p>
+      <button class="remove-btn" data-index="${index}">Remove</button>
+    </div>
+  `).join("");
+
+  cartTotal.textContent = money(calculateCartTotal());
+}
+
+function updateCartQuantity(index, change) {
+  const item = cart[index];
+  if (!item) return;
+  const nextQuantity = (item.quantity || 1) + change;
+  if (nextQuantity <= 0) {
+    removeFromCart(index);
+    return;
+  }
+  item.quantity = safeQuantity(nextQuantity);
+  saveCart();
+  renderCart();
+}
+
+function clearCart() {
+  cart = [];
+  localStorage.removeItem(CART_STORAGE_KEY);
+  renderCart();
+  setCartFeedback("Your treasure order cart is empty.");
 }
 
 function checkout() {
@@ -631,13 +976,29 @@ function updatePreview() {
 document.addEventListener("click", (event) => {
   const addButton = event.target.closest(".add-to-cart-btn");
   if (addButton) {
-    addToCart(Number(addButton.dataset.index));
+    if (addButton.dataset.productId) {
+      addToCartByProductId(addButton.dataset.productId, addButton);
+    } else {
+      addToCart(Number(addButton.dataset.index), addButton);
+    }
     return;
   }
 
   const removeButton = event.target.closest(".remove-btn");
   if (removeButton) {
     removeFromCart(Number(removeButton.dataset.index));
+    return;
+  }
+
+  const quantityButton = event.target.closest("[data-cart-action]");
+  if (quantityButton) {
+    const change = quantityButton.dataset.cartAction === "increase" ? 1 : -1;
+    updateCartQuantity(Number(quantityButton.dataset.index), change);
+    return;
+  }
+
+  if (event.target.closest("#continueShoppingBtn")) {
+    closeCart();
     return;
   }
 
@@ -661,6 +1022,13 @@ document.addEventListener("click", (event) => {
 
   if (event.target === fbModal || event.target === fbModalOk) {
     closeForeverBeadedMessage();
+  }
+});
+
+document.addEventListener("change", (event) => {
+  const variantSelect = event.target.closest(".product-variant-select");
+  if (variantSelect) {
+    syncVariantSelection(variantSelect);
   }
 });
 
@@ -703,6 +1071,7 @@ function centsDisplay(cents, currency = "CAD") {
 }
 
 function productIdForOrderItem(item) {
+  if (item.productId && !/^\d+$/.test(String(item.productId))) return String(item.productId);
   const legacyMap = {
     1: "macaw",
     2: "butterfly",
@@ -736,18 +1105,6 @@ function productIdForOrderItem(item) {
   if (design.includes("pencil")) return "pencil";
   if (design.includes("cross")) return "cross";
   return "custom-idea";
-}
-
-function customerDetailsFromPrompt() {
-  const customerName = window.prompt("Name for your order:");
-  if (customerName === null) return null;
-  const email = window.prompt("Email for your order confirmation:");
-  if (email === null) return null;
-  const shippingAddress = window.prompt("Shipping address, or leave blank if you will arrange pickup:");
-  if (shippingAddress === null) return null;
-  const phone = window.prompt("Phone number, optional:") || "";
-  const notes = window.prompt("Order notes, optional:") || "";
-  return { customerName, email, shippingAddress, phone, notes };
 }
 
 async function saveOrderToDatabase(orderItems, customerDetails) {
@@ -798,36 +1155,19 @@ async function buyNow() {
     return;
   }
 
-  const orderItems = cart.map(item => ({ ...item }));
-  const customerDetails = customerDetailsFromPrompt();
-  if (!customerDetails) return;
-  if (!customerDetails.customerName.trim() || !customerDetails.email.trim()) {
-    showForeverBeadedMessage("Please enter your name and a valid email address before submitting your order.");
-    return;
-  }
-
   const button = document.getElementById("buyNowBtn");
   if (button) {
     button.disabled = true;
-    button.textContent = "Submitting...";
+    button.textContent = "Opening checkout...";
   }
 
-  try {
-    const data = await saveOrderToDatabase(orderItems, customerDetails);
-    cart = [];
-    localStorage.removeItem("foreverBeadedCart");
-    renderCart();
-    if (cartPanel) cartPanel.classList.remove("open");
-
-    showForeverBeadedMessage(`Thank you for your order.\n\nOrder number: ${data.orderNumber}\nTotal: ${centsDisplay(data.total, data.currency)}\n\nPlease send your Interac e-Transfer to:\n${data.etransferEmail}\n\nInclude your order number in the e-transfer message.\n\nYour treasure will begin after payment has been received and verified.`);
-  } catch (error) {
-    showForeverBeadedMessage("Your order could not be submitted right now. Please try again, or contact Forever Beaded at foreverbeaded1@gmail.com.");
-  } finally {
-    if (button) {
-      button.disabled = false;
-      button.textContent = "Order by E-transfer";
-    }
-  }
+  saveCart();
+  sessionStorage.setItem(CART_CHECKOUT_FLAG_KEY, "true");
+  closeCart();
+  const checkoutUrl = new URL("create.html", window.location.href);
+  checkoutUrl.searchParams.set("checkout", "cart");
+  checkoutUrl.hash = "homeDesignBuilder";
+  window.location.assign(checkoutUrl.href);
 }
 
 if (menuBtn) {
@@ -841,7 +1181,7 @@ if (cartBtn) cartBtn.addEventListener("click", openCart);
 const closeCartBtn = document.getElementById("closeCart");
 if (closeCartBtn) {
   closeCartBtn.addEventListener("click", () => {
-    if (cartPanel) cartPanel.classList.remove("open");
+    closeCart();
   });
 }
 

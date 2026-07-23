@@ -39,6 +39,21 @@
     }
   };
 
+  const setupExclusiveProductLinks = () => {
+    document.querySelectorAll("[data-exclusive-product='macaw']").forEach((element) => {
+      element.addEventListener("click", (event) => {
+        if (event.target.closest("a")) return;
+        window.location.href = "create.html?design=macaw#homeDesignBuilder";
+      });
+      element.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        if (event.target.closest("a")) return;
+        event.preventDefault();
+        window.location.href = "create.html?design=macaw#homeDesignBuilder";
+      });
+    });
+  };
+
   const setupBackToTop = () => {
     let button = document.getElementById("backToTop");
     if (!button) {
@@ -135,16 +150,26 @@
       previewPattern: Array.isArray(product?.previewPattern) ? product.previewPattern : null,
       defaultColours: Array.isArray(product?.defaultColours) ? product.defaultColours : ["purple", "cream", "gold"],
       basePrice,
-      basePriceCents: Number(product?.basePriceCents ?? basePrice)
+      basePriceCents: Number(product?.basePriceCents ?? basePrice),
+      active: product?.active !== false,
+      disabledReason: String(product?.disabledReason || "").trim(),
+      photoFocusClass: String(product?.photoFocusClass || "").trim()
     };
   };
 
   let productCatalogue = (window.FOREVER_BEADED_PRODUCTS || [])
     .map(normalizeProductRecord)
-    .filter(product => product && product.active !== false && product.slug && product.referenceImageUrl)
+    .filter(product => product && product.slug)
     .sort((a, b) => (Number(a.sortOrder) || 0) - (Number(b.sortOrder) || 0));
 
-  let fallbackProduct = productCatalogue.find(product => product.slug === "butterfly") || productCatalogue[0] || null;
+  productCatalogue = Array.from(new Map(productCatalogue.map(product => [product.slug, product])).values());
+
+  const isSelectableProduct = (product) => product?.active !== false && Number(product?.basePriceCents || product?.basePrice || 0) > 0;
+
+  let fallbackProduct = productCatalogue.find(product => product.slug === "butterfly" && isSelectableProduct(product))
+    || productCatalogue.find(isSelectableProduct)
+    || productCatalogue[0]
+    || null;
 
   const getSelectedProduct = () => {
     const designDropdown = document.getElementById("homeTreasureDesign");
@@ -162,7 +187,9 @@
       placeholderTarget.classList.remove("image-missing");
     }
     if (!url) {
+      image.dataset.designPhotoUrl = "";
       image.removeAttribute("src");
+      image.hidden = true;
       image.alt = `${product.name} image coming soon`;
       if (placeholderTarget) {
         placeholderTarget.dataset.placeholder = `${product.name} image coming soon`;
@@ -170,9 +197,18 @@
       }
       return;
     }
-    image.hidden = false;
+    image.dataset.designPhotoUrl = url;
+    image.hidden = true;
+    image.removeAttribute("src");
+    image.onload = () => {
+      if (image.dataset.designPhotoUrl === url) {
+        image.hidden = false;
+      }
+    };
     image.onerror = () => {
+      if (image.dataset.designPhotoUrl !== url) return;
       image.removeAttribute("src");
+      image.hidden = true;
       image.alt = `${product.name} image coming soon`;
       if (placeholderTarget) {
         placeholderTarget.dataset.placeholder = `${product.name} image coming soon`;
@@ -186,10 +222,50 @@
   const updateProductImages = (product) => {
     const referenceImage = document.getElementById("homeReferenceImage");
     const referenceFrame = referenceImage?.closest(".workspace-photo-primary");
+    const selectedPhoto = document.getElementById("homeSelectedProductPhoto");
+    const selectedFrame = selectedPhoto?.closest(".home-selected-product-photo");
     if (!product) return;
 
-    const referenceUrl = product.referenceImageUrl || product.imageUrl;
-    setProductImage(referenceImage, referenceFrame, product, referenceUrl, "reference image");
+    const designPhotoUrl = product.referenceImageUrl || product.imageUrl;
+    setProductImage(referenceImage, referenceFrame, product, designPhotoUrl, "reference image");
+    setProductImage(selectedPhoto, selectedFrame, product, designPhotoUrl, "product photo");
+
+    [referenceFrame, selectedFrame].forEach((frame) => {
+      if (!frame) return;
+      Array.from(frame.classList)
+        .filter(className => className.startsWith("focus-"))
+        .forEach(className => frame.classList.remove(className));
+      if (product.photoFocusClass) frame.classList.add(product.photoFocusClass);
+    });
+  };
+
+  const hardwareToneClass = (hardware) => (
+    String(hardware || "").trim().toLowerCase() === "silver" ? "silver" : "gold"
+  );
+
+  const hardwareMarkup = (hardware) => `
+    <span class="preview-hardware preview-hardware-${hardwareToneClass(hardware)}" aria-hidden="true">
+      <span class="preview-hardware-ring"></span>
+      <span class="preview-hardware-link"></span>
+      <span class="preview-hardware-clasp"></span>
+    </span>`;
+
+  const currentHardwareValue = () => document.getElementById("homeTreasureHardware")?.value || "Gold";
+
+  const syncHardwarePreviewSample = () => {
+    const sample = document.getElementById("homeHardwarePreviewSample");
+    const text = document.getElementById("homeHardwarePreviewText");
+    const hardware = currentHardwareValue();
+    const tone = hardwareToneClass(hardware);
+    if (sample) {
+      sample.className = `hardware-preview-sample has-${tone}-hardware`;
+      sample.innerHTML = hardwareMarkup(hardware);
+    }
+    if (text) {
+      text.textContent = tone === "silver"
+        ? "Silver ring and clasp sample"
+        : "Gold ring and clasp sample";
+    }
   };
 
   const renderColourSwatches = (preview, colours) => {
@@ -209,7 +285,7 @@
 
     if (!Array.isArray(pattern) || !pattern.length) {
       preview.classList.add("preview-coming-soon");
-      preview.textContent = `${product?.name || "This design"} colour preview coming soon`;
+      preview.innerHTML = `<span>${product?.name || "This design"} colour preview coming soon</span>`;
       return;
     }
 
@@ -231,17 +307,62 @@
     const select = document.getElementById("homeTreasureDesign");
     if (!select || !productCatalogue.length) return;
     const currentValue = select.value;
-    select.innerHTML = productCatalogue.map(product => (
-      `<option value="${product.slug}">${product.name}</option>`
-    )).join("");
-    const currentProduct = productCatalogue.find(product => product.slug === currentValue);
-    select.value = currentProduct?.slug || fallbackProduct?.slug || productCatalogue[0].slug;
+    select.innerHTML = productCatalogue.map((product) => {
+      const disabled = !isSelectableProduct(product);
+      const note = disabled ? ` — ${product.disabledReason || "coming soon"}` : "";
+      return `<option value="${product.slug}"${disabled ? " disabled" : ""}>${product.name}${note}</option>`;
+    }).join("");
+    const currentProduct = productCatalogue.find(product => product.slug === currentValue && isSelectableProduct(product));
+    select.value = currentProduct?.slug || fallbackProduct?.slug || productCatalogue.find(isSelectableProduct)?.slug || productCatalogue[0].slug;
+  };
+
+  const requestedDesignSlug = () => {
+    const params = new URLSearchParams(window.location.search);
+    const requested = String(params.get("design") || params.get("product") || "").trim().toLowerCase();
+    return productCatalogue.some(product => product.slug === requested && isSelectableProduct(product)) ? requested : "";
+  };
+
+  const applyRequestedDesignSelection = () => {
+    const requested = requestedDesignSlug();
+    const select = document.getElementById("homeTreasureDesign");
+    if (!requested || !select || select.value === requested) return false;
+    select.value = requested;
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    return true;
+  };
+
+  const scrollToRequestedDesign = () => {
+    if (!requestedDesignSlug()) return;
+    const target = document.getElementById("homeDesignBuilder");
+    if (!target) return;
+    window.requestAnimationFrame(() => {
+      target.scrollIntoView({
+        block: "start",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
+      });
+      document.getElementById("homeTreasureDesign")?.focus({ preventScroll: true });
+    });
+  };
+
+  const normalizePersonalizationTextInput = () => {
+    const input = document.getElementById("homePersonalizationText");
+    if (!input) return "";
+    const upper = input.value.toUpperCase();
+    if (input.value !== upper) {
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      input.value = upper;
+      if (document.activeElement === input && start != null && end != null) {
+        input.setSelectionRange(start, end);
+      }
+    }
+    return input.value.trim();
   };
 
   const getPersonalizationState = () => {
     const enabled = document.getElementById("homePersonalizationEnabled")?.value === "yes";
     const type = enabled ? (document.getElementById("homePersonalizationKind")?.value || "name") : "none";
-    const text = document.getElementById("homePersonalizationText")?.value.trim() || "";
+    const text = normalizePersonalizationTextInput();
     if (type === "name") {
       return { type, text, phrase: text ? `personalized for ${text}` : "personalized for" };
     }
@@ -325,6 +446,7 @@
     const previewPersonalization = document.getElementById("homeTreasurePreviewPersonalization");
     updateProductImages(product);
     renderBeadPattern(preview, product, colours);
+    syncHardwarePreviewSample();
 
     if (previewTitle) {
       previewTitle.textContent = isCustomProduct(product)
@@ -449,6 +571,8 @@
   let previousBodyOverflow = "";
   let addressConfirmed = false;
   let activeTreasureOrder = null;
+  const CART_STORAGE_KEY = "foreverBeadedCart";
+  const CART_CHECKOUT_FLAG_KEY = "foreverBeadedCartCheckout";
 
   const toTitleCase = (value) => value
     .toLowerCase()
@@ -639,7 +763,7 @@
       .success-butterfly {
         width: var(--size, 74px);
         height: auto;
-        filter: saturate(1.18) brightness(1.12) drop-shadow(0 8px 14px rgba(0,0,0,.28));
+        filter: sepia(.08) saturate(1.06) contrast(.9) brightness(1.18) drop-shadow(0 8px 14px rgba(54,32,18,.18));
         opacity: 0;
         animation: successButterflyDrift var(--duration, 4.6s) cubic-bezier(.32,.02,.22,1) var(--delay, 0s) forwards;
       }
@@ -1234,6 +1358,280 @@
     return true;
   };
 
+  const cartCheckoutRequested = () => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("checkout") === "cart" || sessionStorage.getItem(CART_CHECKOUT_FLAG_KEY) === "true";
+  };
+
+  let selectedRequestIndex = -1;
+
+  const legacyCartIdToSlug = {
+    1: "macaw",
+    2: "natalies-butterfly",
+    3: "butterfly",
+    5: "flower",
+    6: "big-flower",
+    7: "deluxe-flower",
+    8: "butterfly-with-flowers",
+    9: "gecko",
+    13: "soccer-ball",
+    14: "turtle",
+    15: "octopus",
+    17: "pencil",
+    19: "cross"
+  };
+
+  const productBySlug = (slug) => productCatalogue.find(product => product.slug === slug) || null;
+
+  const trustedProductSlugFromCartItem = (item) => {
+    if (item?.productId && !/^\d+$/.test(String(item.productId))) return String(item.productId);
+    const numericId = String(item?.productId || item?.id || "").split(":")[0];
+    if (legacyCartIdToSlug[numericId]) return legacyCartIdToSlug[numericId];
+    const name = String(item?.name || item?.description || "").toLowerCase();
+    if (name.includes("natalie")) return "natalies-butterfly";
+    if (name.includes("macaw")) return "macaw";
+    if (name.includes("butterfly") && name.includes("flower")) return "butterfly-with-flowers";
+    if (name.includes("big") && name.includes("flower")) return "big-flower";
+    if ((name.includes("deluxe") || name.includes("intricated")) && name.includes("flower")) return "deluxe-flower";
+    if (name.includes("butterfly")) return "butterfly";
+    if (name.includes("gecko")) return "gecko";
+    if (name.includes("flower")) return "flower";
+    if (name.includes("turtle")) return "turtle";
+    if (name.includes("fish")) return "fish";
+    if (name.includes("crab")) return "crab";
+    if (name.includes("penguin")) return "penguin";
+    if (name.includes("octopus")) return "octopus";
+    if (name.includes("soccer")) return "soccer-ball";
+    if (name.includes("pencil")) return "pencil";
+    if (name.includes("cross")) return "cross";
+    return "custom-idea";
+  };
+
+  const normalizeRequestItem = (item) => {
+    const options = item?.options && typeof item.options === "object" ? item.options : {};
+    const productId = trustedProductSlugFromCartItem(item);
+    const product = productBySlug(productId);
+    const personalizationText = String(item?.personalizationText || item?.personalization || options.personalizationText || "").trim();
+    const personalizationType = String(item?.personalizationType || options.personalizationType || (personalizationText ? "name" : "none")).trim().toLowerCase();
+    const quantity = Math.max(1, Number.parseInt(item?.quantity, 10) || 1);
+    const unitPriceCents = Number.isFinite(Number(item?.unitPriceCents))
+      ? Math.max(0, Math.round(Number(item.unitPriceCents)))
+      : Number.isFinite(Number(item?.price))
+        ? Math.max(0, Math.round(Number(item.price) * 100))
+        : Math.max(0, Math.round(Number(product?.basePriceCents || product?.basePrice || 0)));
+    const design = String(item?.name || product?.name || "Custom Idea").trim();
+    const image = String(item?.image || product?.referenceImageUrl || product?.imageUrl || "").trim();
+    return {
+      productId,
+      product,
+      design,
+      image,
+      imageFocusClass: String(item?.imageFocusClass || product?.photoFocusClass || "").trim(),
+      colours: String(item?.colours || item?.colors || options.colours || options.colors || "").trim(),
+      hardware: String(item?.hardware || item?.keychainType || options.hardware || options.keychainType || "").trim(),
+      personalization: personalizationText,
+      personalizationType: personalizationType === "initials" || personalizationType === "name" ? personalizationType : "none",
+      personalizationText,
+      customDescription: String(item?.customDescription || (item?.isCustom ? item?.description : "") || "").trim(),
+      quantity,
+      unitPriceCents,
+      lineTotalCents: unitPriceCents * quantity
+    };
+  };
+
+  const loadStoredRequestItems = () => {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || "[]");
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map(normalizeRequestItem).filter(item => item.productId && item.design && item.quantity > 0);
+    } catch (error) {
+      console.error("[checkout] Could not load cart checkout items", error);
+      return [];
+    }
+  };
+
+  const saveStoredRequestItems = (items) => {
+    const normalized = items.map((item) => ({
+      productId: item.productId,
+      name: item.design,
+      price: item.unitPriceCents / 100,
+      image: item.image,
+      imageFocusClass: item.imageFocusClass,
+      quantity: item.quantity,
+      options: {
+        colours: item.colours,
+        hardware: item.hardware,
+        personalizationType: item.personalizationType,
+        personalizationText: item.personalizationText
+      },
+      customDescription: item.customDescription,
+      availability: "made to order"
+    }));
+    if (normalized.length) {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(normalized));
+    } else {
+      localStorage.removeItem(CART_STORAGE_KEY);
+      sessionStorage.removeItem(CART_CHECKOUT_FLAG_KEY);
+    }
+  };
+
+  const checkoutCartItems = () => loadStoredRequestItems().map((item) => ({
+    productId: item.productId,
+    design: item.design,
+    colours: item.colours,
+    hardware: item.hardware,
+    personalization: item.personalizationText,
+    personalizationType: item.personalizationType,
+    personalizationText: item.personalizationText,
+    customDescription: item.customDescription,
+    quantity: item.quantity
+  }));
+
+  const renderTreasureRequestSummary = () => {
+    const summary = document.getElementById("treasureRequestSummary");
+    const itemsWrap = document.getElementById("treasureRequestItems");
+    const totals = document.getElementById("treasureRequestTotals");
+    if (!summary || !itemsWrap || !totals) return;
+
+    const items = loadStoredRequestItems();
+    summary.hidden = items.length === 0;
+    if (!items.length) {
+      itemsWrap.innerHTML = "";
+      totals.textContent = "";
+      selectedRequestIndex = -1;
+      return;
+    }
+
+    if (selectedRequestIndex >= items.length) selectedRequestIndex = items.length - 1;
+    const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+    const totalCents = items.reduce((sum, item) => sum + item.lineTotalCents, 0);
+    itemsWrap.innerHTML = items.map((item, index) => {
+      const personalization = item.personalizationType !== "none" && item.personalizationText
+        ? `${titleCase(item.personalizationType)}: ${item.personalizationText}`
+        : "No personalization";
+      const options = [
+        item.colours ? `Colours: ${item.colours}` : "",
+        item.hardware ? `Hardware: ${item.hardware}` : "",
+        personalization
+      ].filter(Boolean).join(" | ");
+      const thumbClasses = ["treasure-request-thumb", item.imageFocusClass].filter(Boolean).join(" ");
+      const thumb = item.image
+        ? `<span class="${escapeHtml(thumbClasses)}"><img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.design)} photo"></span>`
+        : `<span class="treasure-request-thumb image-missing" data-placeholder="${escapeHtml(item.design)} image coming soon"></span>`;
+      return `
+        <article class="treasure-request-item${index === selectedRequestIndex ? " is-selected" : ""}" data-request-index="${index}">
+          ${thumb}
+          <div>
+            <strong class="treasure-request-name">${escapeHtml(item.design)}</strong>
+            <p class="treasure-request-meta">${escapeHtml(options)}</p>
+            <p class="treasure-request-price">Unit price: ${formatCents(item.unitPriceCents)} | Line total: ${formatCents(item.lineTotalCents)}</p>
+          </div>
+          <div class="treasure-request-controls">
+            <div class="treasure-request-quantity" aria-label="Quantity controls for ${escapeHtml(item.design)}">
+              <button type="button" data-request-action="decrease" data-request-index="${index}" aria-label="Decrease ${escapeHtml(item.design)} quantity">-</button>
+              <span>${item.quantity}</span>
+              <button type="button" data-request-action="increase" data-request-index="${index}" aria-label="Increase ${escapeHtml(item.design)} quantity">+</button>
+            </div>
+            <button class="treasure-request-remove" type="button" data-request-action="remove" data-request-index="${index}">Remove</button>
+          </div>
+        </article>
+      `;
+    }).join("");
+    totals.textContent = `${totalQuantity} item${totalQuantity === 1 ? "" : "s"} in this request | Combined total: ${formatCents(totalCents)}`;
+  };
+
+  const applyRequestItemToBuilder = (index) => {
+    const items = loadStoredRequestItems();
+    const item = items[index];
+    if (!item) return;
+    selectedRequestIndex = index;
+    const product = item.product || productBySlug(item.productId);
+    const design = document.getElementById("homeTreasureDesign");
+    const colours = document.getElementById("homeTreasureColours");
+    const hardware = document.getElementById("homeTreasureHardware");
+    const quantity = document.getElementById("homeTreasureQuantity");
+    const personalizationEnabled = document.getElementById("homePersonalizationEnabled");
+    const personalizationKind = document.getElementById("homePersonalizationKind");
+    const personalizationText = document.getElementById("homePersonalizationText");
+    const customDescription = document.getElementById("homeCustomDescription");
+
+    if (design && product?.slug) design.value = product.slug;
+    if (!product && item.productId) {
+      console.warn("[checkout] Missing product catalogue record for request item", item.productId);
+    }
+    if (colours) colours.value = item.colours || (product?.defaultColours || ["Purple", "Cream", "Gold"]).join(", ");
+    if (hardware) hardware.value = item.hardware || "Gold";
+    if (quantity) quantity.value = String(item.quantity || 1);
+    if (personalizationEnabled) personalizationEnabled.value = item.personalizationType !== "none" && item.personalizationText ? "yes" : "no";
+    if (personalizationKind) personalizationKind.value = item.personalizationType === "initials" ? "initials" : "name";
+    if (personalizationText) personalizationText.value = item.personalizationText || "";
+    if (customDescription) customDescription.value = item.customDescription || "";
+
+    syncCustomDescriptionField();
+    syncPersonalizationField();
+    renderHomeTreasurePreview();
+    if (item.image) {
+      const imageProduct = {
+        name: item.design,
+        photoFocusClass: item.imageFocusClass
+      };
+      const referenceImage = document.getElementById("homeReferenceImage");
+      const referenceFrame = referenceImage?.closest(".workspace-photo-primary");
+      const selectedPhoto = document.getElementById("homeSelectedProductPhoto");
+      const selectedFrame = selectedPhoto?.closest(".home-selected-product-photo");
+      setProductImage(referenceImage, referenceFrame, imageProduct, item.image, "reference image");
+      setProductImage(selectedPhoto, selectedFrame, imageProduct, item.image, "product photo");
+      [referenceFrame, selectedFrame].forEach((frame) => {
+        if (!frame) return;
+        Array.from(frame.classList)
+          .filter(className => className.startsWith("focus-"))
+          .forEach(className => frame.classList.remove(className));
+        if (item.imageFocusClass) frame.classList.add(item.imageFocusClass);
+      });
+    }
+    renderTreasureRequestSummary();
+  };
+
+  const setupTreasureRequestSummary = () => {
+    const summary = document.getElementById("treasureRequestSummary");
+    if (!summary || summary.dataset.ready === "true") return;
+    summary.dataset.ready = "true";
+    summary.addEventListener("click", (event) => {
+      const actionButton = event.target.closest("[data-request-action]");
+      const itemCard = event.target.closest(".treasure-request-item");
+      const index = Number.parseInt((actionButton || itemCard)?.dataset.requestIndex, 10);
+      if (!Number.isInteger(index)) return;
+
+      const items = loadStoredRequestItems();
+      const item = items[index];
+      if (!item) return;
+
+      if (actionButton) {
+        const action = actionButton.dataset.requestAction;
+        if (action === "increase") {
+          item.quantity += 1;
+        } else if (action === "decrease") {
+          item.quantity -= 1;
+        } else if (action === "remove") {
+          items.splice(index, 1);
+          selectedRequestIndex = Math.min(selectedRequestIndex, items.length - 1);
+          saveStoredRequestItems(items);
+          renderTreasureRequestSummary();
+          return;
+        }
+        if (item.quantity <= 0) {
+          items.splice(index, 1);
+        }
+        saveStoredRequestItems(items);
+        renderTreasureRequestSummary();
+        return;
+      }
+
+      applyRequestItemToBuilder(index);
+    });
+    renderTreasureRequestSummary();
+  };
+
   const buildHomeTreasureOrder = (confirmedAddress) => {
     checkoutTrace("Building order payload");
     const product = getSelectedProduct();
@@ -1244,6 +1642,19 @@
     const personalization = getPersonalizationState();
     const customDescription = isCustomProduct(product) ? (document.getElementById("homeCustomDescription")?.value.trim() || "") : "";
     const address = confirmedAddress || validateAndNormalizeAddress();
+
+    const cartItems = checkoutCartItems();
+    const orderItems = cartItems.length ? cartItems : [{
+      productId: product?.slug || "custom-idea",
+      design,
+      colours,
+      hardware,
+      personalization: personalization.text,
+      personalizationType: personalization.type,
+      personalizationText: personalization.text,
+      customDescription,
+      quantity
+    }];
 
     return {
       customer: {
@@ -1263,17 +1674,7 @@
       },
       notes: "",
       website: document.getElementById("homeOrderWebsite")?.value || "",
-      items: [{
-        productId: product?.slug || "custom-idea",
-        design,
-        colours,
-        hardware,
-        personalization: personalization.text,
-        personalizationType: personalization.type,
-        personalizationText: personalization.text,
-        customDescription,
-        quantity
-      }]
+      items: orderItems
     };
   };
 
@@ -1296,7 +1697,10 @@
     let orderSucceeded = false;
     try {
       const submittedOrder = buildHomeTreasureOrder(confirmedAddress);
-      const extendingOrderNumber = activeTreasureOrder?.orderNumber || "";
+      const storedRequestItems = loadStoredRequestItems();
+      const extendingOrderNumber = activeTreasureOrder?.orderNumber && storedRequestItems.length === 0 && submittedOrder.items.length === 1
+        ? activeTreasureOrder.orderNumber
+        : "";
       const orderApiUrl = extendingOrderNumber
         ? `${API_BASE_URL.replace(/\/$/, "")}/api/orders/${encodeURIComponent(extendingOrderNumber)}/items`
         : `${API_BASE_URL.replace(/\/$/, "")}/api/orders`;
@@ -1311,6 +1715,7 @@
       checkoutTrace("Submitting order to API", {
         orderApiUrl,
         productId: submittedOrder.items?.[0]?.productId,
+        itemCount: submittedOrder.items?.length || 0,
         normalizedAddress: submittedOrder.shipping?.normalizedAddress,
         extendingOrderNumber: extendingOrderNumber || null
       });
@@ -1348,6 +1753,13 @@
         button.disabled = true;
         button.textContent = "Order Received";
       }
+      if (cartCheckoutRequested()) {
+        localStorage.removeItem(CART_STORAGE_KEY);
+        sessionStorage.removeItem(CART_CHECKOUT_FLAG_KEY);
+      } else if (storedRequestItems.length) {
+        localStorage.removeItem(CART_STORAGE_KEY);
+      }
+      renderTreasureRequestSummary();
       checkoutTrace("Checkout complete; success modal displayed");
     } catch (error) {
       console.error("[checkout] Order submission failed", error);
@@ -1372,6 +1784,7 @@
     if (!form) return;
 
     populateDesignOptions();
+    applyRequestedDesignSelection();
     form.addEventListener("input", renderHomeTreasurePreview);
     form.addEventListener("change", () => {
       syncCustomDescriptionField();
@@ -1389,6 +1802,7 @@
       renderHomeTreasurePreview();
     });
     document.getElementById("homePersonalizationText")?.addEventListener("input", () => {
+      normalizePersonalizationTextInput();
       validatePersonalization(false);
       renderHomeTreasurePreview();
     });
@@ -1397,13 +1811,33 @@
       validateCustomDescription();
       renderHomeTreasurePreview();
     });
+    document.getElementById("homeTreasureHardware")?.addEventListener("change", () => {
+      syncHardwarePreviewSample();
+      renderHomeTreasurePreview();
+    });
+    document.getElementById("homeTreasureHardware")?.addEventListener("input", () => {
+      syncHardwarePreviewSample();
+    });
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       beginHomeTreasureOrder(form);
     });
+    setupTreasureRequestSummary();
     syncCustomDescriptionField();
     syncPersonalizationField();
     renderHomeTreasurePreview();
+    const storedRequestItems = loadStoredRequestItems();
+    if (storedRequestItems.length) {
+      applyRequestItemToBuilder(0);
+    }
+    if (cartCheckoutRequested() && storedRequestItems.length) {
+      setOrderStatus("Your cart treasures are ready. Please complete your customer details and shipping address to place one e-Transfer order.");
+      form.scrollIntoView({
+        block: "start",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
+      });
+    }
+    scrollToRequestedDesign();
   };
 
   const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
@@ -1699,6 +2133,7 @@
 
   const setupPage = () => {
     setupBackToTop();
+    setupExclusiveProductLinks();
     setupHomeDesignBuilder();
     setupChapterTwoButterflies();
     setupPageTransitions();

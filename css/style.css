@@ -167,19 +167,38 @@ input, select {
   top: 0;
   right: -420px;
   width: min(420px, 92vw);
-  height: 100vh;
+  height: 100dvh;
   background: white;
-  z-index: 10;
+  z-index: 10050;
   box-shadow: -8px 0 22px rgba(0,0,0,.14);
   padding: 24px;
   transition: .3s ease;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .cart-panel.open { right: 0; }
 
+body.cart-open {
+  overflow: hidden;
+  animation: none !important;
+  transform: none !important;
+  filter: none !important;
+}
+
+body.cart-open::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 10040;
+  background: rgba(18, 8, 24, .62);
+}
+
 .close-btn {
+  position: sticky;
+  top: 0;
   float: right;
+  z-index: 1;
   font-size: 28px;
   padding: 4px 12px;
 }
@@ -187,6 +206,54 @@ input, select {
 .cart-item {
   border-bottom: 1px solid #eee;
   padding: 14px 0;
+}
+
+.cart-feedback {
+  margin: 10px 0 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #fff8e6;
+  color: #6f4d00;
+  font-weight: 800;
+}
+
+.cart-item-image {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 14px;
+  background: #f8f0ff;
+  float: left;
+  margin: 0 12px 8px 0;
+}
+
+.cart-quantity-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: #f8f0ff;
+  font-weight: 800;
+}
+
+.cart-quantity-controls .quantity-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+}
+
+.continue-shopping-btn {
+  width: 100%;
+  margin-top: 10px;
+  background: white;
+  color: var(--purple);
+  border: 2px solid var(--purple);
 }
 
 @media (max-width: 780px) {
@@ -204,6 +271,10 @@ input, select {
 @media (max-width: 480px) {
   .product-grid, .gallery-grid { grid-template-columns: 1fr; }
   .menu-btn { display: block; }
+  .cart-panel {
+    width: min(370px, 96vw);
+    right: min(-370px, -96vw);
+  }
   
 }
 .product-card .product-image {
@@ -511,6 +582,63 @@ body {
 
 .gallery-info button, .product-card button {
   box-shadow: 0 10px 18px rgba(123,75,179,.18);
+}
+
+.product-variant-field {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 12px;
+  color: var(--dark);
+  font-weight: 800;
+  text-align: left;
+}
+
+.product-variant-field span {
+  font-size: .86rem;
+  color: #5d4b68;
+}
+
+.product-variant-select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid rgba(123, 75, 179, .2);
+  border-radius: 14px;
+  padding: 0 12px;
+  background: rgba(255, 255, 255, .94);
+  color: var(--dark);
+  font: inherit;
+}
+
+.product-variant-select:focus-visible {
+  outline: 3px solid rgba(212, 175, 55, .55);
+  outline-offset: 2px;
+}
+
+.product-card button:disabled,
+.gallery-info button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+  transform: none;
+}
+
+.variant-product-image,
+.gallery-image.variant-product-image,
+.cart-item-image.focus-fish,
+.cart-item-image.focus-crab,
+.cart-item-image.focus-penguin {
+  object-fit: cover;
+}
+
+.focus-fish {
+  object-position: 14% center;
+}
+
+.focus-penguin {
+  object-position: 50% center;
+}
+
+.focus-crab {
+  object-position: 86% center;
 }
 
 .contact-card {
@@ -1521,6 +1649,30 @@ nav a:hover{ color:var(--purple); }
   color:var(--purple);
   margin:6px 0;
 }
+
+.site-footer-links {
+  margin-top: 16px;
+}
+
+.site-footer-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 18px;
+  border: 1px solid rgba(131, 85, 35, .22);
+  border-radius: 999px;
+  color: var(--purple);
+  background: rgba(255, 255, 255, .54);
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 10px 22px rgba(91, 55, 125, .1);
+}
+
+.site-footer-links a:focus-visible {
+  outline: 3px solid rgba(214, 168, 79, .72);
+  outline-offset: 3px;
+}
+
 .footer-flourish{
   width:min(440px,84vw);
   margin:0 auto 10px;
@@ -2141,7 +2293,7 @@ img{user-select:none;-webkit-user-drag:none}
   width:clamp(46px,5vw,78px);
   aspect-ratio:206 / 197;
   opacity:.62;
-  filter:drop-shadow(0 12px 12px rgba(47,36,58,.2)) saturate(1.32) contrast(1.08) brightness(1.12);
+  filter:drop-shadow(0 12px 12px rgba(54,32,18,.16)) sepia(.08) saturate(1.08) contrast(.92) brightness(1.18);
   animation:livingButterflyPath 42s cubic-bezier(.44,.02,.48,1) infinite;
 }
 
@@ -2159,15 +2311,15 @@ img{user-select:none;-webkit-user-drag:none}
   width:100%;
   height:100%;
   object-fit:contain;
-  opacity:.94;
-  filter:saturate(1.3) contrast(1.08) brightness(1.12);
+  opacity:.82;
+  filter:sepia(.08) saturate(1.08) contrast(.92) brightness(1.18);
 }
 
 .living-butterfly .monarch-shadow{
   transform:translate(7px,12px) scale(.82);
   border-radius:50%;
-  background:radial-gradient(ellipse,rgba(0,0,0,.28),transparent 68%);
-  opacity:.3;
+  background:radial-gradient(ellipse,rgba(78,48,26,.16),transparent 68%);
+  opacity:.2;
   filter:blur(8px);
 }
 
@@ -2175,7 +2327,8 @@ img{user-select:none;-webkit-user-drag:none}
 .living-butterfly b{
   width:62%;
   background:url("../images/monarch-cover-left-wing.png") center / contain no-repeat;
-  filter:saturate(1.4) contrast(1.12) brightness(1.16);
+  opacity:.88;
+  filter:sepia(.12) saturate(1.06) contrast(.88) brightness(1.2);
   animation:livingWing .68s ease-in-out infinite alternate;
 }
 

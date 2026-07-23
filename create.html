@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/book.css" />
-  <link rel="stylesheet" href="css/garden.css" />
+  <link rel="stylesheet" href="css/garden.css?v=treasure-catalogue-20260717" />
   <link rel="stylesheet" href="css/animations.css" />
 </head>
 <body class="storybook-home storybook-page storybook-page-shell">
@@ -21,6 +21,7 @@
       <a href="treasures.html">Treasures</a>
       <a href="reviews.html">Kind Words</a>
       <a href="maker.html">Meet the Maker</a>
+      <a href="https://foreverbeadedbyglad.etsy.com" target="_blank" rel="noopener noreferrer">Shop on Etsy</a>
       <a class="nav-order" href="create.html" aria-current="page">Create Yours</a>
     </nav>
   </header>
@@ -52,6 +53,17 @@
             <h3>Begin the request.</h3>
             <p>Send Gladlyn a clear starting point. Every custom order is reviewed before payment.</p>
           </div>
+          <section id="treasureRequestSummary" class="treasure-request-summary" aria-labelledby="treasureRequestTitle" hidden>
+            <div class="treasure-request-heading">
+              <div>
+                <span class="panel-label">Your Treasure Request</span>
+                <h3 id="treasureRequestTitle">Your Treasure Request</h3>
+              </div>
+              <a class="request-continue-shopping" href="collections.html">Continue Shopping</a>
+            </div>
+            <div id="treasureRequestItems" class="treasure-request-items"></div>
+            <p id="treasureRequestTotals" class="treasure-request-total"></p>
+          </section>
           <div class="builder-grid">
             <label>Your Name <input id="homeCustomerName" name="customerName" type="text" autocomplete="name" required></label>
             <label>Email <input id="homeCustomerEmail" name="email" type="email" autocomplete="email" required></label>
@@ -89,7 +101,16 @@
           </div>
           <div class="treasure-preview" aria-live="polite">
             <div><span class="preview-label">Live bead preview</span><h4 id="homeTreasurePreviewTitle">Butterfly in purple, cream, and gold</h4><p id="homeTreasurePreviewMeta">Gold hardware, quantity 1, no personalization.</p><p id="homeTreasurePreviewDescription" class="preview-description"></p></div>
-            <div class="home-preview-art-wrap"><div id="homeTreasurePreview" class="home-preview-beads" aria-label="Live bead colour preview"></div><p id="homeTreasurePreviewPersonalization" class="preview-personalization" hidden></p></div>
+            <div class="home-preview-art-wrap">
+              <figure class="home-selected-product-photo"><img id="homeSelectedProductPhoto" alt="Selected treasure product photo" loading="lazy" decoding="async"></figure>
+              <div id="homeTreasurePreview" class="home-preview-beads" aria-label="Live bead colour preview"></div>
+              <aside class="hardware-preview-card" aria-label="Hardware preview">
+                <span class="preview-label">Hardware preview</span>
+                <div id="homeHardwarePreviewSample" class="hardware-preview-sample has-gold-hardware" aria-hidden="true"></div>
+                <p id="homeHardwarePreviewText">Gold ring and clasp sample</p>
+              </aside>
+              <p id="homeTreasurePreviewPersonalization" class="preview-personalization" hidden></p>
+            </div>
           </div>
           <div id="homeOrderStatus" class="cart-payment-note" role="status" aria-live="polite"></div>
           <button id="homeTreasureButton" class="gold-button treasure-submit" type="submit">Create My Treasure</button>
@@ -98,10 +119,10 @@
     </section>
   </main>
 
-<footer class="storybook-footer"><p class="chapter-kicker">The End... for now</p><h2>Forever Beaded</h2><p>Handmade treasures with a story, crafted by Gladlyn.</p><nav aria-label="Footer links"><a href="https://www.instagram.com/foreverbeaded1" target="_blank" rel="noopener noreferrer">Instagram</a><a href="https://www.tiktok.com/@foreverbeaded1" target="_blank" rel="noopener noreferrer">TikTok</a><a href="https://www.etsy.com/shop/foreverbeaded" target="_blank" rel="noopener noreferrer">Etsy</a><a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=foreverbeaded1@gmail.com&amp;su=Forever%20Beaded%20Inquiry" target="_blank" rel="noopener noreferrer">Email</a></nav></footer>
+<footer class="storybook-footer"><p class="chapter-kicker">The End... for now</p><h2>Forever Beaded</h2><p>Handmade treasures with a story, crafted by Gladlyn.</p><nav aria-label="Footer links"><a href="https://www.instagram.com/foreverbeaded1" target="_blank" rel="noopener noreferrer">Instagram</a><a href="https://www.tiktok.com/@foreverbeaded1" target="_blank" rel="noopener noreferrer">TikTok</a><a href="https://foreverbeadedbyglad.etsy.com" target="_blank" rel="noopener noreferrer">Shop on Etsy</a><a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=foreverbeaded1@gmail.com&amp;su=Forever%20Beaded%20Inquiry" target="_blank" rel="noopener noreferrer">Email</a></nav></footer>
   <script src="js/book.js?v=butterfly-refine-20260711"></script>
   <script src="js/butterflies.js?v=butterfly-refine-20260711"></script>
-  <script src="js/product-catalogue.js?v=accurate-patterns-20260712"></script>
-<script src="js/garden.js?v=final-polish-20260716"></script>
+  <script src="js/product-catalogue.js?v=treasure-catalogue-20260717"></script>
+<script src="js/garden.js?v=treasure-catalogue-20260717"></script>
 </body>
 </html>

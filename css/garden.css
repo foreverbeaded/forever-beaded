@@ -593,6 +593,15 @@ body.ambient-nature-active .ambient-nature-layer {
   transition: box-shadow 1.4s ease, border-color 1.4s ease, transform 1.4s ease;
 }
 
+.hero-feature[data-exclusive-product] {
+  cursor: pointer;
+}
+
+.hero-feature[data-exclusive-product]:focus-visible {
+  outline: 2px solid rgba(212, 175, 55, .9);
+  outline-offset: 6px;
+}
+
 .hero-feature::after {
   content: "";
   position: absolute;
@@ -642,8 +651,11 @@ body.ambient-nature-active .ambient-nature-layer {
 .hero-feature img {
   width: 100%;
   aspect-ratio: 1;
+  height: auto;
+  max-height: clamp(148px, 18vw, 220px);
   grid-row: 1 / span 4;
   object-fit: contain;
+  object-position: center;
   padding: 10px;
   border-radius: 6px;
   background: rgba(255, 245, 223, .94);
@@ -703,6 +715,13 @@ body.ambient-nature-active .ambient-nature-layer {
   filter: saturate(.95) contrast(1.05) brightness(.78);
   transform: scale(1.03);
   transition: transform .6s ease, filter .6s ease;
+}
+
+.story-tile[data-exclusive-product] img {
+  object-fit: contain;
+  object-position: center;
+  padding: clamp(18px, 3vw, 34px);
+  background: radial-gradient(circle at center, rgba(255, 245, 223, .88), rgba(49, 24, 55, .78));
 }
 
 .story-tile::before {
@@ -800,7 +819,7 @@ body.ambient-nature-active .ambient-nature-layer {
 
 .photo-collection-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
   gap: 16px;
 }
 
@@ -817,14 +836,15 @@ body.ambient-nature-active .ambient-nature-layer {
 }
 
 .photo-collection-grid a:nth-child(1),
-.photo-collection-grid a:nth-child(6) {
+.photo-collection-grid a:last-child {
   grid-column: span 2;
 }
 
 .photo-collection-grid a:nth-child(2),
 .photo-collection-grid a:nth-child(3),
 .photo-collection-grid a:nth-child(4),
-.photo-collection-grid a:nth-child(5) {
+.photo-collection-grid a:nth-child(5),
+.photo-collection-grid a:nth-child(6) {
   grid-column: span 1;
 }
 
@@ -835,6 +855,14 @@ body.ambient-nature-active .ambient-nature-layer {
   transform: scale(1.02);
   filter: saturate(.94) contrast(1.03);
   transition: transform .45s ease, filter .45s ease;
+}
+
+.photo-collection-grid .photo-collection-macaw-image {
+  object-fit: cover;
+  object-position: 50% 48%;
+  padding: 0;
+  background: #160a1a;
+  transform: scale(1.01);
 }
 
 .photo-collection-grid a::after {
@@ -1239,16 +1267,21 @@ body.intro-active .scroll-monarch-layer {
   transform-origin: 50% 50%;
   transform-style: preserve-3d;
   will-change: transform, opacity, filter;
-  filter: drop-shadow(0 18px 18px rgba(0, 0, 0, .42)) saturate(1.34) contrast(1.1) brightness(1.12);
+  --monarch-body-filter: sepia(.08) saturate(1.08) contrast(.92) brightness(1.18);
+  --monarch-wing-filter: sepia(.12) saturate(1.06) contrast(.88) brightness(1.2);
+  --monarch-wing-opacity: .88;
+  --monarch-highlight-opacity: .42;
+  filter: drop-shadow(0 18px 18px rgba(54, 32, 18, .26)) var(--monarch-body-filter);
 }
 
 .svg-monarch.is-warm-lit {
   filter:
-    drop-shadow(0 18px 18px rgba(0, 0, 0, .34))
-    drop-shadow(0 0 18px rgba(255, 190, 82, .26))
-    saturate(1.42)
-    contrast(1.08)
-    brightness(1.24);
+    drop-shadow(0 18px 18px rgba(54, 32, 18, .2))
+    drop-shadow(0 0 18px rgba(255, 215, 132, .32))
+    sepia(.1)
+    saturate(1.08)
+    contrast(.9)
+    brightness(1.28);
 }
 
 .svg-monarch svg {
@@ -1271,15 +1304,15 @@ body.intro-active .scroll-monarch-layer {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  opacity: .94;
-  filter: contrast(1.08) saturate(1.34) brightness(1.12);
+  opacity: .82;
+  filter: var(--monarch-body-filter);
 }
 
 .svg-monarch .monarch-shadow {
   transform: translate(8px, 14px) scale(.82);
   border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(0, 0, 0, .34), transparent 68%);
-  opacity: .28;
+  background: radial-gradient(ellipse, rgba(78, 48, 26, .18), transparent 68%);
+  opacity: .2;
   filter: blur(8px);
 }
 
@@ -1287,8 +1320,8 @@ body.intro-active .scroll-monarch-layer {
   background-repeat: no-repeat;
   background-size: contain;
   background-position: center;
-  opacity: .98;
-  filter: contrast(1.12) saturate(1.42) brightness(1.16);
+  opacity: var(--monarch-wing-opacity);
+  filter: var(--monarch-wing-filter);
   will-change: transform;
 }
 
@@ -1346,7 +1379,15 @@ body.intro-active .scroll-monarch-layer {
 
 .svg-monarch .left-wing::after,
 .svg-monarch .right-wing::after {
-  content: none;
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 44% 30%, rgba(255, 241, 196, .42), transparent 32%),
+    radial-gradient(ellipse at 62% 66%, rgba(255, 225, 162, .22), transparent 42%);
+  mix-blend-mode: screen;
+  opacity: var(--monarch-highlight-opacity);
+  pointer-events: none;
 }
 
 .svg-monarch .body {
@@ -1378,7 +1419,24 @@ body.intro-active .scroll-monarch-layer {
 .svg-monarch-small,
 .svg-monarch-depth {
   width: clamp(60px, 5.2vw, 82px);
-  filter: drop-shadow(0 14px 12px rgba(0, 0, 0, .34)) saturate(1.28) contrast(1.08) brightness(1.1);
+  filter: drop-shadow(0 14px 12px rgba(54, 32, 18, .2)) var(--monarch-body-filter);
+}
+
+.svg-monarch-flower,
+.scroll-monarch-2 {
+  --monarch-body-filter: sepia(.12) saturate(1.02) contrast(.9) brightness(1.22);
+  --monarch-wing-filter: sepia(.16) saturate(1.02) contrast(.86) brightness(1.24);
+  --monarch-wing-opacity: .84;
+  --monarch-highlight-opacity: .48;
+}
+
+.svg-monarch-depth,
+.svg-monarch-title,
+.scroll-monarch-1 {
+  --monarch-body-filter: sepia(.06) saturate(1.12) contrast(.94) brightness(1.16);
+  --monarch-wing-filter: sepia(.1) saturate(1.1) contrast(.9) brightness(1.18);
+  --monarch-wing-opacity: .9;
+  --monarch-highlight-opacity: .38;
 }
 
 .svg-monarch.is-flying {
@@ -1513,6 +1571,210 @@ body.intro-active .scroll-monarch-layer {
   outline-offset: 2px;
 }
 
+.treasure-request-summary {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid rgba(244, 213, 141, .26);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 88% 18%, rgba(244, 213, 141, .13), transparent 9rem),
+    rgba(255, 255, 255, .055);
+}
+
+.treasure-request-summary[hidden] {
+  display: none;
+}
+
+.treasure-request-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.treasure-request-heading h3 {
+  margin: 6px 0 0;
+  color: var(--gold-light);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(1.8rem, 3.4vw, 2.8rem);
+  line-height: .95;
+}
+
+.request-continue-shopping {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  border: 1px solid rgba(212, 175, 55, .72);
+  border-radius: 999px;
+  color: var(--cream);
+  font-size: .82rem;
+  font-weight: 900;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.request-continue-shopping:hover,
+.request-continue-shopping:focus-visible {
+  background: rgba(212, 175, 55, .18);
+  outline: 2px solid rgba(244, 213, 141, .42);
+  outline-offset: 2px;
+}
+
+.treasure-request-items {
+  display: grid;
+  gap: 12px;
+}
+
+.treasure-request-item {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid rgba(244, 213, 141, .2);
+  border-radius: 8px;
+  background: rgba(5, 2, 8, .28);
+  color: var(--cream);
+  text-align: left;
+}
+
+.treasure-request-item.is-selected {
+  border-color: rgba(212, 175, 55, .72);
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, .18);
+}
+
+.treasure-request-item button {
+  font: inherit;
+}
+
+.treasure-request-thumb {
+  position: relative;
+  width: 78px;
+  height: 78px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(244, 213, 141, .18);
+  border-radius: 8px;
+  background: rgba(4, 1, 7, .54);
+}
+
+.treasure-request-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}
+
+.treasure-request-thumb.image-missing::after {
+  content: attr(data-placeholder);
+  padding: 8px;
+  color: rgba(255, 245, 223, .76);
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  line-height: 1.25;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.treasure-request-thumb.image-missing img {
+  display: none;
+}
+
+.treasure-request-thumb.focus-fish img,
+.treasure-request-thumb.focus-penguin img,
+.treasure-request-thumb.focus-crab img,
+.treasure-request-thumb.focus-lobster img {
+  object-fit: cover;
+}
+
+.treasure-request-thumb.focus-fish img {
+  object-position: 14% center;
+}
+
+.treasure-request-thumb.focus-penguin img {
+  object-position: 50% center;
+}
+
+.treasure-request-thumb.focus-crab img,
+.treasure-request-thumb.focus-lobster img {
+  object-position: 86% center;
+}
+
+.treasure-request-name {
+  display: block;
+  color: var(--gold-light);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.treasure-request-meta,
+.treasure-request-price {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: .86rem;
+  line-height: 1.45;
+}
+
+.treasure-request-controls {
+  display: grid;
+  gap: 9px;
+  justify-items: end;
+}
+
+.treasure-request-quantity {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 4px;
+  border: 1px solid rgba(244, 213, 141, .22);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, .16);
+}
+
+.treasure-request-quantity button,
+.treasure-request-remove {
+  min-width: 34px;
+  min-height: 34px;
+  border: 1px solid rgba(212, 175, 55, .52);
+  border-radius: 999px;
+  background: rgba(212, 175, 55, .12);
+  color: var(--cream);
+  cursor: pointer;
+}
+
+.treasure-request-remove {
+  padding: 0 12px;
+  font-size: .78rem;
+  font-weight: 900;
+}
+
+.treasure-request-quantity button:hover,
+.treasure-request-quantity button:focus-visible,
+.treasure-request-remove:hover,
+.treasure-request-remove:focus-visible {
+  background: var(--antique-gold);
+  color: #1f1026;
+  outline: 2px solid rgba(244, 213, 141, .42);
+  outline-offset: 2px;
+}
+
+.treasure-request-total {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid rgba(244, 213, 141, .18);
+  color: var(--gold-light);
+  font-weight: 900;
+  line-height: 1.5;
+}
+
 .back-to-top {
   position: fixed;
   right: 20px;
@@ -1599,11 +1861,15 @@ body.intro-active .scroll-monarch-layer {
   --home-preview-rows: 7;
   --home-preview-bead-size: 8px;
   --home-preview-gap: 2px;
+  --preview-hardware-main: #d8ad45;
+  --preview-hardware-light: #fff0a8;
+  --preview-hardware-shadow: #8b5f18;
   width: 180px;
   height: 180px;
   max-width: 180px;
   max-height: 180px;
   overflow: hidden;
+  position: relative;
   display: grid;
   grid-template-columns: repeat(var(--home-preview-cols), var(--home-preview-bead-size));
   grid-template-rows: repeat(var(--home-preview-rows), var(--home-preview-bead-size));
@@ -1618,10 +1884,204 @@ body.intro-active .scroll-monarch-layer {
     rgba(4, 1, 7, .48);
 }
 
+.home-preview-beads.has-silver-hardware {
+  --preview-hardware-main: #c7ccd4;
+  --preview-hardware-light: #ffffff;
+  --preview-hardware-shadow: #737b86;
+}
+
+.preview-hardware {
+  position: absolute;
+  top: 13px;
+  left: 50%;
+  z-index: 0;
+  width: 46px;
+  height: 42px;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.preview-hardware-ring,
+.preview-hardware-link,
+.preview-hardware-clasp {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+}
+
+.preview-hardware-ring {
+  inset: 0 5px auto;
+  height: 30px;
+  border: 5px solid var(--preview-hardware-main);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, .82), transparent 22%),
+    radial-gradient(circle at 50% 52%, rgba(4, 1, 7, .58) 0 42%, transparent 43%);
+  box-shadow:
+    inset 2px 2px 4px rgba(255, 255, 255, .38),
+    inset -3px -4px 5px rgba(0, 0, 0, .28),
+    0 3px 8px rgba(0, 0, 0, .26);
+}
+
+.preview-hardware-link {
+  left: 50%;
+  top: 25px;
+  width: 10px;
+  height: 13px;
+  border: 3px solid var(--preview-hardware-light);
+  border-radius: 999px;
+  background: var(--preview-hardware-main);
+  box-shadow: inset -2px -2px 3px var(--preview-hardware-shadow);
+  transform: translateX(-50%);
+}
+
+.preview-hardware-clasp {
+  left: 50%;
+  top: 35px;
+  width: 18px;
+  height: 24px;
+  border-radius: 999px 999px 50% 50%;
+  background:
+    linear-gradient(135deg, var(--preview-hardware-light), var(--preview-hardware-main) 46%, var(--preview-hardware-shadow));
+  box-shadow:
+    inset 2px 2px 4px rgba(255, 255, 255, .42),
+    inset -2px -4px 5px rgba(0, 0, 0, .26),
+    0 4px 9px rgba(0, 0, 0, .22);
+  transform: translateX(-50%);
+}
+
 .home-preview-art-wrap {
   display: grid;
   justify-items: end;
   gap: 10px;
+}
+
+.hardware-preview-card {
+  width: 180px;
+  display: grid;
+  gap: 7px;
+  justify-items: center;
+  padding: 10px;
+  border: 1px solid rgba(244, 213, 141, .2);
+  border-radius: 8px;
+  background: rgba(4, 1, 7, .34);
+  box-sizing: border-box;
+}
+
+.hardware-preview-card p {
+  margin: 0;
+  color: rgba(255, 245, 223, .78);
+  font-size: .72rem;
+  font-weight: 800;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.hardware-preview-sample {
+  --preview-hardware-main: #d8ad45;
+  --preview-hardware-light: #fff0a8;
+  --preview-hardware-shadow: #8b5f18;
+  position: relative;
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 35% 24%, rgba(255, 255, 255, .2), transparent 32%),
+    rgba(255, 255, 255, .055);
+  overflow: hidden;
+}
+
+.hardware-preview-sample.has-silver-hardware {
+  --preview-hardware-main: #c7ccd4;
+  --preview-hardware-light: #ffffff;
+  --preview-hardware-shadow: #737b86;
+}
+
+.hardware-preview-sample .preview-hardware {
+  position: relative;
+  left: auto;
+  top: auto;
+  width: 58px;
+  height: 58px;
+  transform: none;
+}
+
+.hardware-preview-sample .preview-hardware-ring {
+  top: 5px;
+}
+
+.hardware-preview-sample .preview-hardware-link {
+  top: 27px;
+}
+
+.hardware-preview-sample .preview-hardware-clasp {
+  top: 38px;
+}
+
+.home-selected-product-photo {
+  position: relative;
+  width: 180px;
+  height: 140px;
+  margin: 0;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(244, 213, 141, .2);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(255, 245, 223, .08), transparent 68%),
+    rgba(4, 1, 7, .54);
+}
+
+.home-selected-product-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}
+
+.home-selected-product-photo.image-missing img {
+  display: none;
+}
+
+.home-selected-product-photo.image-missing::after {
+  content: attr(data-placeholder);
+  padding: 14px;
+  color: rgba(255, 245, 223, .76);
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  line-height: 1.35;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.home-selected-product-photo.focus-natalies-butterfly img {
+  object-position: 38% center;
+}
+
+.home-selected-product-photo.focus-fish img,
+.home-selected-product-photo.focus-penguin img,
+.home-selected-product-photo.focus-crab img,
+.home-selected-product-photo.focus-lobster img {
+  object-fit: cover;
+}
+
+.home-selected-product-photo.focus-fish img {
+  object-position: 14% center;
+}
+
+.home-selected-product-photo.focus-penguin img {
+  object-position: 50% center;
+}
+
+.home-selected-product-photo.focus-crab img,
+.home-selected-product-photo.focus-lobster img {
+  object-position: 86% center;
 }
 
 .treasure-preview .preview-personalization {
@@ -1637,6 +2097,8 @@ body.intro-active .scroll-monarch-layer {
 
 .home-preview-beads .preview-bead,
 .home-preview-beads .preview-colour-swatch {
+  position: relative;
+  z-index: 1;
   width: var(--home-preview-bead-size);
   aspect-ratio: 1;
   border-radius: 50%;
@@ -1985,7 +2447,7 @@ body.intro-active .scroll-monarch-layer {
   width: 30px;
   height: 22px;
   opacity: 0;
-  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, .28));
+  filter: drop-shadow(0 8px 12px rgba(54, 32, 18, .18)) sepia(.08) saturate(1.06) contrast(.9) brightness(1.16);
   transform-origin: center;
 }
 
@@ -1998,9 +2460,9 @@ body.intro-active .scroll-monarch-layer {
   height: 20px;
   border: 2px solid rgba(19, 10, 14, .92);
   background:
-    radial-gradient(circle at 38% 38%, rgba(255, 238, 176, .5) 0 8%, transparent 9%),
-    linear-gradient(90deg, transparent 46%, rgba(24, 12, 16, .82) 47% 53%, transparent 54%),
-    linear-gradient(155deg, #ffb13a 0 42%, #e96722 43% 70%, #161015 71% 100%);
+    radial-gradient(circle at 38% 38%, rgba(255, 241, 196, .68) 0 10%, transparent 11%),
+    linear-gradient(90deg, transparent 46%, rgba(64, 38, 28, .58) 47% 53%, transparent 54%),
+    linear-gradient(155deg, #ffc15f 0 42%, #ee8238 43% 72%, #473025 73% 100%);
   animation: successWing 420ms ease-in-out infinite alternate;
 }
 
@@ -2459,11 +2921,12 @@ body.intro-active .scroll-monarch-layer {
 
   .photo-collection-grid a,
   .photo-collection-grid a:nth-child(1),
-  .photo-collection-grid a:nth-child(6),
+  .photo-collection-grid a:last-child,
   .photo-collection-grid a:nth-child(2),
   .photo-collection-grid a:nth-child(3),
   .photo-collection-grid a:nth-child(4),
-  .photo-collection-grid a:nth-child(5) {
+  .photo-collection-grid a:nth-child(5),
+  .photo-collection-grid a:nth-child(6) {
     grid-column: span 1;
   }
 
@@ -2569,8 +3032,22 @@ body.intro-active .scroll-monarch-layer {
   }
 
   .builder-grid,
+  .treasure-request-item,
   .treasure-preview {
     grid-template-columns: 1fr;
+  }
+
+  .treasure-request-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .request-continue-shopping {
+    align-self: start;
+  }
+
+  .treasure-request-controls {
+    justify-items: start;
   }
 
   .treasure-preview {
@@ -2588,6 +3065,20 @@ body.intro-active .scroll-monarch-layer {
     justify-self: center;
   }
 
+  .hardware-preview-card {
+    width: 130px;
+  }
+
+  .hardware-preview-sample {
+    width: 62px;
+    height: 62px;
+  }
+
+  .hardware-preview-sample .preview-hardware {
+    width: 52px;
+    height: 52px;
+  }
+
   .home-preview-beads {
     --home-preview-bead-size: 5.5px;
     --home-preview-gap: 1.5px;
@@ -2599,6 +3090,12 @@ body.intro-active .scroll-monarch-layer {
     grid-template-rows: repeat(var(--home-preview-rows), var(--home-preview-bead-size));
     justify-self: center;
     padding: 10px;
+  }
+
+  .home-selected-product-photo {
+    width: 130px;
+    height: 110px;
+    justify-self: center;
   }
 
   .home-preview-beads .preview-bead {

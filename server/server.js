@@ -375,7 +375,7 @@ async function normalizeItem(db, rawItem) {
   const personalizationType = normalizePersonalizationType(rawItem.personalizationType);
   const personalizationText = personalizationType === "none"
     ? ""
-    : normalizeText(rawItem.personalizationText || rawItem.personalization || rawItem.name, personalizationType === "initials" ? 8 : 40, "Personalization", { required: true });
+    : normalizeText(rawItem.personalizationText || rawItem.personalization || rawItem.name, personalizationType === "initials" ? 8 : 40, "Personalization", { required: true }).toUpperCase();
 
   return {
     productId: String(product.id),

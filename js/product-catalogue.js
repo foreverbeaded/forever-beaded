@@ -19,6 +19,32 @@
       ".......bbb.......",
       "........b........"
     ]),
+    fish: patternFromRows([
+      "...aaa.....",
+      ".aaaaaa..c",
+      "aaaaaaa.cc",
+      ".aaaaaa..c",
+      "...aaa....."
+    ]),
+    crab: patternFromRows([
+      "a..a...a..a",
+      ".aa.aaa.aa.",
+      "...aaaaa...",
+      "..aaaaaaa..",
+      "...aaaaa...",
+      ".aa.....aa.",
+      "a.........a"
+    ]),
+    penguin: patternFromRows([
+      "..aaaaa..",
+      ".aabbbaa.",
+      "aabbbbbaa",
+      "aabcccbaa",
+      "aabcccbaa",
+      ".abcccba.",
+      ".aadddaa.",
+      "..ddddd.."
+    ]),
     gecko: patternFromRows([
       ".......aaa.......",
       "......acaca......",
@@ -153,6 +179,18 @@
       "aa..aa..aa..",
       "a...a...a..."
     ]),
+    turtle: patternFromRows([
+      "....aaa....",
+      "...aaaaa...",
+      "..abbbbba..",
+      ".abbbbbba.c",
+      "abbbbbbbbac",
+      ".abbbbbba.c",
+      "..abbbbba..",
+      "...aaaaa...",
+      "..a.....a..",
+      ".a.......a."
+    ]),
     soccerBall: patternFromRows([
       "...aaaaa...",
       "..aabbaa..",
@@ -167,6 +205,23 @@
   };
 
   const products = [
+    {
+      id: 12,
+      slug: "natalies-butterfly",
+      name: "Natalie’s Butterfly",
+      category: "Nature",
+      description: "A distinct handmade butterfly keepsake inspired by Natalie’s colours.",
+      basePriceCents: 2500,
+      basePrice: 2500,
+      imageUrl: "images/natalies-butterfly-mushroom.jpeg",
+      referenceImageUrl: "images/natalies-butterfly-mushroom.jpeg",
+      previewImageUrl: "images/natalies-butterfly-mushroom.jpeg",
+      previewPattern: previewPatterns.butterfly,
+      defaultColours: ["pink", "purple", "orange", "teal"],
+      photoFocusClass: "focus-natalies-butterfly",
+      active: true,
+      sortOrder: 5
+    },
     {
       id: 1,
       slug: "butterfly",
@@ -232,6 +287,22 @@
       sortOrder: 35
     },
     {
+      id: 19,
+      slug: "deluxe-flower",
+      name: "Deluxe Flower",
+      category: "Flower",
+      description: "Intricate handmade beaded flower design.",
+      basePriceCents: 2500,
+      basePrice: 2500,
+      imageUrl: "images/intricated-flower.jpeg",
+      referenceImageUrl: "images/intricated-flower.jpeg",
+      previewImageUrl: "images/intricated-flower.jpeg",
+      previewPattern: previewPatterns.flower,
+      defaultColours: ["purple", "green", "cream"],
+      active: true,
+      sortOrder: 37
+    },
+    {
       id: 4,
       slug: "butterfly-with-flowers",
       name: "Butterfly with Flowers",
@@ -250,7 +321,7 @@
     {
       id: 5,
       slug: "macaw",
-      name: "Macaw",
+      name: "Exclusive Macaw",
       category: "Birds",
       description: "A vibrant Sunset Macaw inspired beaded design.",
       basePriceCents: 4700,
@@ -262,6 +333,76 @@
       defaultColours: ["red", "black", "white", "orange"],
       active: true,
       sortOrder: 50
+    },
+    {
+      id: 13,
+      slug: "fish",
+      name: "Fish",
+      category: "Ocean Animals",
+      description: "Fish design visible in the ocean trio photo.",
+      basePriceCents: 3000,
+      basePrice: 3000,
+      imageUrl: "images/fish-crab-penguin.jpeg",
+      referenceImageUrl: "images/fish-crab-penguin.jpeg",
+      previewImageUrl: "images/fish-crab-penguin.jpeg",
+      previewPattern: previewPatterns.fish,
+      defaultColours: ["pink", "blue", "orange", "teal"],
+      active: true,
+      disabledReason: "",
+      photoFocusClass: "focus-fish",
+      sortOrder: 52
+    },
+    {
+      id: 14,
+      slug: "crab",
+      name: "Crab",
+      category: "Ocean Animals",
+      description: "Crab design visible in the ocean trio photo.",
+      basePriceCents: 3000,
+      basePrice: 3000,
+      imageUrl: "images/fish-crab-penguin.jpeg",
+      referenceImageUrl: "images/fish-crab-penguin.jpeg",
+      previewImageUrl: "images/fish-crab-penguin.jpeg",
+      previewPattern: previewPatterns.crab,
+      defaultColours: ["red", "teal", "white"],
+      active: true,
+      disabledReason: "",
+      photoFocusClass: "focus-crab",
+      sortOrder: 54
+    },
+    {
+      id: 15,
+      slug: "penguin",
+      name: "Penguin",
+      category: "Ocean Animals",
+      description: "Penguin design visible in the ocean trio photo.",
+      basePriceCents: 3000,
+      basePrice: 3000,
+      imageUrl: "images/fish-crab-penguin.jpeg",
+      referenceImageUrl: "images/fish-crab-penguin.jpeg",
+      previewImageUrl: "images/fish-crab-penguin.jpeg",
+      previewPattern: previewPatterns.penguin,
+      defaultColours: ["black", "white", "orange"],
+      active: true,
+      disabledReason: "",
+      photoFocusClass: "focus-penguin",
+      sortOrder: 56
+    },
+    {
+      id: 20,
+      slug: "turtle",
+      name: "Turtle",
+      category: "Ocean Animals",
+      description: "A handmade beaded turtle design.",
+      basePriceCents: 2000,
+      basePrice: 2000,
+      imageUrl: "images/turtle.jpeg",
+      referenceImageUrl: "images/turtle.jpeg",
+      previewImageUrl: "images/turtle.jpeg",
+      previewPattern: previewPatterns.turtle,
+      defaultColours: ["green", "brown", "cream"],
+      active: true,
+      sortOrder: 58
     },
     {
       id: 6,
@@ -342,6 +483,58 @@
       defaultColours: ["purple", "cream", "gold"],
       active: true,
       sortOrder: 100
+    },
+    {
+      id: 16,
+      slug: "mushroom",
+      name: "Mushroom",
+      category: "Nature",
+      description: "Mushroom design price pending confirmation.",
+      basePriceCents: 0,
+      basePrice: 0,
+      imageUrl: "images/natalies-butterfly-mushroom.jpeg",
+      referenceImageUrl: "images/natalies-butterfly-mushroom.jpeg",
+      previewImageUrl: "images/natalies-butterfly-mushroom.jpeg",
+      previewPattern: null,
+      defaultColours: ["red", "cream", "brown"],
+      active: false,
+      disabledReason: "Price pending confirmation",
+      sortOrder: 110
+    },
+    {
+      id: 17,
+      slug: "tiger",
+      name: "Tiger",
+      category: "Animals",
+      description: "Tiger design price and photo pending confirmation.",
+      basePriceCents: 0,
+      basePrice: 0,
+      imageUrl: "",
+      referenceImageUrl: "",
+      previewImageUrl: "",
+      previewPattern: null,
+      defaultColours: ["orange", "black", "white"],
+      active: false,
+      disabledReason: "Photo and price pending confirmation",
+      sortOrder: 120
+    },
+    {
+      id: 18,
+      slug: "lobster",
+      name: "Lobster",
+      category: "Ocean Animals",
+      description: "Lobster design price pending confirmation.",
+      basePriceCents: 0,
+      basePrice: 0,
+      imageUrl: "images/fish-crab-penguin.jpeg",
+      referenceImageUrl: "images/fish-crab-penguin.jpeg",
+      previewImageUrl: "images/fish-crab-penguin.jpeg",
+      previewPattern: null,
+      defaultColours: ["red", "orange", "white"],
+      active: false,
+      disabledReason: "Price pending confirmation",
+      photoFocusClass: "focus-lobster",
+      sortOrder: 130
     }
   ];
 

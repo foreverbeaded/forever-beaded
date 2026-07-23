@@ -18,8 +18,18 @@ async function withServer(options = {}, callback) {
     orderRateLimit: options.orderRateLimit || 20,
     emailSender: options.emailSender
   });
-  const server = await new Promise((resolve) => {
-    const instance = app.listen(0, () => resolve(instance));
+  const server = await new Promise((resolve, reject) => {
+    let attempts = 0;
+    const listen = () => {
+      attempts += 1;
+      const port = 31000 + Math.floor(Math.random() * 10000);
+      const instance = app.listen(port, "127.0.0.1", () => resolve(instance));
+      instance.once("error", (error) => {
+        if (error.code === "EADDRINUSE" && attempts < 20) return listen();
+        return reject(error);
+      });
+    };
+    listen();
   });
   const baseUrl = `http://127.0.0.1:${server.address().port}`;
   try {
@@ -158,7 +168,7 @@ test("adds another treasure to the same order number", async () => {
     assert.equal(thirdBody.success, true);
     assert.equal(thirdBody.orderNumber, firstBody.orderNumber);
     assert.equal(thirdBody.items.length, 3);
-    assert.deepEqual(thirdBody.items.map((item) => item.productName), ["Butterfly", "Gecko", "Macaw"]);
+    assert.deepEqual(thirdBody.items.map((item) => item.productName), ["Butterfly", "Gecko", "Exclusive Macaw"]);
     assert.equal(thirdBody.total, 8700);
 
     const orderCount = await dbGet(app.locals.db, "SELECT COUNT(*) AS count FROM orders WHERE order_number = ?", [firstBody.orderNumber]);
@@ -197,7 +207,7 @@ test("includes customer confirmation email line only when provider accepts email
 test("seeds active products and exposes safe catalogue metadata", async () => {
   await withServer({}, async ({ app, baseUrl }) => {
     const seeded = await dbGet(app.locals.db, "SELECT COUNT(*) AS count FROM products WHERE active = 1");
-    assert.equal(seeded.count, 11);
+    assert.equal(seeded.count, 15);
 
     const response = await fetch(`${baseUrl}/api/products`, {
       headers: { Origin: "https://foreverbeaded.github.io" }
@@ -205,20 +215,28 @@ test("seeds active products and exposes safe catalogue metadata", async () => {
     const body = await response.json();
     assert.equal(response.status, 200);
     assert.equal(body.success, true);
-    assert.equal(body.products.length, 11);
+    assert.equal(body.products.length, 15);
     assert.deepEqual(body.products.map((product) => product.slug), [
+      "natalies-butterfly",
       "butterfly",
       "gecko",
       "flower",
       "big-flower",
       "butterfly-with-flowers",
       "macaw",
+      "fish",
+      "crab",
+      "penguin",
       "cross",
       "pencil",
       "octopus",
       "soccer-ball",
       "custom-idea"
     ]);
+    assert.ok(body.products.some((product) => product.slug === "natalies-butterfly" && product.name === "Natalie’s Butterfly" && product.basePriceCents === 2500 && product.referenceImageUrl === "images/natalies-butterfly-mushroom.jpeg"));
+    assert.ok(body.products.some((product) => product.slug === "fish" && product.name === "Fish" && product.basePriceCents === 3000 && product.referenceImageUrl === "images/fish-crab-penguin.jpeg"));
+    assert.ok(body.products.some((product) => product.slug === "crab" && product.name === "Crab" && product.basePriceCents === 3000 && product.referenceImageUrl === "images/fish-crab-penguin.jpeg"));
+    assert.ok(body.products.some((product) => product.slug === "penguin" && product.name === "Penguin" && product.basePriceCents === 3000 && product.referenceImageUrl === "images/fish-crab-penguin.jpeg"));
     assert.ok(body.products.some((product) => product.id === 10 && product.slug === "custom-idea" && product.referenceImageUrl === "images/both-flowers-side-by-side.jpeg" && product.previewImageUrl === "images/both-flowers-side-by-side.jpeg"));
     assert.ok(body.products.some((product) => product.slug === "gecko" && product.referenceImageUrl === "images/gecko.jpeg" && product.previewImageUrl === "images/gecko.jpeg"));
     assert.ok(body.products.some((product) => product.slug === "big-flower" && product.name === "Big Flower" && product.category === "Flower" && product.basePriceCents === 2000 && product.imageUrl === "images/big-flower.jpeg" && product.referenceImageUrl === "images/big-flower.jpeg" && product.previewImageUrl === "images/big-flower.jpeg"));
@@ -236,8 +254,12 @@ test("seeds active products and exposes safe catalogue metadata", async () => {
 test("seeded product image paths point to existing jpeg assets", () => {
   const products = require("../../js/product-catalogue");
   const expectedMappings = {
+    "natalies-butterfly": "images/natalies-butterfly-mushroom.jpeg",
     gecko: "images/gecko.jpeg",
     macaw: "images/macaw.jpeg",
+    fish: "images/fish-crab-penguin.jpeg",
+    crab: "images/fish-crab-penguin.jpeg",
+    penguin: "images/fish-crab-penguin.jpeg",
     pencil: "images/pencil.jpeg",
     octopus: "images/octopus.jpeg",
     "soccer-ball": "images/soccer-ball.jpeg",
@@ -246,14 +268,22 @@ test("seeded product image paths point to existing jpeg assets", () => {
   };
 
   for (const product of products) {
-    assert.match(product.imageUrl, /^images\/.+\.jpeg$/);
-    assert.ok(fs.existsSync(path.join(__dirname, "..", "..", product.imageUrl)), `${product.name} image is missing at ${product.imageUrl}`);
-    assert.ok(fs.existsSync(path.join(__dirname, "..", "..", product.referenceImageUrl)), `${product.name} reference image is missing at ${product.referenceImageUrl}`);
-    assert.ok(fs.existsSync(path.join(__dirname, "..", "..", product.previewImageUrl)), `${product.name} preview image is missing at ${product.previewImageUrl}`);
+    if (product.imageUrl) {
+      assert.match(product.imageUrl, /^images\/.+\.jpeg$/);
+      assert.ok(fs.existsSync(path.join(__dirname, "..", "..", product.imageUrl)), `${product.name} image is missing at ${product.imageUrl}`);
+    }
+    if (product.referenceImageUrl) {
+      assert.match(product.referenceImageUrl, /^images\/.+\.jpeg$/);
+      assert.ok(fs.existsSync(path.join(__dirname, "..", "..", product.referenceImageUrl)), `${product.name} reference image is missing at ${product.referenceImageUrl}`);
+    }
+    if (product.previewImageUrl) {
+      assert.match(product.previewImageUrl, /^images\/.+\.jpeg$/);
+      assert.ok(fs.existsSync(path.join(__dirname, "..", "..", product.previewImageUrl)), `${product.name} preview image is missing at ${product.previewImageUrl}`);
+    }
     assert.ok(Array.isArray(product.defaultColours), `${product.name} is missing default colours`);
     if (product.slug === "custom-idea") {
       assert.equal(product.previewPattern, null);
-    } else {
+    } else if (product.active !== false) {
       assert.ok(Array.isArray(product.previewPattern) && product.previewPattern.length > 0, `${product.name} is missing a preview pattern`);
     }
     if (expectedMappings[product.slug]) {
@@ -292,6 +322,24 @@ test("accepts product slugs as trusted catalogue lookups", async () => {
     assert.equal(response.status, 200);
     const item = await dbGet(app.locals.db, "SELECT product_id, product_name, unit_price_cents FROM order_items JOIN orders ON orders.id = order_items.order_id WHERE orders.order_number = ?", [body.orderNumber]);
     assert.deepEqual(item, { product_id: "2", product_name: "Gecko", unit_price_cents: 2000 });
+  });
+});
+
+test("accepts Natalie’s Butterfly and ocean animal variants", async () => {
+  await withServer({}, async ({ app, baseUrl }) => {
+    const accepted = await postOrder(baseUrl, validOrder({ items: [{ productId: "natalies-butterfly", quantity: 1, colours: "Pink, Purple, Orange" }] }));
+    const acceptedBody = await accepted.json();
+    assert.equal(accepted.status, 200);
+    assert.equal(acceptedBody.total, 3000);
+    const item = await dbGet(app.locals.db, "SELECT product_id, product_name, unit_price_cents FROM order_items JOIN orders ON orders.id = order_items.order_id WHERE orders.order_number = ?", [acceptedBody.orderNumber]);
+    assert.deepEqual(item, { product_id: "12", product_name: "Natalie’s Butterfly", unit_price_cents: 2500 });
+
+    for (const slug of ["fish", "crab", "penguin"]) {
+      const response = await postOrder(baseUrl, validOrder({ items: [{ productId: slug, quantity: 1 }] }));
+      const body = await response.json();
+      assert.equal(response.status, 200);
+      assert.equal(body.total, 3500);
+    }
   });
 });
 
@@ -364,27 +412,32 @@ test("requires and stores custom idea descriptions with line breaks", async () =
 test("stores personalization type and text with orders", async () => {
   await withServer({}, async ({ app, baseUrl }) => {
     const response = await postOrder(baseUrl, validOrder({
+      customer: {
+        name: "Becky Customer",
+        email: "becky@example.com",
+        phone: "604-555-1212"
+      },
       items: [{
         productId: 1,
         quantity: 1,
         colours: "Purple, Cream, Gold",
         hardware: "Gold",
-        personalizationType: "initials",
-        personalizationText: "B.T."
+        personalizationType: "name",
+        personalizationText: "becky"
       }]
     }));
     const body = await response.json();
     assert.equal(response.status, 200);
-    assert.equal(body.items[0].personalizationType, "initials");
-    assert.equal(body.items[0].personalizationText, "B.T.");
+    assert.equal(body.items[0].personalizationType, "name");
+    assert.equal(body.items[0].personalizationText, "BECKY");
     assert.match(body.message, /^Thank you! Your Forever Beaded order has been received\./);
     assert.doesNotMatch(body.message, /Personalization:/);
 
-    const row = await dbGet(app.locals.db, `SELECT personalization_type, personalization
+    const row = await dbGet(app.locals.db, `SELECT orders.customer_name, personalization_type, personalization
       FROM order_items
       JOIN orders ON orders.id = order_items.order_id
       WHERE orders.order_number = ?`, [body.orderNumber]);
-    assert.deepEqual(row, { personalization_type: "initials", personalization: "B.T." });
+    assert.deepEqual(row, { customer_name: "Becky Customer", personalization_type: "name", personalization: "BECKY" });
   });
 });
 

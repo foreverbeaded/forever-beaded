@@ -1,0 +1,81 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Enchanted Beings at Forever Beaded"><title>Enchanted Beings | Forever Beaded</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/style.css?v=clean-worlds-1"><link rel="stylesheet" href="css/book.css?v=clean-worlds-1"><link rel="stylesheet" href="css/world-pages.css?v=clean-worlds-1">  <link rel="stylesheet" href="css/site-butterflies.css?v=gentle-1">
+  <link rel="stylesheet" href="css/chapter-navigation.css?v=chapter-1">
+  <link rel="stylesheet" href="css/chapter-order-navigation.css?v=chapter-order-2">
+  <link rel="stylesheet" href="css/master-header.css?v=20260731">
+  <style>
+    .world-enchanted {
+      --world-bg: url('../images/enchanted-beings-background.jpg') center/cover no-repeat fixed;
+      --world-overlay: none;
+    }
+    .world-enchanted .world-browser {
+      background: rgba(31, 22, 58, .22) !important;
+      border-color: rgba(235, 224, 255, .34) !important;
+      box-shadow: 0 20px 58px rgba(13, 9, 32, .2) !important;
+      backdrop-filter: blur(3px) !important;
+      -webkit-backdrop-filter: blur(3px) !important;
+    }
+    .world-enchanted .product-grid {
+      width: min(660px, 100%);
+      grid-template-columns: repeat(2, minmax(0, 295px));
+      justify-content: start;
+      gap: 2.4rem;
+      margin-right: auto;
+    }
+    .world-enchanted .product-card {
+      width: 100%;
+      background: rgba(255, 255, 255, .48) !important;
+      border-color: rgba(245, 239, 255, .62) !important;
+      box-shadow: 0 14px 36px rgba(16, 10, 38, .2) !important;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .world-enchanted .product-card-content {
+      background: rgba(255, 255, 255, .26);
+    }
+    @media (max-width: 850px) {
+      .world-enchanted .product-grid {
+        width: 100%;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.4rem;
+      }
+    }
+    @media (max-width: 560px) {
+      .world-enchanted .product-grid {
+        width: min(360px, 100%);
+        grid-template-columns: 1fr;
+        margin-inline: auto;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="css/collection-layout.css?v=stationery-master-1">
+  <style>
+    .world-enchanted .product-grid { justify-content: start !important; justify-items: start !important; margin-left: 0 !important; margin-right: auto !important; }
+    .world-enchanted .product-grid > * { justify-self: start !important; }
+  </style>
+</head><body class="world-page world-enchanted" data-initial-category="Enchanted Beings"><header class="story-header">
+    <a class="story-brand" href="index.html" aria-label="Forever Beaded home">
+      <span>Forever Beaded</span>
+      <small>by Gladlyn</small>
+    </a>
+    <button id="storyMenuButton" class="story-menu-button" type="button" aria-label="Open navigation" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <nav id="storyNav" class="story-nav" aria-label="Main navigation">
+      <a href="collections.html">Collections</a>
+      <a href="treasures.html">Treasures</a>
+      <a href="index.html#chapterOne">Our Story</a>
+      <a href="reviews.html">Kind Words</a>
+      <a href="maker.html">Meet the Maker</a>
+      <a href="https://foreverbeadedbyglad.etsy.com" target="_blank" rel="noopener noreferrer">Shop on Etsy</a>
+      <a class="nav-order" href="create.html">Create Yours</a>
+    </nav>
+  </header><main><section class="world-hero"><div class="world-hero-copy"><p class="world-kicker">Forever Beaded Collection</p><h1>Enchanted Beings</h1><p>Follow the twilight path into a moonlit magical forest where the unicorn belongs.</p></div></section><section class="world-browser" id="shop" aria-label="Browse products"><div class="world-search-row"><input autocomplete="off" id="productSearch" placeholder="Search this treasure world..." type="search"><button class="tiny-link-btn" id="clearShopFilters" type="button">Clear</button></div><div class="shop-results-row"><p id="shopResultsCount">Loading handmade pieces...</p></div><div class="product-grid" id="productGrid"></div></section></main><aside class="cart-panel story-cart" id="cartPanel" aria-hidden="true"><button class="close-btn" id="closeCart" type="button">Close</button><h2>Your Cart</h2><div id="cartItems"></div><h3>Total: <span id="cartTotal">$0 CAD</span></h3><p class="cart-payment-note">Payment is by Canadian e-transfer only. Details will be confirmed by email after your order is reviewed.</p><button id="clearCart" type="button">Clear Cart</button><button id="buyNowBtn" class="checkout-btn" type="button">Order by E-transfer</button></aside><div class="fb-modal story-modal" id="fbModal" aria-hidden="true"><div class="fb-modal-card"><h2 id="fbModalTitle">Forever Beaded</h2><p id="fbModalMessage"></p><button id="fbModalOk" class="primary-btn" type="button">OK</button></div></div><section class="chapter-navigation" aria-label="Next chapter">
+      <a class="chapter-navigation__link" href="flags-of-the-world.html">
+        <span>Next Chapter</span>
+        <strong>Flags of the World</strong>
+      </a>
+      <span class="chapter-navigation__ornament" aria-hidden="true">&#9825;</span>
+    </section><button id="backToTop" class="back-to-top" type="button" aria-label="Back to top">Up</button><script src="js/product-catalogue.js?v=superhero-1"></script><script src="js/app.js?v=superhero-1"></script><script src="js/world-pages.js?v=clean-worlds-1"></script>  <script src="js/site-butterflies.js?v=homepage-book-only-20260731"></script>
+  <script src="js/chapter-order-navigation.js?v=chapter-order-4"></script>
+  <script src="js/master-header.js?v=20260731"></script>
+</body></html>

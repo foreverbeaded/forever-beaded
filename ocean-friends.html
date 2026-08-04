@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Explore handmade Ocean Friends bead products from Forever Beaded.">
+  <title>Ocean Friends | Forever Beaded</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; min-height: 100%; }
+    html {
+      background: #3c432d;
+      scrollbar-color: rgba(55,43,31,.58) transparent;
+    }
+    body {
+      position: relative;
+      isolation: isolate;
+      overflow-x: hidden;
+      font-family: Georgia, "Times New Roman", serif;
+      background-color: #477a8f;
+      background-image: url("images/ocean-friends-background.jpg");
+      background-size: cover;
+      background-position: center top;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+    .story-header {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 50;
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 12px clamp(20px,5vw,78px);
+      background: rgba(20,18,25,.96);
+      border-bottom: 1px solid rgba(214,180,102,.24);
+      box-shadow: 0 8px 28px rgba(0,0,0,.22);
+      color: #f4e8c3;
+    }
+    .story-brand {
+      display: inline-flex;
+      flex-direction: column;
+      color: #e8d49b;
+      text-decoration: none;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .story-brand span { font-size: clamp(20px,2vw,31px); }
+    .story-brand small {
+      margin-top: 4px;
+      font: 600 9px/1.1 Arial,sans-serif;
+      letter-spacing: .28em;
+      text-transform: uppercase;
+    }
+    .story-nav {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: clamp(14px,2vw,30px);
+      font: 700 clamp(11px,.95vw,15px)/1 Arial,sans-serif;
+    }
+    .story-nav a { color: #f2eddc; text-decoration: none; white-space: nowrap; }
+    .story-nav a:hover, .story-nav a:focus-visible { color: #e5c76f; }
+    .story-nav .nav-order {
+      padding: 11px 18px;
+      border: 1px solid rgba(229,199,111,.8);
+      border-radius: 999px;
+      color: #f0d985;
+    }
+    .page-scroll { width: 100%; min-height: 100vh; padding: 118px clamp(12px,2vw,32px) 72px; }
+    .ocean-page { width: min(1040px,100%); margin: 0 auto; }
+    .page-heading {
+      width: min(760px,100%);
+      margin: 0 auto 48px;
+      text-align: center;
+      color: #3f271d;
+      filter: none;
+      backdrop-filter: none;
+      opacity: 1;
+      transform: none;
+      text-shadow: none;
+    }
+    .page-heading h1 {
+      margin: 0 0 22px;
+      font-size: clamp(48px,7vw,96px);
+      font-weight: 500;
+      line-height: .95;
+      letter-spacing: -.035em;
+    }
+    .page-kicker {
+      margin: 0 0 12px;
+      font: 700 12px/1.2 Arial,sans-serif;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+    }
+    .page-subtitle {
+      max-width: 650px;
+      margin: 1rem auto 22px;
+      font-size: 1.05rem;
+      line-height: 1.7;
+    }
+    .collection-title,
+    .collection-subtitle,
+    .page-heading h1,
+    .page-heading .page-subtitle {
+      filter: none;
+      backdrop-filter: none;
+      opacity: 1;
+      transform: none;
+      text-shadow: none;
+      animation: none;
+    }
+    .search-wrap { width: min(620px,100%); margin: 0 auto; }
+    .search-wrap input {
+      width: 100%;
+      min-height: 56px;
+      border: 1px solid rgba(102,69,43,.34);
+      border-radius: 999px;
+      background: rgba(255,249,232,.94);
+      padding: 0 26px;
+      color: #4d3426;
+      font: 500 clamp(15px,1.4vw,18px)/1.2 Arial,sans-serif;
+      box-shadow: 0 12px 32px rgba(36,30,22,.18);
+      outline: none;
+    }
+    .chapter-order-nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      width: min(980px,100%);
+      margin: 24px auto 0;
+    }
+    .chapter-order-nav__link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      padding: 7px 13px;
+      border: 1px solid rgba(77,52,38,.35);
+      border-radius: 999px;
+      background: rgba(255,249,232,.94);
+      box-shadow: 0 5px 15px rgba(36,30,22,.16);
+      color: #432b20;
+      font: 700 12px/1.15 Arial,sans-serif;
+      text-align: center;
+      text-decoration: none;
+    }
+    .chapter-order-nav__link[aria-current="page"] {
+      border-color: #3f271d;
+      background: #4d3426;
+      color: #fff8e6;
+    }
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(3,minmax(0,1fr));
+      column-gap: clamp(18px,2vw,28px);
+      row-gap: clamp(40px,3.5vw,52px);
+      align-items: stretch;
+    }
+    .product-card {
+      position: relative;
+      display: block;
+      width: 100%;
+      min-width: 0;
+      aspect-ratio: 1.48/1;
+      overflow: hidden;
+      border: 5px solid rgba(255,246,218,.92);
+      border-radius: 18px;
+      background: rgba(255,248,227,.93);
+      outline: none;
+      box-shadow: 0 16px 36px rgba(33,38,28,.3), inset 0 0 0 1px rgba(124,87,53,.26);
+      transition: box-shadow .18s ease, transform .18s ease;
+      cursor: pointer;
+    }
+    .product-card:hover, .product-card:focus-visible {
+      box-shadow: 0 0 0 4px rgba(255,250,235,.82), 0 12px 30px rgba(67,40,21,.3);
+      transform: translateY(-5px);
+    }
+    .product-card > img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+      object-position: center;
+      padding: 12px;
+      filter: none;
+      opacity: 1;
+      animation: none;
+      transform: none;
+    }
+    .product-card > h3 {
+      position: absolute;
+      z-index: 2;
+      inset: auto 8% 5%;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      margin: 0;
+      padding: 4px 13px;
+      border: 1px solid rgba(132,91,53,.28);
+      border-radius: 10px;
+      background: rgba(255,246,218,.94);
+      color: #492d1d;
+      font-size: clamp(14px,1.5vw,20px);
+      font-weight: 400;
+      line-height: 1.05;
+      text-align: center;
+      box-shadow: 0 5px 16px rgba(52,39,25,.18);
+      pointer-events: none;
+    }
+    .hero-ocean-friends .product-card-link {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      height: 100% !important;
+    }
+    .hero-ocean-friends .product-card-link img {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    .hero-ocean-friends .product-card .product-name,
+    .hero-ocean-friends .product-card .product-price {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    .product-card > .product-create-request-btn {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: block !important;
+      opacity: 0;
+    }
+    .favourite-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 5;
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: #713b62;
+      font: 700 25px/1 Arial,sans-serif;
+      cursor: pointer;
+      box-shadow: none;
+      text-shadow: 0 1px 3px rgba(255,255,255,.95), 0 1px 5px rgba(0,0,0,.3);
+    }
+    .favourite-btn:hover, .favourite-btn:focus-visible, .favourite-btn.is-saved {
+      background: transparent;
+      color: #7b315f;
+      box-shadow: none;
+    }
+    .shop-results-row { display: none; }
+    .chapter-navigation { position: relative; z-index: 3; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+    @media (max-width: 900px) {
+      .story-header { min-height: 64px; gap: 14px; padding: 10px 14px; }
+      .story-brand span { font-size: 20px; }
+      .story-nav { flex: 1; overflow-x: auto; justify-content: flex-start; gap: 14px; padding-bottom: 3px; }
+      .product-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    }
+    @media (max-width: 620px) {
+      .story-brand small { display: none; }
+      .story-nav { font-size: 10px; }
+      .page-scroll { padding: 92px 12px 48px; }
+      .page-heading { margin-bottom: 30px; }
+      .page-heading h1 { font-size: clamp(44px,15vw,64px); }
+      .product-grid { grid-template-columns: 1fr; row-gap: 26px; }
+      .product-card { width: min(360px,100%); justify-self: center; border-width: 3px; }
+    }
+  </style>
+  <link rel="stylesheet" href="css/chapter-navigation.css?v=chapter-1">
+  <link rel="stylesheet" href="css/master-header.css?v=20260731">
+  <link rel="stylesheet" href="css/collection-layout.css?v=ocean-subtitle-box-removed-1">
+</head>
+<body class="hero-ocean-friends" data-initial-category="Ocean Animals">
+  <header class="story-header">
+    <a class="story-brand" href="index.html" aria-label="Forever Beaded home">
+      <span>Forever Beaded</span>
+      <small>by Gladlyn</small>
+    </a>
+    <button id="storyMenuButton" class="story-menu-button" type="button" aria-label="Open navigation" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <nav id="storyNav" class="story-nav" aria-label="Main navigation">
+      <a href="collections.html">Collections</a>
+      <a href="treasures.html">Treasures</a>
+      <a href="index.html#chapterOne">Our Story</a>
+      <a href="reviews.html">Kind Words</a>
+      <a href="maker.html">Meet the Maker</a>
+      <a href="https://foreverbeadedbyglad.etsy.com" target="_blank" rel="noopener noreferrer">Shop on Etsy</a>
+      <a class="nav-order" href="create.html">Create Yours</a>
+    </nav>
+  </header>
+
+  <div class="page-scroll">
+    <main class="ocean-page" aria-label="Ocean Friends bead products">
+      <div class="page-heading">
+        <p class="page-kicker">Forever Beaded Collection</p>
+        <h1>Ocean Friends</h1>
+        <p class="page-subtitle">Begin on the shell-covered shore, cross the shallows, and dive toward the coral reef and deep sea.</p>
+        <form class="search-wrap" id="oceanSearchForm" role="search">
+          <label class="sr-only" for="productSearch">Search ocean products</label>
+          <input id="productSearch" type="search" autocomplete="off" aria-label="Search ocean products" placeholder="Search ocean treasures...">
+        </form>
+      </div>
+      <div class="shop-results-row"><p id="shopResultsCount">Loading handmade pieces...</p></div>
+      <div class="product-grid" id="productGrid">
+        <article class="product-card" data-favourite-key="turtle"><a class="product-card-link" href="create.html?design=turtle"><img src="images/turtle.jpeg" alt="Turtle"><span class="product-name">Turtle</span><span class="product-price">$20 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Turtle to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
+        <article class="product-card" data-favourite-key="octopus"><a class="product-card-link" href="create.html?design=octopus"><img src="images/octopus.jpeg" alt="Octopus"><span class="product-name">Octopus</span><span class="product-price">$30 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Octopus to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
+        <article class="product-card" data-favourite-key="fish"><a class="product-card-link" href="create.html?design=fish"><img src="images/fish.jpeg" alt="Fish"><span class="product-name">Fish</span><span class="product-price">$20 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Fish to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
+        <article class="product-card" data-favourite-key="penguin"><a class="product-card-link" href="create.html?design=penguin"><img src="images/penquin.jpeg" alt="Penguin"><span class="product-name">Penguin</span><span class="product-price">$20 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Penguin to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
+        <article class="product-card" data-favourite-key="whale"><a class="product-card-link" href="create.html?design=whale"><img src="images/whale.jpeg" alt="Whale"><span class="product-name">Whale</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Whale to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
+        <article class="product-card" data-favourite-key="jellyfish"><a class="product-card-link" href="create.html?design=jellyfish"><img src="images/jellyfish.jpeg" alt="Jellyfish"><span class="product-name">Jellyfish</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Jellyfish to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
+        <article class="product-card" data-favourite-key="lobster"><a class="product-card-link" href="create.html?design=lobster"><img src="images/lobster.jpeg" alt="Lobster"><span class="product-name">Lobster</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Lobster to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
+        <article class="product-card" data-favourite-key="shark"><a class="product-card-link" href="create.html?design=shark"><img src="images/shark.jpeg" alt="Shark"><span class="product-name">Shark</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Shark to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
+      </div>
+    </main>
+  </div>
+
+  <section class="chapter-navigation" aria-label="Next chapter">
+      <a class="chapter-navigation__link" href="sandy-beaches.html">
+        <span>Next Chapter</span>
+        <strong>Sandy Beaches</strong>
+      </a>
+      <span class="chapter-navigation__ornament" aria-hidden="true">&#9825;</span>
+    </section>
+  <script src="js/product-catalogue.js?v=superhero-1"></script>
+<script src="js/static-collection-cards.js?v=20260802-1"></script>
+  <script src="js/chapter-order-navigation.js?v=chapter-order-4"></script>
+  <script src="js/master-header.js?v=20260731"></script>
+</body>
+</html>

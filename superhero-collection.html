@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Explore handmade superhero-inspired bead products from the Forever Beaded Superhero Collection.">
+  <title>Superhero Collection | Forever Beaded</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; min-height: 100%; }
+    html {
+      background: #08142f;
+      scrollbar-color: rgba(55, 43, 31, .58) transparent;
+    }
+    html::-webkit-scrollbar { width: 11px; }
+    html::-webkit-scrollbar-track { background: transparent; }
+    html::-webkit-scrollbar-thumb {
+      border: 3px solid transparent;
+      border-radius: 999px;
+      background: rgba(55, 43, 31, .58);
+      background-clip: padding-box;
+    }
+    body {
+      position: relative;
+      isolation: isolate;
+      display: flow-root;
+      overflow-x: hidden;
+      font-family: Georgia, 'Times New Roman', serif;
+      background-color: #08142f;
+      background-image: url('images/superhero-collection-background.jpg');
+      background-size: cover;
+      background-position: center top;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(3,10,29,.22), rgba(3,8,24,.48));
+    }
+
+    .story-header {
+      position: fixed;
+      inset: 0 0 auto 0;
+      z-index: 50;
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 12px clamp(20px, 5vw, 78px);
+      background: rgba(20, 18, 25, .96);
+      border-bottom: 1px solid rgba(214, 180, 102, .24);
+      box-shadow: 0 8px 28px rgba(0,0,0,.22);
+      color: #f4e8c3;
+    }
+    .story-brand {
+      display: inline-flex;
+      flex-direction: column;
+      color: #e8d49b;
+      text-decoration: none;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .story-brand span { font-size: clamp(20px, 2vw, 31px); }
+    .story-brand small { margin-top: 4px; font: 600 9px/1.1 Arial, sans-serif; letter-spacing: .28em; text-transform: uppercase; }
+    .story-nav {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: clamp(14px, 2vw, 30px);
+      font: 700 clamp(11px, .95vw, 15px)/1 Arial, sans-serif;
+    }
+    .story-nav a { color: #f2eddc; text-decoration: none; white-space: nowrap; }
+    .story-nav a:hover, .story-nav a:focus-visible { color: #e5c76f; }
+    .story-nav .nav-order {
+      padding: 11px 18px;
+      border: 1px solid rgba(229,199,111,.8);
+      border-radius: 999px;
+      color: #f0d985;
+    }
+
+    .page-scroll { width: 100%; min-height: 100vh; padding: 118px clamp(12px, 2vw, 32px) 72px; }
+    .sandy-page { width: min(1040px, 100%); margin: 0 auto; }
+    .page-heading {
+      width: min(760px, 100%);
+      margin: 0 auto 48px;
+      text-align: center;
+      color: #fff3d9;
+      text-shadow: 0 3px 14px rgba(0,0,0,.9), 0 0 24px rgba(31,102,210,.42);
+    }
+    .page-heading h1 {
+      margin: 0 0 22px;
+      font-size: clamp(48px, 7vw, 96px);
+      font-weight: 500;
+      line-height: .95;
+      letter-spacing: -.035em;
+    }
+    .page-heading .page-subtitle {
+      max-width: 650px;
+      margin: 1rem auto 22px;
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: #f7ead5;
+      text-shadow: 0 2px 10px rgba(0,0,0,.92);
+    }
+    .search-wrap { width: min(620px, 100%); margin: 0 auto; }
+    .search-wrap input {
+      width: 100%;
+      min-height: 56px;
+      border: 1px solid rgba(102,69,43,.34);
+      border-radius: 999px;
+      background: rgba(255,249,232,.94);
+      padding: 0 26px;
+      color: #4d3426;
+      font: 500 clamp(15px, 1.4vw, 18px)/1.2 Arial, sans-serif;
+      box-shadow: 0 12px 32px rgba(36,30,22,.18);
+      outline: none;
+    }
+    .search-wrap input::placeholder { color: #765f4d; opacity: 1; }
+    .search-wrap input:focus {
+      border-color: #7f5a35;
+      box-shadow: 0 0 0 4px rgba(255,246,218,.64), 0 12px 32px rgba(36,30,22,.2);
+    }
+    .collection-navigation {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      width: min(980px, 100%);
+      margin: 24px auto 0;
+    }
+    .collection-navigation a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      padding: 7px 13px;
+      border: 1px solid rgba(77, 52, 38, .35);
+      border-radius: 999px;
+      background: rgba(255, 249, 232, .94);
+      box-shadow: 0 5px 15px rgba(36, 30, 22, .16);
+      color: #432b20;
+      font: 700 12px/1.15 Arial, sans-serif;
+      text-align: center;
+      text-decoration: none;
+    }
+    .collection-navigation a:hover,
+    .collection-navigation a:focus-visible {
+      border-color: #6f4d31;
+      background: #fff8df;
+      outline: none;
+      transform: translateY(-1px);
+    }
+    .collection-navigation a[aria-current="page"] {
+      border-color: #3f271d;
+      background: #4d3426;
+      color: #fff8e6;
+      box-shadow: 0 6px 18px rgba(36, 30, 22, .28);
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      column-gap: clamp(18px, 2vw, 28px);
+      row-gap: clamp(40px, 3.5vw, 52px);
+      align-items: stretch;
+      justify-content: center;
+    }
+    .product-card {
+      position: relative;
+      display: block;
+      width: 100%;
+      min-width: 0;
+      aspect-ratio: 1.48 / 1;
+      overflow: hidden;
+      border: 5px solid rgba(255,246,218,.92);
+      border-radius: 18px;
+      background: rgba(255,248,227,.93);
+      text-decoration: none;
+      outline: none;
+      box-shadow: 0 16px 36px rgba(33,38,28,.3), inset 0 0 0 1px rgba(124,87,53,.26);
+      transition: box-shadow .18s ease, transform .18s ease;
+    }
+    .product-card:hover, .product-card:focus-visible {
+      box-shadow: 0 0 0 4px rgba(255,250,235,.82), 0 12px 30px rgba(67,40,21,.3);
+      transform: translateY(-5px);
+    }
+    .product-card-link {
+      position: absolute;
+      inset: 0;
+      display: block;
+      color: inherit;
+      text-decoration: none;
+    }
+    .favourite-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 5;
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: #713b62;
+      font: 700 25px/1 Arial, sans-serif;
+      cursor: pointer;
+      box-shadow: none;
+      text-shadow: 0 1px 3px rgba(255,255,255,.95), 0 1px 5px rgba(0,0,0,.3);
+    }
+    .favourite-btn:hover, .favourite-btn:focus-visible {
+      background: transparent;
+      color: #7b315f;
+      outline: 3px solid rgba(185,59,134,.25);
+      outline-offset: 2px;
+      transform: scale(1.05);
+      box-shadow: none;
+    }
+    .favourite-btn.is-saved {
+      background: transparent;
+      color: #7b315f;
+      box-shadow: none;
+    }
+    .product-card[hidden] { display: none; }
+    .product-card img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+      object-position: center;
+      padding: 12px;
+      filter: none;
+      opacity: 1;
+      animation: none;
+      transform: none;
+    }
+    .product-card span {
+      position: absolute;
+      inset: auto 8% 5% 8%;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      padding: 4px 13px;
+      border: 1px solid rgba(132,91,53,.28);
+      border-radius: 10px;
+      background: rgba(255,246,218,.94);
+      color: #492d1d;
+      font-size: clamp(14px, 1.5vw, 20px);
+      line-height: 1.05;
+      text-align: center;
+      box-shadow: 0 5px 16px rgba(52,39,25,.18);
+    }
+    .product-empty {
+      margin: 30px auto 0;
+      width: max-content;
+      max-width: 100%;
+      padding: 12px 20px;
+      border-radius: 10px;
+      background: rgba(255,246,218,.94);
+      color: #492d1d;
+      font: 700 15px/1.2 Arial, sans-serif;
+    }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .flying-butterfly {
+      position: fixed;
+      z-index: 5;
+      width: clamp(42px, 5vw, 76px);
+      pointer-events: none;
+      filter: drop-shadow(0 7px 8px rgba(39,27,16,.22));
+      animation: butterfly-flight 18s linear infinite;
+    }
+    .flying-butterfly.two { width: clamp(34px, 4vw, 62px); animation-duration: 23s; animation-delay: -9s; }
+    @keyframes butterfly-flight {
+      0% { left: -10%; top: 35%; transform: rotate(-10deg) scale(.85); }
+      24% { left: 24%; top: 18%; transform: rotate(12deg) scale(1); }
+      52% { left: 56%; top: 36%; transform: rotate(-7deg) scale(.9); }
+      78% { left: 82%; top: 20%; transform: rotate(9deg) scale(1.05); }
+      100% { left: 110%; top: 31%; transform: rotate(-5deg) scale(.88); }
+    }
+
+    @media (max-width: 900px) {
+      .story-header { min-height: 64px; gap: 14px; padding: 10px 14px; }
+      .story-brand span { font-size: 20px; }
+      .story-nav { flex: 1; overflow-x: auto; justify-content: flex-start; gap: 14px; padding-bottom: 3px; }
+      .story-nav .nav-order { padding: 9px 13px; }
+      .page-scroll { padding-top: 102px; }
+      .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 620px) {
+      .story-brand small { display: none; }
+      .story-nav { font-size: 10px; }
+      .page-scroll { padding: 92px 12px 48px; }
+      .page-heading { margin-bottom: 30px; }
+      .page-heading h1 { margin-bottom: 18px; font-size: clamp(44px, 15vw, 64px); }
+      .search-wrap input { min-height: 50px; padding-inline: 20px; }
+      .product-grid { grid-template-columns: 1fr; row-gap: 26px; }
+      .product-card { width: min(360px, 100%); justify-self: center; border-width: 3px; }
+      .product-card span { inset: auto 6% 5% 6%; height: 38px; padding: 3px 7px; font-size: 14px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .flying-butterfly { display: none; animation: none; }
+    }
+  </style>
+  <link rel="stylesheet" href="css/site-butterflies.css?v=gentle-1">
+  <link rel="stylesheet" href="css/chapter-navigation.css?v=chapter-1">
+  <link rel="stylesheet" href="css/chapter-order-navigation.css?v=chapter-order-2">
+  <link rel="stylesheet" href="css/master-header.css?v=20260731">
+  <link rel="stylesheet" href="css/collection-layout.css?v=stationery-master-1">
+  <style>
+    .sandy-page > .product-grid { justify-content: start !important; justify-items: start !important; margin-left: 0 !important; margin-right: auto !important; }
+    .sandy-page > .product-grid > * { justify-self: start !important; }
+  </style>
+  <link rel="stylesheet" href="css/compact-product-cards.css?v=1">
+</head>
+<body class="hero-superhero-collection">
+  <header class="story-header">
+    <a class="story-brand" href="index.html" aria-label="Forever Beaded home">
+      <span>Forever Beaded</span>
+      <small>by Gladlyn</small>
+    </a>
+    <button id="storyMenuButton" class="story-menu-button" type="button" aria-label="Open navigation" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <nav id="storyNav" class="story-nav" aria-label="Main navigation">
+      <a href="collections.html">Collections</a>
+      <a href="treasures.html">Treasures</a>
+      <a href="index.html#chapterOne">Our Story</a>
+      <a href="reviews.html">Kind Words</a>
+      <a href="maker.html">Meet the Maker</a>
+      <a href="https://foreverbeadedbyglad.etsy.com" target="_blank" rel="noopener noreferrer">Shop on Etsy</a>
+      <a class="nav-order" href="create.html">Create Yours</a>
+    </nav>
+  </header>
+
+  <img class="flying-butterfly one" src="images/monarch-cover-realistic.png" alt="" aria-hidden="true">
+  <img class="flying-butterfly two" src="images/monarch-cover-realistic.png" alt="" aria-hidden="true">
+
+  <div class="page-scroll">
+    <main class="sandy-page" aria-label="Superhero Collection bead products">
+      <div class="page-heading">
+        <h1>Superhero Collection</h1>
+        <p class="page-subtitle">Step beyond the ordinary and discover handmade heroes created bead by bead.</p>
+        <form class="search-wrap" id="sandySearchForm" role="search">
+          <label class="sr-only" for="sandySearch">Search Superhero Collection products</label>
+          <input id="sandySearch" type="search" autocomplete="off" aria-label="Search Superhero Collection products" placeholder="Search superhero treasures...">
+        </form>
+      </div>
+
+      <div class="product-grid">
+        <article class="product-card" data-favourite-key="spider-man">
+  <a class="product-card-link" href="create.html?design=spider-man">
+    <img src="images/spider-man-and-captain-america-keychains.jpg" alt="Handmade beaded Spider-Man keychain">
+    <span class="product-name">Spider-Man</span>
+    <span class="product-price">$40 CAD</span>
+  </a>
+  <button class="favourite-btn" type="button" aria-label="Save Spider-Man to favourites" aria-pressed="false">
+    <span aria-hidden="true">♡</span>
+  </button>
+</article>
+
+<article class="product-card" data-favourite-key="spider-man-version-1">
+  <a class="product-card-link" href="create.html?design=spider-man-version-1">
+    <img src="images/spider-man-double-keychain.jpg" alt="Handmade beaded Spider-Man Version 1.0 keychain">
+    <span class="product-name">Spider-Man Version 1.0</span>
+    <span class="product-price">$40 CAD</span>
+  </a>
+  <button class="favourite-btn" type="button" aria-label="Save Spider-Man Version 1.0 to favourites" aria-pressed="false">
+    <span aria-hidden="true">♡</span>
+  </button>
+</article></div>
+      <p class="product-empty" id="productEmpty" hidden>No superhero treasure found</p>
+    </main>
+  </div>
+
+  <section class="chapter-navigation" aria-label="Next chapter">
+      <a class="chapter-navigation__link" href="flags-of-the-world.html">
+        <span>Next Chapter</span>
+        <strong>Flags of the World</strong>
+      </a>
+      <span class="chapter-navigation__ornament" aria-hidden="true">&#9825;</span>
+    </section>
+  <script>
+    history.scrollRestoration = 'manual';
+    window.addEventListener('load', () => window.scrollTo(0, 0), { once: true });
+
+    (() => {
+      const form = document.getElementById('sandySearchForm');
+      const input = document.getElementById('sandySearch');
+      const cards = Array.from(document.querySelectorAll('.product-grid .product-card'));
+      const empty = document.getElementById('productEmpty');
+      const favouritesKey = 'foreverBeadedFavourites';
+
+      function loadFavourites() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(favouritesKey) || '[]');
+          return new Set(Array.isArray(saved) ? saved.map(String) : []);
+        } catch {
+          return new Set();
+        }
+      }
+
+      function syncFavouriteButtons() {
+        const favourites = loadFavourites();
+        cards.forEach(card => {
+          const button = card.querySelector('.favourite-btn');
+          const selected = favourites.has(card.dataset.favouriteKey);
+          const name = card.querySelector('.product-card-link span')?.textContent.trim() || 'product';
+          button.classList.toggle('is-saved', selected);
+          button.setAttribute('aria-pressed', String(selected));
+          button.setAttribute('aria-label', `${selected ? 'Remove' : 'Save'} ${name} ${selected ? 'from' : 'to'} favourites`);
+          button.querySelector('span').textContent = selected ? '♥' : '♡';
+        });
+      }
+
+      cards.forEach(card => {
+        card.querySelector('.favourite-btn').addEventListener('click', event => {
+          event.preventDefault();
+          event.stopPropagation();
+          const favourites = loadFavourites();
+          const key = card.dataset.favouriteKey;
+          if (favourites.has(key)) favourites.delete(key);
+          else favourites.add(key);
+          localStorage.setItem(favouritesKey, JSON.stringify([...favourites]));
+          syncFavouriteButtons();
+        });
+      });
+
+      function filterProducts() {
+        const query = input.value.trim().toLowerCase();
+        const matches = cards.filter(card => card.textContent.trim().toLowerCase().includes(query));
+        cards.forEach(card => { card.hidden = !matches.includes(card); });
+        empty.hidden = matches.length > 0;
+        return matches;
+      }
+
+      input.addEventListener('input', filterProducts);
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+        const matches = filterProducts();
+        if (matches.length === 1) location.href = matches[0].href;
+      });
+      syncFavouriteButtons();
+    })();
+  </script>
+  <script src="js/site-butterflies.js?v=homepage-book-only-20260731"></script>
+  <script src="js/chapter-order-navigation.js?v=chapter-order-4"></script>
+  <script src="js/master-header.js?v=20260731"></script>
+</body>
+</html>

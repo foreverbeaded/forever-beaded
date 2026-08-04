@@ -1,0 +1,157 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="The Butterfly Garden at Forever Beaded"><title>The Butterfly Garden | Forever Beaded</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/style.css?v=clean-worlds-1"><link rel="stylesheet" href="css/book.css?v=clean-worlds-1"><link rel="stylesheet" href="css/world-pages.css?v=clean-worlds-1">  <link rel="stylesheet" href="css/site-butterflies.css?v=gentle-1">
+  <link rel="stylesheet" href="css/chapter-navigation.css?v=chapter-1">
+  <style>
+    body.world-butterflies {
+      margin: 0;
+      background-image: url("images/butterfly-garden-background.jpeg");
+      background-size: cover;
+      background-position: center top;
+      background-repeat: no-repeat;
+      background-attachment: scroll;
+    }
+
+    body.world-butterflies::before,
+    body.world-butterflies::after,
+    .world-butterflies .world-hero::before {
+      background: none;
+    }
+
+    .world-butterflies .world-hero-copy,
+    .world-butterflies .world-browser {
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      backdrop-filter: none;
+    }
+
+    .world-butterflies .story-header {
+      background: rgba(5, 2, 8, .88);
+    }
+
+    .world-butterflies .product-grid {
+      width: min(1040px, 100%);
+      margin: 0 auto;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      column-gap: clamp(18px, 2vw, 28px);
+      row-gap: clamp(40px, 3.5vw, 52px);
+    }
+
+    .world-butterflies .product-grid .butterfly-compact-card {
+      position: relative;
+      display: block;
+      width: 100%;
+      min-width: 0;
+      aspect-ratio: 1.48 / 1;
+      padding: 0;
+      overflow: hidden;
+      border: 5px solid rgba(255,246,218,.92);
+      border-radius: 18px;
+      background: rgba(255,248,227,.93);
+      box-shadow: 0 16px 36px rgba(33,38,28,.3), inset 0 0 0 1px rgba(124,87,53,.26);
+      transition: box-shadow .18s ease, transform .18s ease;
+    }
+
+    .world-butterflies .product-grid .butterfly-compact-card:hover,
+    .world-butterflies .product-grid .butterfly-compact-card:focus-within {
+      box-shadow: 0 0 0 4px rgba(255,250,235,.82), 0 12px 30px rgba(67,40,21,.3);
+      transform: translateY(-5px);
+    }
+
+    .world-butterflies .butterfly-compact-link {
+      position: absolute;
+      inset: 0;
+      display: block;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .world-butterflies .product-grid .butterfly-compact-card img {
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      display: block;
+      object-fit: cover;
+      background: transparent;
+    }
+
+    .world-butterflies .butterfly-compact-name {
+      position: absolute;
+      inset: auto 8% 5% 8%;
+      z-index: 2;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      padding: 4px 13px;
+      border: 1px solid rgba(132,91,53,.28);
+      border-radius: 10px;
+      background: rgba(255,246,218,.94);
+      color: #492d1d;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(14px, 1.5vw, 20px);
+      line-height: 1.05;
+      text-align: center;
+      box-shadow: 0 5px 16px rgba(52,39,25,.18);
+    }
+
+    .world-butterflies .butterfly-compact-card .favourite-btn {
+      top: 10px;
+      right: 10px;
+      width: 42px;
+      height: 42px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: #713b62;
+      box-shadow: none;
+      text-shadow: 0 1px 3px rgba(255,255,255,.95), 0 1px 5px rgba(0,0,0,.3);
+    }
+
+    .world-butterflies .butterfly-compact-card .favourite-btn:hover,
+    .world-butterflies .butterfly-compact-card .favourite-btn:focus-visible,
+    .world-butterflies .butterfly-compact-card .favourite-btn.is-saved {
+      background: transparent;
+      color: #7b315f;
+      box-shadow: none;
+    }
+
+    @media (max-width: 850px) {
+      .world-butterflies .product-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      .world-butterflies .product-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>  <link rel="stylesheet" href="css/chapter-order-navigation.css?v=chapter-order-2">
+  <link rel="stylesheet" href="css/master-header.css?v=20260731">
+  <link rel="stylesheet" href="css/collection-layout.css?v=stationery-master-1">
+</head><body class="world-page world-butterflies" data-initial-category="Butterfly"><header class="story-header">
+    <a class="story-brand" href="index.html" aria-label="Forever Beaded home">
+      <span>Forever Beaded</span>
+      <small>by Gladlyn</small>
+    </a>
+    <button id="storyMenuButton" class="story-menu-button" type="button" aria-label="Open navigation" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <nav id="storyNav" class="story-nav" aria-label="Main navigation">
+      <a href="collections.html">Collections</a>
+      <a href="treasures.html">Treasures</a>
+      <a href="index.html#chapterOne">Our Story</a>
+      <a href="reviews.html">Kind Words</a>
+      <a href="maker.html">Meet the Maker</a>
+      <a href="https://foreverbeadedbyglad.etsy.com" target="_blank" rel="noopener noreferrer">Shop on Etsy</a>
+      <a class="nav-order" href="create.html">Create Yours</a>
+    </nav>
+  </header><main><section class="world-hero"><div class="world-hero-copy"><p class="world-kicker">Forever Beaded Collection</p><h1>The Butterfly Garden</h1><p>Start on the gravel path and wander deeper into blossoms filled with fluttering butterflies.</p></div></section><section class="world-browser" id="shop" aria-label="Browse products"><div class="world-search-row"><input autocomplete="off" id="productSearch" placeholder="Search this treasure world..." type="search"><button class="tiny-link-btn" id="clearShopFilters" type="button">Clear</button></div><div class="shop-results-row"><p id="shopResultsCount">Loading handmade pieces...</p></div><div class="product-grid" id="productGrid"></div></section></main><aside class="cart-panel story-cart" id="cartPanel" aria-hidden="true"><button class="close-btn" id="closeCart" type="button">Close</button><h2>Your Cart</h2><div id="cartItems"></div><h3>Total: <span id="cartTotal">$0 CAD</span></h3><p class="cart-payment-note">Payment is by Canadian e-transfer only. Details will be confirmed by email after your order is reviewed.</p><button id="clearCart" type="button">Clear Cart</button><button id="buyNowBtn" class="checkout-btn" type="button">Order by E-transfer</button></aside><div class="fb-modal story-modal" id="fbModal" aria-hidden="true"><div class="fb-modal-card"><h2 id="fbModalTitle">Forever Beaded</h2><p id="fbModalMessage"></p><button id="fbModalOk" class="primary-btn" type="button">OK</button></div></div><section class="chapter-navigation" aria-label="Next chapter">
+      <a class="chapter-navigation__link" href="animal-friends.html">
+        <span>Next Chapter</span>
+        <strong>Animal Friends</strong>
+      </a>
+      <span class="chapter-navigation__ornament" aria-hidden="true">&#9825;</span>
+    </section><button id="backToTop" class="back-to-top" type="button" aria-label="Back to top">Up</button><script src="js/product-catalogue.js?v=superhero-1"></script><script src="js/app.js?v=superhero-1"></script><script src="js/world-pages.js?v=clean-worlds-1"></script>  <script src="js/site-butterflies.js?v=homepage-book-only-20260731"></script>
+  <script src="js/chapter-order-navigation.js?v=chapter-order-4"></script>
+  <script src="js/master-header.js?v=20260731"></script>
+</body></html>

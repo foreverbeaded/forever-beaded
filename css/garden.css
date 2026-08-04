@@ -3459,3 +3459,50 @@ body.intro-active .scroll-monarch-layer {
     min-height: 360px;
   }
 }
+
+
+/* Compact doorway from Chapter Two to the full handmade collection case. */
+.collections-discover-frame {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 2rem auto 0;
+}
+
+.collections-discover-frame a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0.75rem 1.65rem;
+  border: 1px solid rgba(218, 181, 95, 0.78);
+  border-radius: 999px;
+  background: linear-gradient(145deg, rgba(42, 31, 52, 0.92), rgba(21, 17, 31, 0.94));
+  color: #f4dfaa;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(1rem, 1.4vw, 1.15rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.34), inset 0 0 18px rgba(218, 181, 95, 0.08);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.collections-discover-frame a:hover,
+.collections-discover-frame a:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(247, 218, 145, 0.95);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.42), 0 0 20px rgba(218, 181, 95, 0.14);
+  outline: none;
+}
+
+@media (max-width: 640px) {
+  .collections-discover-frame {
+    margin-top: 1.4rem;
+  }
+
+  .collections-discover-frame a {
+    width: min(88%, 320px);
+    padding-inline: 1.2rem;
+  }
+}

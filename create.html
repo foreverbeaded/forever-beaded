@@ -4,25 +4,724 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Create your own Forever Beaded handmade treasure with Gladlyn." />
-  <title>Create Yours | Forever Beaded</title>
+  <title>Create Your Own Treasure | Forever Beaded</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/book.css" />
-  <link rel="stylesheet" href="css/garden.css?v=treasure-catalogue-20260717" />
+  <link rel="stylesheet" href="css/garden.css?v=create-layout-20260725" />
   <link rel="stylesheet" href="css/animations.css" />
+  <link rel="stylesheet" href="css/world-pages.css?v=clean-worlds-1" />
+
+  <style>
+    :root { color-scheme: light; }
+    html { background: #ead5a9; }
+    body.world-create {
+      min-height: 100vh;
+      background-image: url('images/a_cozy_warm_sunlit_artist_craft_studio_scene_view.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+    body.world-create::before,
+    body.world-create::after { background: none; }
+    .world-create .story-header {
+      background: rgba(255,249,236,.88);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(103,69,40,.18);
+    }
+    .world-create main { padding: clamp(22px, 4vw, 58px) 0 70px; }
+    .world-create .custom-story {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: clamp(24px, 4vw, 52px);
+      border-radius: 34px;
+      background: rgba(255,249,238,.86);
+      box-shadow: 0 24px 70px rgba(67,43,24,.26);
+      border: 1px solid rgba(255,255,255,.72);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .world-create .section-heading { text-align: center; }
+    .world-create .section-heading > .chapter-order-nav {
+      left: 50%;
+      width: min(1120px, calc(100vw - 32px));
+      margin: 20px 0 22px;
+      transform: translateX(-50%);
+    }
+    .world-create .selected-design-summary,
+    .world-create .preview-selected-design {
+      margin: 14px auto 0;
+      color: #4b2e20;
+      font-family: Inter, system-ui, sans-serif;
+      font-weight: 800;
+    }
+    .world-create .selected-design-summary {
+      width: max-content;
+      max-width: 100%;
+      padding: 9px 15px;
+      border: 1px solid rgba(107, 70, 42, .25);
+      border-radius: 12px;
+      background: rgba(255, 250, 237, .92);
+      box-shadow: 0 7px 20px rgba(57, 36, 22, .14);
+    }
+    .world-create .chapter-two-layout {
+      display: grid;
+      grid-template-columns: minmax(0, .92fr) minmax(440px, 1.08fr);
+      align-items: start;
+      gap: clamp(24px, 3vw, 42px);
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+    .world-create .create-table-hero,
+    .world-create .workspace-scene,
+    .world-create .create-butterflies,
+    .world-create .cart-panel,
+    .world-create .cart-pill,
+    .world-create .exclusive-discovery,
+    .world-create .floating-heart,
+    .world-create .floating-icon,
+    .world-create .site-butterfly-layer,
+    .world-create .chapter-two-butterfly-layer {
+      display: none !important;
+    }
+    .world-create .treasure-builder {
+      grid-column: 1;
+      grid-row: 1;
+      min-width: 0;
+      background: rgba(42,18,45,.82);
+      border: 1px solid rgba(218,174,92,.42);
+      box-shadow: 0 18px 45px rgba(38,18,31,.22);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .world-create .treasure-preview {
+      grid-column: 2;
+      grid-row: 1;
+      position: sticky;
+      top: 96px;
+      min-width: 0;
+      display: block;
+      padding: clamp(20px, 2.5vw, 30px);
+      border: 1px solid rgba(218,174,92,.42);
+      border-radius: 22px;
+      background: rgba(42,18,45,.80);
+      box-shadow: 0 18px 45px rgba(38,18,31,.22);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .world-create .treasure-builder input,
+    .world-create .treasure-builder select,
+    .world-create .treasure-builder textarea {
+      background: rgba(24,10,28,.88);
+      border-color: rgba(218,174,92,.34);
+      color: #fff6df;
+    }
+    .world-create .treasure-builder label,
+    .world-create .treasure-builder p,
+    .world-create .treasure-builder h3 { color: #fff6df; }
+    .world-create .preview-copy { margin-bottom: 18px; }
+    .world-create .home-preview-art-wrap {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(138px, .42fr);
+      grid-template-areas:
+        "main main"
+        "beads hardware";
+      align-items: stretch;
+      justify-items: stretch;
+      gap: 18px;
+      width: 100%;
+    }
+    .world-create .home-selected-product-photo {
+      grid-area: main;
+      width: 100%;
+      height: clamp(330px, 39vw, 500px);
+      margin: 0;
+      border: 1px solid rgba(218,174,92,.42);
+      border-radius: 18px;
+      background: rgba(18,7,23,.64);
+      box-shadow: 0 16px 36px rgba(12,4,16,.28);
+    }
+    .world-create .home-selected-product-photo img {
+      width: 100%;
+      height: 100%;
+      padding: 12px;
+      object-fit: contain;
+    }
+    .world-create .home-reference-product-photo {
+      position: absolute;
+      z-index: 3;
+      top: clamp(220px, 27vw, 350px);
+      right: 16px;
+      width: clamp(120px, 14vw, 178px);
+      aspect-ratio: 4 / 3;
+      margin: 0;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      border: 5px solid rgba(255,246,223,.9);
+      border-radius: 14px;
+      background: rgba(29,12,33,.92);
+      box-shadow: 0 16px 30px rgba(10,3,14,.38);
+      transform: rotate(2deg);
+    }
+    .world-create .home-reference-product-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .world-create .home-reference-product-photo.image-missing img { display: none; }
+    .world-create .home-reference-product-photo.image-missing::after {
+      content: attr(data-placeholder);
+      padding: 12px;
+      color: #f8ead0;
+      font: 800 .7rem/1.35 Inter, sans-serif;
+      text-align: center;
+      text-transform: uppercase;
+    }
+    .world-create .home-preview-beads {
+      grid-area: beads;
+      width: 100%;
+      max-width: none;
+      height: 170px;
+      max-height: 170px;
+      justify-self: stretch;
+      border: 1px solid rgba(218,174,92,.32);
+      border-radius: 14px;
+      background: rgba(18,7,23,.72);
+    }
+    .world-create .hardware-preview-card {
+      grid-area: hardware;
+      width: 100%;
+      min-width: 0;
+      border-color: rgba(218,174,92,.32);
+      border-radius: 14px;
+      background: rgba(18,7,23,.72);
+    }
+    .world-create > .chapter-navigation,
+    .world-create .storybook-footer,
+    .world-create .back-to-top,
+    .world-create #backToTop { display: none !important; }
+    .world-create main { overflow-x: clip; }
+    @media (max-width: 900px) {
+      body.world-create { background-attachment: scroll; }
+      .world-create .chapter-two-layout {
+        grid-template-columns: minmax(0, 1fr);
+        max-width: 720px;
+      }
+      .world-create .treasure-preview {
+        grid-column: 1;
+        grid-row: 1;
+        position: relative;
+        top: auto;
+      }
+      .world-create .treasure-builder {
+        grid-column: 1;
+        grid-row: 2;
+      }
+      .world-create .home-selected-product-photo {
+        height: clamp(300px, 76vw, 480px);
+      }
+      .world-create .home-reference-product-photo {
+        top: clamp(190px, 52vw, 330px);
+      }
+    }
+    .world-create .storybook-footer {
+      margin-top: 0;
+      background: rgba(255,248,232,.90);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    @media (max-width: 560px) {
+      .world-create .custom-story { padding-inline: 14px; }
+      .world-create .treasure-preview { padding: 16px; }
+      .world-create .home-preview-art-wrap {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .world-create .home-selected-product-photo { height: 300px; }
+      .world-create .home-reference-product-photo {
+        top: 202px;
+        right: 10px;
+        width: 118px;
+      }
+      .world-create .home-preview-beads,
+      .world-create .hardware-preview-card { height: 150px; }
+    }
+
+    /* Final Create page composition: animated editorial art left, working form right. */
+    .world-create .custom-story {
+      width: min(1240px, calc(100% - 28px));
+      padding: clamp(20px, 3vw, 38px) 0 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      overflow: visible;
+    }
+    .world-create .custom-story::before { content: none; }
+    .world-create .chapter-two-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 48fr) minmax(0, 52fr);
+      align-items: start;
+      gap: 24px;
+      width: 100%;
+      max-width: none;
+    }
+    .world-create .editorial-showcase,
+    .world-create .treasure-builder {
+      min-width: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+    .world-create .editorial-showcase {
+      grid-column: 1;
+      grid-row: 1;
+      position: sticky;
+      top: 96px;
+      min-height: 0;
+      height: auto;
+      overflow: visible;
+      isolation: isolate;
+      padding: 24px;
+    }
+    .world-create .treasure-builder {
+      grid-column: 2;
+      grid-row: 1;
+      display: block;
+      padding: clamp(20px, 2.4vw, 30px);
+    }
+    .world-create .editorial-photo {
+      position: relative;
+      z-index: 2;
+      margin: 0;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid rgba(255,239,204,.78);
+      background: rgba(18,7,23,.72);
+      box-shadow: 0 20px 42px rgba(10,3,14,.46), 0 0 0 1px rgba(202,154,70,.3);
+    }
+    .world-create .editorial-photo img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .world-create #homeShowcaseProductImage {
+      width: 100% !important;
+      height: auto !important;
+      max-width: 100%;
+      max-height: 560px;
+      padding: 12px;
+      box-sizing: border-box;
+      object-fit: contain !important;
+      object-position: center !important;
+      transform: none !important;
+      opacity: 1;
+      transition: opacity .22s ease, filter .22s ease;
+    }
+    .world-create .editorial-photo-main {
+      background: transparent;
+      height: auto;
+      min-height: 0;
+    }
+    .world-create #homeShowcaseProductImage.is-changing {
+      opacity: .28;
+      filter: brightness(.88);
+    }
+    .world-create .editorial-photo-main {
+      inset: auto;
+      width: 100%;
+      border-radius: 20px;
+      animation: editorialMainDrift 12s ease-in-out infinite alternate;
+    }
+    .world-create .showcase-image-fallback {
+      margin: 0;
+      padding: clamp(54px, 10vw, 110px) 24px;
+      color: #fff1d3;
+      font: 700 1rem/1.5 Inter, system-ui, sans-serif;
+      text-align: center;
+      text-shadow: 0 2px 8px rgba(20,7,23,.9);
+    }
+    .world-create .custom-idea-preview-text {
+      position: relative;
+      z-index: 6;
+      width: max-content;
+      max-width: 100%;
+      margin: 14px auto 0;
+      padding: 7px 12px;
+      color: #fff1d3;
+      font: 700 .95rem/1.4 Inter, system-ui, sans-serif;
+      text-align: center;
+      text-shadow: 0 2px 7px rgba(20,7,23,.95);
+    }
+    .world-create .custom-concept-card {
+      display: none;
+      width: 100%;
+      min-width: 0;
+      padding: clamp(24px, 5vw, 42px);
+      overflow: hidden;
+      box-sizing: border-box;
+      border: 1px solid rgba(229,190,112,.55);
+      border-radius: 24px;
+      background:
+        radial-gradient(circle at 50% 0, rgba(196,140,84,.18), transparent 44%),
+        linear-gradient(145deg, rgba(48,20,50,.97), rgba(24,9,29,.97));
+      box-shadow: 0 24px 52px rgba(10,3,14,.4), inset 0 0 0 1px rgba(255,246,222,.05);
+      color: #fff4dc;
+      text-align: center;
+    }
+    .world-create .editorial-showcase.is-custom-idea .editorial-photo-main {
+      overflow: visible;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      animation: none;
+    }
+    .world-create .editorial-showcase.is-custom-idea #homeShowcaseProductImage,
+    .world-create .editorial-showcase.is-custom-idea #homeShowcaseImageFallback,
+    .world-create .editorial-showcase.is-custom-idea .editorial-motion-lines,
+    .world-create .editorial-showcase.is-custom-idea .editorial-floating-beads,
+    .world-create .editorial-showcase.is-custom-idea .custom-idea-preview-text { display: none !important; }
+    .world-create .editorial-showcase.is-custom-idea .custom-concept-card { display: block; }
+    .world-create .custom-concept-kicker {
+      margin: 0 0 8px;
+      color: #e6bd70;
+      font: 800 .68rem/1.2 Inter, sans-serif;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+    .world-create .custom-concept-card h2 {
+      margin: 0;
+      color: #fff5df;
+      font: 700 clamp(2rem, 5vw, 3.25rem)/.98 "Cormorant Garamond", serif;
+      overflow-wrap: anywhere;
+    }
+    .world-create .custom-concept-idea {
+      max-width: 42ch;
+      margin: 22px auto 0;
+      color: #f9ead1;
+      font: 500 1rem/1.65 Inter, sans-serif;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .world-create .custom-concept-details {
+      display: grid;
+      gap: 18px;
+      margin-top: 28px;
+      padding-top: 22px;
+      border-top: 1px solid rgba(229,190,112,.25);
+    }
+    .world-create .custom-concept-label {
+      display: block;
+      margin-bottom: 10px;
+      color: #dfb76b;
+      font: 800 .66rem/1.2 Inter, sans-serif;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    .world-create .custom-concept-swatches {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .world-create .custom-concept-swatch {
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+      gap: 7px;
+      padding: 7px 10px;
+      border: 1px solid rgba(255,244,220,.2);
+      border-radius: 999px;
+      background: rgba(255,255,255,.07);
+      color: #fff3dc;
+      font: 700 .76rem/1.2 Inter, sans-serif;
+      overflow-wrap: anywhere;
+    }
+    .world-create .custom-concept-swatch::before {
+      content: "";
+      flex: 0 0 17px;
+      width: 17px;
+      height: 17px;
+      border: 1px solid rgba(255,255,255,.48);
+      border-radius: 50%;
+      background: var(--swatch, #8f8f8f);
+      box-shadow: inset 0 1px 2px rgba(255,255,255,.35), 0 2px 5px rgba(0,0,0,.25);
+    }
+    .world-create .custom-concept-specs {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+    .world-create .custom-concept-spec {
+      min-width: 118px;
+      max-width: 100%;
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.07);
+      box-sizing: border-box;
+    }
+    .world-create .custom-concept-spec strong {
+      display: block;
+      color: #fff5df;
+      font: 700 .95rem/1.3 Inter, sans-serif;
+      overflow-wrap: anywhere;
+    }
+    .world-create .editorial-motion-lines {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .world-create .editorial-motion-lines span {
+      position: absolute;
+      width: 44%;
+      height: 24%;
+      border: 1px solid rgba(218,174,92,.38);
+      border-left-color: transparent;
+      border-bottom-color: transparent;
+      border-radius: 50%;
+      animation: editorialLineGlow 8s ease-in-out infinite alternate;
+    }
+    .world-create .editorial-motion-lines span:first-child { left: 2%; top: 6%; transform: rotate(-17deg); }
+    .world-create .editorial-motion-lines span:last-child { right: 3%; bottom: 7%; transform: rotate(163deg); animation-delay: -3s; }
+    .world-create .editorial-floating-beads { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+    .world-create .editorial-floating-beads span {
+      position: absolute;
+      width: 13px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: radial-gradient(circle at 34% 28%, #fff9dc 0 17%, transparent 18%), #c99a46;
+      box-shadow: inset -3px -3px 5px rgba(55,24,42,.38), 0 4px 10px rgba(10,3,14,.28);
+      animation: editorialBeadFloat 7s ease-in-out infinite alternate;
+    }
+    .world-create .editorial-floating-beads span:nth-child(1) { left: 5%; top: 18%; }
+    .world-create .editorial-floating-beads span:nth-child(2) { left: 11%; top: 72%; animation-delay: -2s; background-color: #8a5b91; }
+    .world-create .editorial-floating-beads span:nth-child(3) { right: 8%; top: 12%; animation-delay: -4s; background-color: #f2dfbd; }
+    .world-create .editorial-floating-beads span:nth-child(4) { right: 5%; top: 54%; animation-delay: -1s; background-color: #9b6a2f; }
+    .world-create .editorial-floating-beads span:nth-child(5) { left: 28%; bottom: 3%; animation-delay: -5s; background-color: #b77bc0; }
+    .world-create .editorial-floating-beads span:nth-child(6) { right: 32%; top: 4%; animation-delay: -3s; background-color: #fff5df; }
+    .world-create .treasure-preview {
+      position: relative;
+      top: auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 16px;
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 16px;
+      background: rgba(26,10,30,.66);
+    }
+    .world-create .home-preview-art-wrap {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(138px, .45fr);
+      grid-template-areas: "beads hardware";
+      gap: 14px;
+    }
+    @keyframes editorialMainDrift {
+      from { transform: translate3d(0, 0, 0) rotate(-.25deg); }
+      to { transform: translate3d(0, -5px, 0) rotate(.25deg); }
+    }
+    @keyframes editorialBeadFloat {
+      from { transform: translate3d(0, 0, 0) rotate(0); }
+      to { transform: translate3d(5px, -10px, 0) rotate(18deg); }
+    }
+    @keyframes editorialLineGlow { from { opacity: .34; } to { opacity: .72; } }
+    @media (max-width: 900px) {
+      .world-create .chapter-two-layout { grid-template-columns: minmax(0, 1fr); }
+      .world-create .editorial-showcase {
+        grid-column: 1;
+        grid-row: 1;
+        position: relative;
+        top: auto;
+        min-height: 0;
+      }
+      .world-create .treasure-builder { grid-column: 1; grid-row: 2; }
+    }
+    @media (max-width: 560px) {
+      .world-create .custom-story { width: min(100% - 20px, 1240px); padding-inline: 0; }
+      .world-create .editorial-showcase { min-height: 0; padding: 14px; }
+      .world-create .home-preview-art-wrap { grid-template-columns: 1fr; grid-template-areas: "hardware" "beads"; }
+      .world-create .hardware-preview-card { min-height: 145px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .world-create .editorial-photo,
+      .world-create .editorial-floating-beads span,
+      .world-create .editorial-motion-lines span { animation: none !important; }
+    }
+
+    /* Hero readability uses letter-level colour and shadow only. */
+    .world-create .section-heading {
+      position: relative;
+      isolation: isolate;
+    }
+    .world-create .section-heading h1 {
+      color: #fff1d3 !important;
+      text-shadow: 0 3px 10px rgba(20,7,23,.9), 0 0 22px rgba(20,7,23,.52) !important;
+    }
+    .world-create .section-heading > p:not(.chapter-kicker):not(.selected-design-summary) {
+      color: #f8e8cd !important;
+      text-shadow: 0 2px 8px rgba(20,7,23,.92), 0 0 16px rgba(20,7,23,.46) !important;
+    }
+    .world-create .section-heading .chapter-kicker {
+      color: #d8b56d !important;
+      text-shadow: 0 2px 8px rgba(20,7,23,.88) !important;
+    }
+    /* High-contrast copy without restoring full-column backing panels. */
+    .world-create .builder-copy .panel-label,
+    .world-create .preview-label {
+      color: #efca7a !important;
+      font-weight: 800;
+      text-shadow: 0 2px 5px rgba(13,4,16,.96), 0 0 10px rgba(13,4,16,.55);
+    }
+    .world-create .builder-copy h3,
+    .world-create .treasure-preview h4 {
+      color: #fff5df !important;
+      text-shadow: 0 2px 6px rgba(13,4,16,.98), 0 0 14px rgba(13,4,16,.55);
+    }
+    .world-create .builder-copy p,
+    .world-create .treasure-preview p,
+    .world-create .field-help,
+    .world-create .cart-payment-note {
+      color: #f9ecd3 !important;
+      text-shadow: 0 1px 4px rgba(13,4,16,.96);
+    }
+    .world-create .treasure-builder label {
+      color: #fff3dc !important;
+      font-weight: 700;
+      text-shadow: 0 1px 4px rgba(13,4,16,.98);
+    }
+    .world-create .treasure-builder input,
+    .world-create .treasure-builder select,
+    .world-create .treasure-builder textarea {
+      background: rgba(24,10,28,.94) !important;
+      border: 1px solid rgba(225,184,104,.62) !important;
+      color: #fff8e8 !important;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,.3), 0 0 0 1px rgba(255,244,216,.04);
+    }
+    .world-create .treasure-builder input::placeholder,
+    .world-create .treasure-builder textarea::placeholder {
+      color: rgba(255,239,211,.72) !important;
+      opacity: 1;
+    }
+    .world-create .selected-design-summary,
+    .world-create .preview-selected-design {
+      color: #3b2119 !important;
+      text-shadow: none;
+    }
+    .world-create .treasure-submit {
+      color: #24101f !important;
+      font-weight: 900;
+      text-shadow: 0 1px 0 rgba(255,255,255,.34);
+    }
+    /* Hardware preview only: isolated, centred ring-and-clasp sample. */
+    .world-create .home-preview-art-wrap {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: "hardware" "beads";
+      align-items: start;
+      justify-items: center;
+    }
+    .world-create .home-preview-beads {
+      grid-area: beads;
+      width: min(100%, 360px);
+      max-width: 360px;
+      justify-self: center;
+    }
+    .world-create .hardware-preview-card {
+      grid-area: hardware;
+      width: 150px;
+      min-width: 150px;
+      max-width: 150px;
+      height: 150px;
+      min-height: 150px;
+      max-height: 150px;
+      justify-self: center;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      align-items: center;
+      justify-items: center;
+      gap: 4px;
+      padding: 9px 8px 8px;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+    .world-create .hardware-preview-card > .preview-label {
+      align-self: start;
+      width: 100%;
+      font-size: .58rem;
+      line-height: 1.2;
+      letter-spacing: .11em;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .world-create .hardware-preview-sample {
+      width: 76px;
+      height: 72px;
+      margin: 0;
+      place-self: center;
+      overflow: visible;
+    }
+    .world-create .hardware-preview-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center;
+    }
+    .world-create .hardware-preview-card .preview-bead,
+    .world-create .hardware-preview-card .preview-colour-swatch,
+    .world-create .hardware-preview-card .home-preview-beads { display: none !important; }
+    .world-create .hardware-preview-card > p {
+      align-self: end;
+      width: 100%;
+      margin: 0 !important;
+      color: #f8e8cd;
+      font-size: .68rem;
+      line-height: 1.25;
+      text-align: center;
+      white-space: normal;
+      overflow: visible;
+    }
+    @media (max-width: 560px) {
+      .world-create .home-preview-art-wrap { grid-template-columns: 1fr; }
+      .world-create .hardware-preview-card { justify-self: center; }
+    }
+  </style>
+  <link rel="stylesheet" href="css/site-butterflies.css?v=gentle-1">
+  <link rel="stylesheet" href="css/chapter-navigation.css?v=chapter-1">
+  <link rel="stylesheet" href="css/chapter-order-navigation.css?v=chapter-order-2">
+  <link rel="stylesheet" href="css/master-header.css?v=20260731">
 </head>
-<body class="storybook-home storybook-page storybook-page-shell">
+<body class="storybook-home storybook-page storybook-page-shell world-page world-create">
   <header class="story-header">
-    <a class="story-brand" href="index.html" aria-label="Forever Beaded home"><span>Forever Beaded</span><small>by Gladlyn</small></a>
-    <button id="storyMenuButton" class="story-menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button>
+    <a class="story-brand" href="index.html" aria-label="Forever Beaded home">
+      <span>Forever Beaded</span>
+      <small>by Gladlyn</small>
+    </a>
+    <button id="storyMenuButton" class="story-menu-button" type="button" aria-label="Open navigation" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
     <nav id="storyNav" class="story-nav" aria-label="Main navigation">
       <a href="collections.html">Collections</a>
       <a href="treasures.html">Treasures</a>
+      <a href="index.html#chapterOne">Our Story</a>
       <a href="reviews.html">Kind Words</a>
       <a href="maker.html">Meet the Maker</a>
       <a href="https://foreverbeadedbyglad.etsy.com" target="_blank" rel="noopener noreferrer">Shop on Etsy</a>
-      <a class="nav-order" href="create.html" aria-current="page">Create Yours</a>
+      <a class="nav-order" href="create.html">Create Yours</a>
     </nav>
   </header>
 
@@ -32,21 +731,36 @@
         <p class="chapter-kicker">Chapter Three</p>
         <h1 id="customTitle">Create Your Own Treasure</h1>
         <p>Choose a design, colours, hardware, and quantity. The preview updates as your idea begins to take shape.</p>
+        <p id="selectedDesignSummary" class="selected-design-summary" aria-live="polite">Selected Design: Loading…</p>
       </div>
 
       <div class="chapter-two-layout">
-        <div class="workspace-scene" aria-label="Handcrafted beading workspace with flowers, beads, thread, and butterfly charm">
-          <div class="workspace-light" aria-hidden="true"></div>
-          <div class="workspace-dust" aria-hidden="true"></div>
-          <div class="workspace-table-grain" aria-hidden="true"></div>
-          <figure class="workspace-photo workspace-photo-primary"><img id="homeReferenceImage" alt="Forever Beaded custom design reference" loading="lazy" decoding="async"></figure>
-          <figure class="workspace-photo workspace-photo-flower"><img src="images/intricated-flower.jpeg" alt="Purple handmade beaded flower" loading="lazy" decoding="async"></figure>
-          <div class="loose-beads" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-          <span class="workspace-thread" aria-hidden="true"></span>
-          <span class="workspace-needle" aria-hidden="true"></span>
-          <span class="unfinished-charm" aria-hidden="true"></span>
-        </div>
-
+        <aside class="editorial-showcase" aria-label="Forever Beaded butterfly and flower inspiration">
+          <figure class="editorial-photo editorial-photo-main">
+            <img id="homeShowcaseProductImage" src="images/butterfly-purple.jpg" alt="Butterfly handmade beaded keychain" loading="eager" decoding="async">
+            <p id="homeShowcaseImageFallback" class="showcase-image-fallback" role="status" hidden>Product image coming soon.</p>
+            <article id="homeCustomConceptCard" class="custom-concept-card" aria-label="Your custom treasure concept preview" hidden>
+              <p class="custom-concept-kicker">Concept preview</p>
+              <h2>Your Custom Treasure</h2>
+              <p id="homeCustomConceptIdea" class="custom-concept-idea">Start typing your custom idea to see it here.</p>
+              <div class="custom-concept-details">
+                <div>
+                  <span class="custom-concept-label">Selected colours</span>
+                  <div id="homeCustomConceptColours" class="custom-concept-swatches"></div>
+                </div>
+                <div class="custom-concept-specs">
+                  <div class="custom-concept-spec"><span class="custom-concept-label">Hardware</span><strong id="homeCustomConceptHardware">Gold</strong></div>
+                  <div class="custom-concept-spec"><span class="custom-concept-label">Quantity</span><strong id="homeCustomConceptQuantity">1</strong></div>
+                </div>
+              </div>
+            </article>
+          </figure>
+          <p id="homeCustomIdeaPreviewText" class="custom-idea-preview-text" aria-live="polite" hidden></p>
+          <div class="editorial-motion-lines" aria-hidden="true"><span></span><span></span></div>
+          <div class="editorial-floating-beads" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </aside>
         <form id="homeDesignBuilder" class="treasure-builder" aria-label="Forever Beaded custom design builder">
           <div class="builder-copy">
             <span class="panel-label">Forever Beaded Custom Design Builder</span>
@@ -89,10 +803,13 @@
               <input id="homePersonalizationText" name="personalizationText" type="text" placeholder="e.g. Becky" autocomplete="off" maxlength="40">
             </label>
             <label>Design <select id="homeTreasureDesign" name="design"><option value="">Loading designs...</option></select></label>
-            <label id="homeCustomDescriptionWrap" class="custom-description-field" for="homeCustomDescription" hidden aria-hidden="true">Describe your custom design
-              <textarea id="homeCustomDescription" name="customDescription" minlength="10" maxlength="500" placeholder="Tell me exactly what you would like — shape, colours, pattern, theme, names, initials, flowers, animals, or any special details." aria-describedby="homeCustomDescriptionHelp homeCustomDescriptionCount"></textarea>
-              <span id="homeCustomDescriptionHelp" class="field-help">Required for Custom idea. Minimum 10 characters.</span>
+            <label id="homeCustomDescriptionWrap" class="custom-description-field" for="homeCustomDescription" hidden aria-hidden="true">Describe your custom idea
+              <textarea id="homeCustomDescription" name="customDescription" maxlength="500" placeholder="Tell me what you would like — for example, Lion." aria-describedby="homeCustomDescriptionHelp homeCustomDescriptionCount"></textarea>
+              <span id="homeCustomDescriptionHelp" class="field-help">Required when Custom Idea is selected.</span>
               <span id="homeCustomDescriptionCount" class="field-help">0 / 500</span>
+            </label>
+            <label id="homeCustomReferenceWrap" class="custom-description-field" for="homeCustomReferenceImage" hidden aria-hidden="true">Upload a reference image <span class="field-help">(optional)</span>
+              <input id="homeCustomReferenceImage" name="customReferenceImage" type="file" accept="image/*">
             </label>
             <label>Colours <input id="homeTreasureColours" name="colours" type="text" value="Purple, Cream, Gold" autocomplete="off"></label>
             <label>Hardware <select id="homeTreasureHardware" name="hardware"><option value="Gold">Gold</option><option value="Silver">Silver</option></select></label>
@@ -100,15 +817,14 @@
             <label class="order-honeypot" aria-hidden="true" tabindex="-1">Website <input id="homeOrderWebsite" name="website" type="text" autocomplete="off" tabindex="-1"></label>
           </div>
           <div class="treasure-preview" aria-live="polite">
-            <div><span class="preview-label">Live bead preview</span><h4 id="homeTreasurePreviewTitle">Butterfly in purple, cream, and gold</h4><p id="homeTreasurePreviewMeta">Gold hardware, quantity 1, no personalization.</p><p id="homeTreasurePreviewDescription" class="preview-description"></p></div>
+            <div><span class="preview-label">Live bead preview</span><p id="homeTreasurePreviewSelected" class="preview-selected-design">Selected Design: Loading…</p><h4 id="homeTreasurePreviewTitle">Loading selected design…</h4><p id="homeTreasurePreviewMeta">Gold hardware, quantity 1, no personalization.</p><p id="homeTreasurePreviewDescription" class="preview-description"></p></div>
             <div class="home-preview-art-wrap">
-              <figure class="home-selected-product-photo"><img id="homeSelectedProductPhoto" alt="Selected treasure product photo" loading="lazy" decoding="async"></figure>
-              <div id="homeTreasurePreview" class="home-preview-beads" aria-label="Live bead colour preview"></div>
               <aside class="hardware-preview-card" aria-label="Hardware preview">
                 <span class="preview-label">Hardware preview</span>
                 <div id="homeHardwarePreviewSample" class="hardware-preview-sample has-gold-hardware" aria-hidden="true"></div>
-                <p id="homeHardwarePreviewText">Gold ring and clasp sample</p>
+                <p id="homeHardwarePreviewText">Gold ring and clasp</p>
               </aside>
+              <div id="homeTreasurePreview" class="home-preview-beads" aria-label="Live bead colour preview"></div>
               <p id="homeTreasurePreviewPersonalization" class="preview-personalization" hidden></p>
             </div>
           </div>
@@ -119,10 +835,18 @@
     </section>
   </main>
 
-<footer class="storybook-footer"><p class="chapter-kicker">The End... for now</p><h2>Forever Beaded</h2><p>Handmade treasures with a story, crafted by Gladlyn.</p><nav aria-label="Footer links"><a href="https://www.instagram.com/foreverbeaded1" target="_blank" rel="noopener noreferrer">Instagram</a><a href="https://www.tiktok.com/@foreverbeaded1" target="_blank" rel="noopener noreferrer">TikTok</a><a href="https://foreverbeadedbyglad.etsy.com" target="_blank" rel="noopener noreferrer">Shop on Etsy</a><a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=foreverbeaded1@gmail.com&amp;su=Forever%20Beaded%20Inquiry" target="_blank" rel="noopener noreferrer">Email</a></nav></footer>
-  <script src="js/book.js?v=butterfly-refine-20260711"></script>
-  <script src="js/butterflies.js?v=butterfly-refine-20260711"></script>
+<section class="chapter-navigation" aria-label="Next chapter">
+      <a class="chapter-navigation__link" href="flowers.html">
+        <span>Next Chapter</span>
+        <strong>Flower Garden</strong>
+      </a>
+      <span class="chapter-navigation__ornament" aria-hidden="true">&#9825;</span>
+    </section>
   <script src="js/product-catalogue.js?v=treasure-catalogue-20260717"></script>
-<script src="js/garden.js?v=treasure-catalogue-20260717"></script>
+  <script src="js/garden.js?v=selected-design-flow-1"></script>
+  <script src="js/world-pages.js?v=clean-worlds-1"></script>
+  <script src="js/site-butterflies.js?v=homepage-book-only-20260731"></script>
+  <script src="js/chapter-order-navigation.js?v=chapter-order-3"></script>
+  <script src="js/master-header.js?v=20260731"></script>
 </body>
 </html>

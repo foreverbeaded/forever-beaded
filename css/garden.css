@@ -676,6 +676,30 @@ body.ambient-nature-active .ambient-nature-layer {
   line-height: 1.55;
 }
 
+.exclusive-coming-soon {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(244, 213, 141, .24);
+  border-radius: 8px;
+  background: rgba(4, 1, 7, .28);
+}
+
+.exclusive-coming-soon span,
+.exclusive-coming-soon small {
+  display: block;
+}
+
+.exclusive-coming-soon span {
+  color: var(--gold-light);
+  font-weight: 900;
+}
+
+.exclusive-coming-soon small {
+  margin-top: 3px;
+  color: rgba(255, 245, 223, .68);
+  font-weight: 700;
+}
+
 .hero-story-tiles {
   grid-column: 1 / -1;
   grid-row: 3;
@@ -886,6 +910,101 @@ body.ambient-nature-active .ambient-nature-layer {
 .photo-collection-grid a:hover img {
   transform: scale(1.08);
   filter: saturate(1.02) contrast(1.06);
+}
+
+.ocean-shop-section.is-ocean-active {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(42, 191, 192, .2), transparent 20rem),
+    radial-gradient(circle at 82% 18%, rgba(54, 120, 212, .16), transparent 22rem),
+    linear-gradient(180deg, rgba(10, 45, 72, .72), rgba(7, 68, 78, .58) 48%, rgba(23, 12, 32, .86));
+}
+
+.ocean-shop-section.is-ocean-active::before,
+.ocean-shop-section.is-ocean-active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ocean-shop-section.is-ocean-active::before {
+  background:
+    linear-gradient(104deg, transparent 4%, rgba(216, 239, 255, .12) 8%, transparent 18%),
+    linear-gradient(116deg, transparent 38%, rgba(216, 239, 255, .1) 42%, transparent 52%),
+    linear-gradient(96deg, transparent 68%, rgba(216, 239, 255, .08) 72%, transparent 82%);
+  filter: blur(.5px);
+  animation: oceanLightRays 16s ease-in-out infinite alternate;
+}
+
+.ocean-shop-section.is-ocean-active::after {
+  background:
+    radial-gradient(circle at 12% 82%, rgba(42, 191, 192, .2) 0 1px, transparent 3px),
+    radial-gradient(circle at 38% 72%, rgba(255, 255, 255, .18) 0 1px, transparent 3px),
+    radial-gradient(circle at 71% 88%, rgba(42, 191, 192, .16) 0 1px, transparent 3px),
+    linear-gradient(0deg, rgba(7, 49, 45, .32), transparent 34%);
+  background-size: 140px 180px, 190px 240px, 230px 210px, 100% 100%;
+  animation: oceanBubbles 18s linear infinite;
+}
+
+.ocean-shop-section.is-ocean-active > * {
+  position: relative;
+  z-index: 1;
+}
+
+.ocean-shop-section.is-ocean-active .product-grid {
+  position: relative;
+}
+
+.ocean-shop-section.is-ocean-active .product-grid::before {
+  content: "";
+  position: absolute;
+  left: -4%;
+  right: -4%;
+  bottom: -18px;
+  height: 92px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: .34;
+  background:
+    radial-gradient(ellipse at 12% 100%, rgba(45, 125, 92, .5) 0 16%, transparent 17%),
+    radial-gradient(ellipse at 25% 100%, rgba(27, 92, 86, .48) 0 13%, transparent 14%),
+    radial-gradient(ellipse at 82% 100%, rgba(45, 125, 92, .45) 0 17%, transparent 18%),
+    linear-gradient(90deg, transparent, rgba(50, 145, 120, .18), transparent);
+}
+
+.ocean-shop-section.is-ocean-active .product-card {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes oceanLightRays {
+  from {
+    opacity: .45;
+    transform: translateX(-18px);
+  }
+  to {
+    opacity: .75;
+    transform: translateX(18px);
+  }
+}
+
+@keyframes oceanBubbles {
+  from {
+    background-position: 0 0, 0 0, 0 0, 0 0;
+  }
+  to {
+    background-position: 0 -180px, 0 -240px, 0 -210px, 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ocean-shop-section.is-ocean-active::before,
+  .ocean-shop-section.is-ocean-active::after {
+    animation: none;
+  }
 }
 
 .prized-story,
@@ -3460,49 +3579,821 @@ body.intro-active .scroll-monarch-layer {
   }
 }
 
+/* Customer favourites and moderated reviews */
+.product-card {
+  position: relative;
+}
 
-/* Compact doorway from Chapter Two to the full handmade collection case. */
-.collections-discover-frame {
+.favourite-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 3;
+  width: 42px;
+  height: 42px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(244, 213, 141, .62);
+  border-radius: 999px;
+  color: var(--gold-light, #f4d58d);
+  background: rgba(22, 9, 27, .72);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .26);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+}
+
+.favourite-btn:hover,
+.favourite-btn:focus-visible {
+  transform: translateY(-1px) scale(1.04);
+  border-color: rgba(244, 213, 141, .92);
+  background: rgba(59, 25, 70, .92);
+  outline: 3px solid rgba(244, 213, 141, .32);
+  outline-offset: 3px;
+}
+
+.favourite-btn.is-saved {
+  color: #ffd8e6;
+  background: rgba(97, 31, 66, .92);
+}
+
+.review-submission-form {
+  max-width: 860px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding: clamp(20px, 4vw, 32px);
+  border: 1px solid rgba(244, 213, 141, .25);
+  border-radius: 8px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .045));
+  box-shadow: 0 22px 56px rgba(0, 0, 0, .24);
+}
+
+.review-submission-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--cream, #fff5df);
+  font-weight: 800;
+}
+
+.review-submission-form input,
+.review-submission-form select,
+.review-submission-form textarea {
+  width: 100%;
+  border: 1px solid rgba(244, 213, 141, .28);
+  border-radius: 8px;
+  padding: 12px 13px;
+  color: var(--cream, #fff5df);
+  background: rgba(14, 6, 17, .62);
+  font: inherit;
+}
+
+.review-submission-form input:focus-visible,
+.review-submission-form select:focus-visible,
+.review-submission-form textarea:focus-visible {
+  outline: 3px solid rgba(244, 213, 141, .32);
+  outline-offset: 2px;
+}
+
+.review-submission-form textarea,
+.review-consent,
+.review-moderation-note,
+.review-form-status,
+.review-submission-form .gold-button {
+  grid-column: 1 / -1;
+}
+
+.review-consent {
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.review-consent input {
+  width: auto;
+  margin-top: 4px;
+}
+
+.review-moderation-note,
+.review-form-status {
+  margin: 0;
+  color: rgba(255, 245, 223, .82);
+  line-height: 1.6;
+}
+
+.review-grid {
+  align-items: stretch;
+}
+
+.review-card {
+  border-radius: 8px;
+  border: 1px solid rgba(244, 213, 141, .22);
+  background: linear-gradient(160deg, rgba(255, 245, 223, .12), rgba(255, 245, 223, .055)), rgba(14, 6, 17, .7);
+  color: var(--cream, #fff5df);
+}
+
+.review-card p {
+  color: rgba(255, 245, 223, .84);
+}
+
+.review-card strong,
+.review-product,
+.review-date {
+  display: block;
+  margin-top: 10px;
+}
+
+.review-product,
+.review-date {
+  color: rgba(255, 245, 223, .72);
+  font-size: .92rem;
+}
+
+.review-photo {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(244, 213, 141, .22);
+}
+
+@media (max-width: 700px) {
+  .favourite-btn {
+    top: 10px;
+    right: 10px;
+    width: 44px;
+    height: 44px;
+  }
+
+  .review-submission-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Public launch storybook polish: category chapter atmospheres */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body.page-ready::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    linear-gradient(90deg, rgba(244, 213, 141, .18), rgba(20, 8, 28, .88)),
+    radial-gradient(circle at 12% 50%, rgba(255, 245, 223, .28), transparent 18rem);
+  transform: translateX(-14%) skewX(-7deg);
+  transition: opacity .34s ease, transform .42s ease;
+}
+
+body.page-turning::before {
+  opacity: 1;
+  transform: translateX(0) skewX(-7deg);
+}
+
+.ocean-shop-section {
+  transition: background .42s ease, box-shadow .42s ease;
+}
+
+.ocean-shop-section:is(.is-meadow-active, .is-garden-active, .is-ocean-active, .is-safari-active, .is-desk-active, .is-chapel-active, .is-game-active) {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.ocean-shop-section:is(.is-meadow-active, .is-garden-active, .is-ocean-active, .is-safari-active, .is-desk-active, .is-chapel-active, .is-game-active)::before,
+.ocean-shop-section:is(.is-meadow-active, .is-garden-active, .is-ocean-active, .is-safari-active, .is-desk-active, .is-chapel-active, .is-game-active)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.ocean-shop-section:is(.is-meadow-active, .is-garden-active, .is-ocean-active, .is-safari-active, .is-desk-active, .is-chapel-active, .is-game-active) > * {
+  position: relative;
+  z-index: 1;
+}
+
+.ocean-shop-section.is-meadow-active {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255, 221, 231, .34), transparent 17rem),
+    radial-gradient(circle at 82% 6%, rgba(244, 213, 141, .22), transparent 20rem),
+    linear-gradient(180deg, rgba(78, 44, 93, .52), rgba(72, 112, 77, .28) 55%, rgba(27, 12, 31, .76));
+}
+
+.ocean-shop-section.is-meadow-active::before {
+  background:
+    linear-gradient(108deg, transparent 7%, rgba(255, 245, 223, .16) 10%, transparent 23%),
+    radial-gradient(ellipse at 12% 100%, rgba(196, 136, 184, .42) 0 7%, transparent 8%),
+    radial-gradient(ellipse at 27% 100%, rgba(244, 213, 141, .32) 0 5%, transparent 6%),
+    radial-gradient(ellipse at 82% 100%, rgba(132, 184, 122, .34) 0 9%, transparent 10%);
+  animation: storyLightDrift 18s ease-in-out infinite alternate;
+}
+
+.ocean-shop-section.is-meadow-active::after {
+  background:
+    radial-gradient(circle at 14% 30%, rgba(244, 213, 141, .34) 0 1px, transparent 3px),
+    radial-gradient(circle at 60% 42%, rgba(255, 236, 190, .22) 0 1px, transparent 3px),
+    radial-gradient(ellipse at 70% 22%, rgba(255, 180, 195, .18) 0 1.2rem, transparent 1.3rem);
+  background-size: 150px 170px, 210px 220px, 360px 260px;
+  animation: storyParticlesRise 22s linear infinite;
+}
+
+.ocean-shop-section.is-garden-active {
+  background:
+    radial-gradient(circle at 12% 12%, rgba(255, 223, 235, .24), transparent 18rem),
+    radial-gradient(circle at 88% 18%, rgba(202, 224, 171, .22), transparent 18rem),
+    linear-gradient(180deg, rgba(50, 28, 56, .74), rgba(61, 92, 63, .36) 55%, rgba(29, 11, 33, .82));
+}
+
+.ocean-shop-section.is-garden-active::before {
+  background:
+    radial-gradient(ellipse at 5% 100%, rgba(135, 170, 98, .46) 0 12%, transparent 13%),
+    radial-gradient(ellipse at 95% 100%, rgba(175, 112, 160, .42) 0 13%, transparent 14%),
+    linear-gradient(45deg, transparent 74%, rgba(244, 213, 141, .11) 75%, transparent 84%);
+  animation: storyFoliageSway 20s ease-in-out infinite alternate;
+}
+
+.ocean-shop-section.is-garden-active::after {
+  background:
+    radial-gradient(circle at 20% 12%, rgba(255, 192, 206, .36) 0 2px, transparent 4px),
+    radial-gradient(circle at 72% 22%, rgba(244, 213, 141, .24) 0 2px, transparent 4px),
+    radial-gradient(ellipse at 84% 36%, rgba(255, 230, 126, .2) 0 .55rem, transparent .62rem);
+  background-size: 180px 260px, 240px 300px, 420px 300px;
+  animation: storyPetalsDrift 24s linear infinite;
+}
+
+.ocean-shop-section.is-ocean-active {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(42, 191, 192, .2), transparent 20rem),
+    radial-gradient(circle at 82% 18%, rgba(54, 120, 212, .16), transparent 22rem),
+    linear-gradient(180deg, rgba(6, 28, 58, .9), rgba(7, 73, 92, .62) 48%, rgba(23, 12, 32, .86));
+}
+
+.ocean-shop-section.is-ocean-active::before {
+  background:
+    linear-gradient(104deg, transparent 4%, rgba(216, 239, 255, .14) 8%, transparent 18%),
+    linear-gradient(116deg, transparent 38%, rgba(216, 239, 255, .11) 42%, transparent 52%),
+    linear-gradient(96deg, transparent 68%, rgba(216, 239, 255, .09) 72%, transparent 82%),
+    radial-gradient(ellipse at 8% 100%, rgba(40, 137, 117, .42) 0 11%, transparent 12%),
+    radial-gradient(ellipse at 92% 100%, rgba(32, 111, 97, .44) 0 13%, transparent 14%);
+  filter: blur(.3px);
+  animation: oceanLightRays 16s ease-in-out infinite alternate;
+}
+
+.ocean-shop-section.is-ocean-active::after {
+  background:
+    radial-gradient(circle at 12% 82%, rgba(180, 238, 255, .22) 0 1px, transparent 3px),
+    radial-gradient(circle at 38% 72%, rgba(255, 255, 255, .2) 0 1px, transparent 3px),
+    radial-gradient(circle at 71% 88%, rgba(42, 191, 192, .18) 0 1px, transparent 3px),
+    radial-gradient(ellipse at 76% 26%, rgba(7, 24, 45, .26) 0 .6rem, transparent .65rem),
+    linear-gradient(0deg, rgba(7, 49, 45, .32), transparent 34%);
+  background-size: 140px 180px, 190px 240px, 230px 210px, 330px 180px, 100% 100%;
+  animation: oceanBubbles 18s linear infinite;
+}
+
+.ocean-shop-section.is-safari-active {
+  background:
+    radial-gradient(circle at 70% 10%, rgba(255, 202, 112, .3), transparent 17rem),
+    linear-gradient(180deg, rgba(121, 71, 47, .54), rgba(174, 127, 62, .42) 45%, rgba(36, 18, 29, .82));
+}
+
+.ocean-shop-section.is-safari-active::before {
+  background:
+    linear-gradient(0deg, rgba(45, 39, 25, .5) 0 10%, transparent 11%),
+    radial-gradient(ellipse at 18% 78%, rgba(41, 45, 28, .42) 0 7%, transparent 8%),
+    radial-gradient(ellipse at 82% 76%, rgba(41, 45, 28, .34) 0 6%, transparent 7%),
+    linear-gradient(176deg, transparent 57%, rgba(57, 50, 38, .36) 58%, transparent 61%);
+  animation: storyFoliageSway 22s ease-in-out infinite alternate;
+}
+
+.ocean-shop-section.is-safari-active::after {
+  background:
+    radial-gradient(circle at 20% 34%, rgba(244, 213, 141, .22) 0 1px, transparent 3px),
+    radial-gradient(ellipse at 74% 18%, rgba(36, 25, 35, .28) 0 .35rem, transparent .4rem);
+  background-size: 170px 200px, 260px 180px;
+  animation: storyParticlesRise 26s linear infinite;
+}
+
+.ocean-shop-section.is-desk-active {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(244, 213, 141, .24), transparent 18rem),
+    repeating-linear-gradient(90deg, rgba(139, 88, 46, .16) 0 8px, rgba(75, 43, 34, .14) 8px 16px),
+    linear-gradient(180deg, rgba(86, 50, 40, .76), rgba(40, 19, 31, .86));
+}
+
+.ocean-shop-section.is-desk-active::before {
+  background:
+    linear-gradient(25deg, transparent 58%, rgba(244, 213, 141, .12) 59%, transparent 68%),
+    radial-gradient(circle at 18% 80%, rgba(244, 213, 141, .28) 0 4px, transparent 5px),
+    radial-gradient(circle at 24% 84%, rgba(155, 102, 177, .26) 0 4px, transparent 5px),
+    linear-gradient(90deg, transparent 62%, rgba(255, 245, 223, .12) 63% 64%, transparent 65%);
+}
+
+.ocean-shop-section.is-desk-active::after {
+  background:
+    linear-gradient(12deg, transparent 22%, rgba(255, 245, 223, .11) 23% 26%, transparent 27%),
+    radial-gradient(ellipse at 82% 88%, rgba(244, 213, 141, .16) 0 11%, transparent 12%);
+}
+
+.ocean-shop-section.is-chapel-active {
+  background:
+    radial-gradient(circle at 50% 10%, rgba(244, 213, 141, .2), transparent 18rem),
+    linear-gradient(180deg, rgba(49, 31, 55, .76), rgba(76, 48, 54, .46) 50%, rgba(24, 11, 29, .88));
+}
+
+.ocean-shop-section.is-chapel-active::before {
+  background:
+    linear-gradient(112deg, transparent 19%, rgba(142, 184, 209, .12) 20% 23%, transparent 24%),
+    linear-gradient(68deg, transparent 64%, rgba(182, 112, 151, .12) 65% 68%, transparent 69%),
+    radial-gradient(ellipse at 50% 96%, rgba(91, 58, 38, .38) 0 22%, transparent 23%);
+}
+
+.ocean-shop-section.is-chapel-active::after {
+  background:
+    radial-gradient(circle at 22% 44%, rgba(244, 213, 141, .26) 0 1px, transparent 3px),
+    linear-gradient(0deg, rgba(244, 213, 141, .24) 0 1.8rem, transparent 1.9rem);
+  background-size: 180px 220px, 100% 100%;
+  animation: storyParticlesRise 28s linear infinite;
+}
+
+.ocean-shop-section.is-game-active {
+  background:
+    radial-gradient(circle at 18% 8%, rgba(153, 205, 255, .22), transparent 18rem),
+    radial-gradient(circle at 85% 14%, rgba(244, 213, 141, .18), transparent 20rem),
+    linear-gradient(180deg, rgba(29, 68, 96, .58), rgba(43, 108, 62, .52) 55%, rgba(19, 13, 28, .82));
+}
+
+.ocean-shop-section.is-game-active::before {
+  background:
+    linear-gradient(0deg, rgba(49, 129, 68, .42) 0 18%, transparent 19%),
+    repeating-linear-gradient(90deg, transparent 0 86px, rgba(255, 255, 255, .12) 86px 88px, transparent 88px 174px),
+    linear-gradient(90deg, transparent 0 49%, rgba(255, 255, 255, .16) 49% 50%, transparent 50%);
+}
+
+.ocean-shop-section.is-game-active::after {
+  background:
+    radial-gradient(circle at 14% 20%, rgba(255, 255, 255, .24) 0 1.5rem, transparent 1.6rem),
+    radial-gradient(circle at 86% 18%, rgba(255, 255, 255, .2) 0 1.3rem, transparent 1.4rem),
+    radial-gradient(ellipse at 76% 34%, rgba(255, 255, 255, .16) 0 .7rem, transparent .75rem);
+  animation: storyLightDrift 20s ease-in-out infinite alternate;
+}
+
+.ocean-shop-section:is(.is-meadow-active, .is-garden-active, .is-ocean-active, .is-safari-active, .is-desk-active, .is-chapel-active, .is-game-active) .product-card,
+.ocean-shop-section:is(.is-meadow-active, .is-garden-active, .is-ocean-active, .is-safari-active, .is-desk-active, .is-chapel-active, .is-game-active) .no-results-card {
+  position: relative;
+  z-index: 2;
+  background: rgba(255, 250, 241, .94);
+  backdrop-filter: blur(8px);
+}
+
+.next-chapter-link {
+  position: relative;
+  z-index: 2;
   display: flex;
   justify-content: center;
-  width: 100%;
-  margin: 2rem auto 0;
+  margin: clamp(26px, 5vw, 48px) auto 0;
 }
 
-.collections-discover-frame a {
+.next-chapter-anchor {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-height: 46px;
-  padding: 0.75rem 1.65rem;
-  border: 1px solid rgba(218, 181, 95, 0.78);
+  gap: 14px;
+  min-height: 48px;
+  padding: 12px 20px;
+  border: 1px solid rgba(244, 213, 141, .38);
   border-radius: 999px;
-  background: linear-gradient(145deg, rgba(42, 31, 52, 0.92), rgba(21, 17, 31, 0.94));
-  color: #f4dfaa;
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: clamp(1rem, 1.4vw, 1.15rem);
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  color: var(--cream, #fff5df);
+  background: rgba(18, 8, 24, .56);
   text-decoration: none;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.34), inset 0 0 18px rgba(218, 181, 95, 0.08);
-  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, .18);
 }
 
-.collections-discover-frame a:hover,
-.collections-discover-frame a:focus-visible {
-  transform: translateY(-2px);
-  border-color: rgba(247, 218, 145, 0.95);
-  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.42), 0 0 20px rgba(218, 181, 95, 0.14);
-  outline: none;
+.next-chapter-anchor span {
+  color: rgba(255, 245, 223, .7);
+  font-size: .78rem;
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-transform: uppercase;
 }
 
-@media (max-width: 640px) {
-  .collections-discover-frame {
-    margin-top: 1.4rem;
+.next-chapter-anchor strong {
+  color: var(--gold-light, #f4d58d);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.35rem;
+}
+
+.next-chapter-anchor:focus-visible,
+.next-chapter-anchor:hover {
+  outline: 3px solid rgba(244, 213, 141, .32);
+  outline-offset: 3px;
+  transform: translateY(-1px);
+}
+
+.august-exclusive-feature {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 20% 15%, rgba(244, 213, 141, .28), transparent 12rem),
+    linear-gradient(145deg, rgba(64, 28, 76, .92), rgba(24, 8, 30, .96));
+  box-shadow: 0 34px 110px rgba(0, 0, 0, .38), inset 0 0 0 1px rgba(244, 213, 141, .18);
+}
+
+.august-exclusive-feature::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(244, 213, 141, .34) 0 1px, transparent 2px),
+    linear-gradient(90deg, rgba(255, 245, 223, .06), transparent 35%, rgba(244, 213, 141, .08));
+  background-size: 90px 110px, 100% 100%;
+  opacity: .55;
+  animation: storyParticlesRise 26s linear infinite;
+}
+
+.custom-story {
+  position: relative;
+  overflow: hidden;
+}
+
+.custom-story::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 16%, rgba(244, 213, 141, .2), transparent 18rem),
+    repeating-linear-gradient(90deg, rgba(130, 80, 45, .08) 0 12px, transparent 12px 24px),
+    linear-gradient(180deg, rgba(68, 37, 42, .16), transparent 55%);
+}
+
+.custom-story > * {
+  position: relative;
+  z-index: 1;
+}
+
+.treasure-preview {
+  box-shadow: 0 26px 70px rgba(0, 0, 0, .22), 0 0 34px rgba(244, 213, 141, .12);
+}
+
+@keyframes storyLightDrift {
+  from { opacity: .52; transform: translate3d(-12px, 0, 0); }
+  to { opacity: .82; transform: translate3d(12px, -5px, 0); }
+}
+
+@keyframes storyParticlesRise {
+  to { background-position: 120px -220px, -80px -260px, 0 0, 0 0, 0 0; }
+}
+
+@keyframes storyPetalsDrift {
+  to { background-position: 120px 240px, -180px 320px, 0 0; }
+}
+
+@keyframes storyFoliageSway {
+  from { opacity: .62; transform: translateX(-6px); }
+  to { opacity: .82; transform: translateX(6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.page-ready::before,
+  .ocean-shop-section::before,
+  .ocean-shop-section::after,
+  .august-exclusive-feature::after {
+    animation: none !important;
+    transition: none !important;
   }
 
-  .collections-discover-frame a {
-    width: min(88%, 320px);
-    padding-inline: 1.2rem;
+  body.page-turning::before {
+    opacity: 0;
   }
+}
+
+@media (max-width: 700px) {
+  .next-chapter-anchor {
+    width: min(100%, 340px);
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+  }
+}
+
+
+/* Birds — Across the Open Sky */
+.ocean-shop-section.is-sky-active{background:linear-gradient(180deg,rgba(90,153,213,.82),rgba(238,196,132,.72) 58%,rgba(84,92,62,.72)),radial-gradient(circle at 22% 18%,rgba(255,246,193,.9),transparent 22%);position:relative;overflow:hidden}
+.ocean-shop-section.is-sky-active:before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 20% 32%,rgba(255,255,255,.62) 0 7%,transparent 8%),radial-gradient(ellipse at 70% 20%,rgba(255,255,255,.46) 0 9%,transparent 10%),linear-gradient(155deg,transparent 0 60%,rgba(51,67,49,.34) 61% 100%);opacity:.8}
+.ocean-shop-section.is-sky-active .section-heading h2:after{content:" — Across the Open Sky";font-size:.42em;display:block;letter-spacing:.08em;color:#fff4d2}
+/* Ice Cream — Sundae Shop */
+.ocean-shop-section.is-sundae-active{background:linear-gradient(rgba(255,244,246,.55),rgba(255,230,235,.74)),url('../images/ice-cream-parlor.png') center/cover fixed;position:relative}
+.ocean-shop-section.is-sundae-active .section-heading h2:after{content:" — The Sundae Shop";font-size:.42em;display:block;letter-spacing:.08em;color:#7e354b}
+.ocean-shop-section.is-sundae-active .product-card{box-shadow:0 18px 42px rgba(123,55,75,.22);border-color:rgba(225,132,151,.35)}
+
+/* Create Yours desktop polish — keep the inspiration scene compact beside the form. */
+@media (min-width: 901px) {
+  .chapter-two-layout {
+    align-items: start;
+    grid-template-columns: minmax(320px, .78fr) minmax(520px, 1.22fr);
+    gap: clamp(22px, 3vw, 42px);
+  }
+
+  .workspace-scene {
+    position: sticky;
+    top: 92px;
+    min-height: 0;
+    height: min(520px, calc(100vh - 118px));
+    max-height: 520px;
+  }
+
+  .treasure-builder {
+    min-height: 0;
+  }
+
+  .workspace-photo-primary {
+    left: 7%;
+    right: 9%;
+    top: 8%;
+    height: 43%;
+  }
+
+  .workspace-photo-flower {
+    width: 42%;
+    height: 30%;
+    right: 6%;
+    bottom: 9%;
+  }
+
+  .treasure-preview {
+    grid-template-columns: minmax(0, 1fr) 150px;
+    gap: 18px;
+  }
+
+  .home-preview-art-wrap,
+  .home-selected-product-photo,
+  .home-preview-beads,
+  .hardware-preview-card {
+    width: 150px;
+    max-width: 150px;
+  }
+
+  .home-selected-product-photo {
+    height: 112px;
+  }
+
+  .home-preview-beads {
+    height: 150px;
+    max-height: 150px;
+  }
+}
+
+/* 2026-07-25 collection worlds: approved storybook direction */
+.ocean-shop-section:is(.is-butterfly-garden-active,.is-forest-active,.is-flags-active,.is-sky-active,.is-sundae-active) {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.ocean-shop-section:is(.is-butterfly-garden-active,.is-forest-active,.is-flags-active,.is-sky-active,.is-sundae-active)::before,
+.ocean-shop-section:is(.is-butterfly-garden-active,.is-forest-active,.is-flags-active,.is-sky-active,.is-sundae-active)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.ocean-shop-section:is(.is-butterfly-garden-active,.is-forest-active,.is-flags-active,.is-sky-active,.is-sundae-active) > * { position: relative; z-index: 1; }
+.ocean-shop-section:is(.is-butterfly-garden-active,.is-forest-active,.is-flags-active,.is-sky-active,.is-sundae-active) .product-card,
+.ocean-shop-section:is(.is-butterfly-garden-active,.is-forest-active,.is-flags-active,.is-sky-active,.is-sundae-active) .no-results-card {
+  background: rgba(255,250,241,.94);
+  backdrop-filter: blur(8px);
+}
+
+/* Butterflies — a true garden of flowers */
+.ocean-shop-section.is-butterfly-garden-active {
+  background:
+    radial-gradient(circle at 50% 4%, rgba(255,244,197,.52), transparent 24rem),
+    linear-gradient(180deg, rgba(112,164,201,.78) 0 25%, rgba(116,164,104,.68) 62%, rgba(43,49,32,.9) 100%);
+}
+.ocean-shop-section.is-butterfly-garden-active::before {
+  background:
+    radial-gradient(ellipse at 5% 100%, rgba(245,146,185,.82) 0 5%, transparent 5.5%),
+    radial-gradient(ellipse at 15% 96%, rgba(255,218,105,.84) 0 4%, transparent 4.5%),
+    radial-gradient(ellipse at 29% 100%, rgba(191,128,211,.74) 0 5%, transparent 5.5%),
+    radial-gradient(ellipse at 72% 98%, rgba(255,179,191,.8) 0 5%, transparent 5.5%),
+    radial-gradient(ellipse at 88% 100%, rgba(241,209,101,.86) 0 6%, transparent 6.5%),
+    radial-gradient(ellipse at 98% 95%, rgba(183,124,205,.72) 0 4%, transparent 4.5%),
+    linear-gradient(0deg, rgba(40,91,48,.58) 0 18%, transparent 19%);
+  animation: storyFoliageSway 18s ease-in-out infinite alternate;
+}
+.ocean-shop-section.is-butterfly-garden-active::after {
+  background:
+    radial-gradient(circle at 18% 28%, rgba(255,229,238,.9) 0 2px, transparent 3px),
+    radial-gradient(circle at 67% 22%, rgba(255,236,180,.86) 0 2px, transparent 3px),
+    radial-gradient(ellipse at 82% 34%, rgba(72,35,81,.35) 0 .5rem, transparent .56rem);
+  background-size: 170px 220px, 230px 280px, 360px 240px;
+  animation: storyPetalsDrift 22s linear infinite;
+}
+
+/* Animals — deep, friendly forest */
+.ocean-shop-section.is-forest-active {
+  background:
+    radial-gradient(circle at 48% 8%, rgba(246,220,150,.24), transparent 18rem),
+    linear-gradient(180deg, rgba(27,72,58,.92), rgba(38,83,55,.84) 52%, rgba(26,28,20,.96));
+}
+.ocean-shop-section.is-forest-active::before {
+  background:
+    linear-gradient(90deg, rgba(29,38,28,.58) 0 4%, transparent 4.5% 16%, rgba(30,42,29,.55) 16.5% 20%, transparent 20.5% 78%, rgba(30,42,29,.5) 78.5% 83%, transparent 83.5%),
+    radial-gradient(ellipse at 10% 100%, rgba(64,111,64,.72) 0 14%, transparent 15%),
+    radial-gradient(ellipse at 90% 100%, rgba(53,97,57,.76) 0 16%, transparent 17%),
+    radial-gradient(ellipse at 30% 92%, rgba(117,67,43,.62) 0 3%, transparent 3.5%);
+  animation: storyFoliageSway 20s ease-in-out infinite alternate;
+}
+.ocean-shop-section.is-forest-active::after {
+  background:
+    radial-gradient(circle at 21% 30%, rgba(245,219,145,.26) 0 1px, transparent 3px),
+    radial-gradient(circle at 73% 40%, rgba(245,219,145,.2) 0 1px, transparent 3px),
+    radial-gradient(ellipse at 78% 88%, rgba(202,84,66,.55) 0 .55rem, transparent .62rem);
+  background-size: 180px 210px, 230px 260px, 300px 220px;
+  animation: storyParticlesRise 26s linear infinite;
+}
+
+/* Ocean animals — beach, shells, shore, then sea */
+.ocean-shop-section.is-ocean-active {
+  background:
+    linear-gradient(180deg, rgba(111,189,224,.92) 0 22%, rgba(239,231,188,.9) 22% 39%, rgba(52,171,191,.84) 40% 62%, rgba(6,65,91,.94) 100%);
+}
+.ocean-shop-section.is-ocean-active::before {
+  background:
+    radial-gradient(ellipse at 9% 35%, rgba(255,248,223,.94) 0 1.1rem, transparent 1.2rem),
+    radial-gradient(ellipse at 22% 34%, rgba(231,174,139,.85) 0 .75rem, transparent .82rem),
+    radial-gradient(ellipse at 82% 36%, rgba(255,247,220,.92) 0 1rem, transparent 1.08rem),
+    radial-gradient(ellipse at 94% 35%, rgba(223,160,121,.84) 0 .65rem, transparent .72rem),
+    repeating-radial-gradient(ellipse at 50% 42%, rgba(255,255,255,.32) 0 2px, transparent 3px 18px);
+  background-size: 100% 100%;
+  animation: oceanLightRays 16s ease-in-out infinite alternate;
+}
+.ocean-shop-section.is-ocean-active::after {
+  background:
+    radial-gradient(circle at 13% 72%, rgba(220,248,255,.32) 0 2px, transparent 4px),
+    radial-gradient(circle at 48% 80%, rgba(255,255,255,.27) 0 2px, transparent 4px),
+    radial-gradient(circle at 78% 68%, rgba(216,247,255,.3) 0 2px, transparent 4px),
+    linear-gradient(0deg, rgba(8,76,67,.42), transparent 30%);
+  background-size: 150px 190px, 210px 240px, 260px 230px, 100% 100%;
+  animation: oceanBubbles 19s linear infinite;
+}
+
+/* Flags — all countries, travelling together */
+.ocean-shop-section.is-flags-active {
+  background:
+    radial-gradient(circle at 50% 12%, rgba(255,245,205,.3), transparent 20rem),
+    linear-gradient(180deg, rgba(42,81,116,.88), rgba(91,63,90,.72) 54%, rgba(31,19,37,.94));
+}
+.ocean-shop-section.is-flags-active::before {
+  background:
+    repeating-linear-gradient(125deg, transparent 0 55px, rgba(255,255,255,.11) 56px 58px, transparent 59px 116px),
+    radial-gradient(circle at 18% 22%, rgba(229,66,70,.64) 0 1.4rem, transparent 1.5rem),
+    radial-gradient(circle at 48% 16%, rgba(255,220,76,.65) 0 1.3rem, transparent 1.4rem),
+    radial-gradient(circle at 78% 23%, rgba(71,157,211,.66) 0 1.4rem, transparent 1.5rem);
+}
+.ocean-shop-section.is-flags-active::after {
+  background:
+    radial-gradient(ellipse at 50% 104%, rgba(193,153,91,.38) 0 34%, transparent 35%),
+    linear-gradient(155deg, transparent 60%, rgba(244,213,141,.12) 61% 63%, transparent 64%);
+}
+
+/* Macaw is a regular bird treasure, not an exclusive. */
+.product-card[data-category="Birds"] .product-image { object-fit: contain; object-position: center; padding: 14px; background: rgba(249,242,225,.9); }
+
+@media (max-width: 700px) {
+  .photo-collection-grid a:nth-child(1),
+  .photo-collection-grid a:last-child { grid-column: span 1; }
+  .photo-collection-grid a { min-height: 220px; }
+  .ocean-shop-section.is-sundae-active { background-attachment: scroll; }
+}
+
+
+/* Clear chapter-specific helper text. */
+.collection-world-detail {
+  width: fit-content;
+  max-width: min(760px, 92%);
+  margin: .8rem auto 0;
+  padding: .65rem 1rem;
+  border: 1px solid rgba(196,156,72,.55);
+  border-radius: 999px;
+  background: rgba(255,250,237,.9);
+  color: #4c2f45;
+  font-weight: 700;
+  box-shadow: 0 8px 22px rgba(31,18,29,.14);
+}
+
+/* Shoreline shells remain visible without covering product cards. */
+.ocean-shop-section.is-ocean-active .section-heading::after {
+  content: "Seashells on the shore · handmade ocean treasures beyond the waves";
+  display: block;
+  width: fit-content;
+  max-width: 92%;
+  margin: .9rem auto 0;
+  padding: .55rem .9rem;
+  border-radius: 999px;
+  background: rgba(255,249,226,.88);
+  color: #315b67;
+  font-weight: 700;
+  box-shadow: 0 7px 20px rgba(11,58,72,.14);
+}
+
+/* Flags chapter reads as a world collection rather than one-country stock. */
+.ocean-shop-section.is-flags-active .section-heading::after {
+  content: "Every country is welcome — request the flag that feels like home";
+  display: block;
+  width: fit-content;
+  max-width: 92%;
+  margin: .9rem auto 0;
+  padding: .6rem 1rem;
+  border: 1px solid rgba(244,213,141,.55);
+  border-radius: 999px;
+  background: rgba(38,25,49,.78);
+  color: #fff6d8;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+/* Approved storybook worlds: Enchanted Beings + Tiny Garden Friends */
+.ocean-shop-section:is(.is-enchanted-active,.is-tiny-garden-active) {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.ocean-shop-section:is(.is-enchanted-active,.is-tiny-garden-active)::before,
+.ocean-shop-section:is(.is-enchanted-active,.is-tiny-garden-active)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.ocean-shop-section:is(.is-enchanted-active,.is-tiny-garden-active) > * { position: relative; z-index: 1; }
+.ocean-shop-section:is(.is-enchanted-active,.is-tiny-garden-active) .product-card,
+.ocean-shop-section:is(.is-enchanted-active,.is-tiny-garden-active) .no-results-card {
+  background: rgba(255, 252, 244, .94);
+  backdrop-filter: blur(8px);
+}
+.ocean-shop-section.is-enchanted-active {
+  color: #fff7ff;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(190, 109, 255, .32), transparent 28%),
+    radial-gradient(circle at 82% 20%, rgba(255, 106, 220, .25), transparent 30%),
+    linear-gradient(145deg, #110d2d 0%, #2c1450 46%, #071d28 100%);
+}
+.ocean-shop-section.is-enchanted-active::before {
+  background:
+    radial-gradient(circle at 15% 28%, rgba(255,255,255,.9) 0 2px, transparent 3px),
+    radial-gradient(circle at 72% 18%, rgba(255,225,130,.9) 0 2px, transparent 3px),
+    radial-gradient(circle at 88% 42%, rgba(224,156,255,.9) 0 3px, transparent 4px);
+  background-size: 150px 130px, 210px 180px, 260px 220px;
+  opacity: .7;
+}
+.ocean-shop-section.is-enchanted-active::after {
+  background: linear-gradient(to top, rgba(4,12,18,.78), transparent 62%);
+}
+.ocean-shop-section.is-enchanted-active .section-heading h2,
+.ocean-shop-section.is-enchanted-active .chapter-kicker,
+.ocean-shop-section.is-enchanted-active .shop-results-row { color: #fff4d4; }
+.ocean-shop-section.is-enchanted-active .filter-btn.active { background: #8b4bb2; color: white; }
+
+.ocean-shop-section.is-tiny-garden-active {
+  color: #173d20;
+  background:
+    radial-gradient(circle at 10% 30%, rgba(255, 239, 157, .65), transparent 34%),
+    radial-gradient(circle at 88% 24%, rgba(255, 255, 255, .7), transparent 28%),
+    linear-gradient(145deg, #f8efbb 0%, #b8d88f 45%, #4f7d42 100%);
+}
+.ocean-shop-section.is-tiny-garden-active::before {
+  background:
+    radial-gradient(ellipse at 8% 80%, rgba(255,255,255,.75) 0 5%, transparent 6%),
+    radial-gradient(ellipse at 92% 78%, rgba(255,210,220,.75) 0 5%, transparent 6%),
+    radial-gradient(circle at 70% 20%, rgba(255,255,255,.6) 0 3px, transparent 4px);
+  background-size: 130px 130px, 145px 145px, 110px 110px;
+  opacity: .55;
+}
+.ocean-shop-section.is-tiny-garden-active::after {
+  background: linear-gradient(to top, rgba(31,73,38,.55), transparent 55%);
+}
+.ocean-shop-section.is-tiny-garden-active .filter-btn.active { background: #356d3c; color: white; }
+
+.photo-collection-grid a img[src$="unicorn.jpeg"],
+.photo-collection-grid a img[src$="ladybug-backpack.jpeg"],
+.product-card img[src$="unicorn.jpeg"],
+.product-card img[src$="ladybug-backpack.jpeg"],
+.product-card img[src$="dragonfly-keychain.jpeg"] {
+  object-fit: contain;
+  background: rgba(255,255,255,.82);
 }

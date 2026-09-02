@@ -129,7 +129,6 @@
 
   const setupPage = () => {
     protectImages();
-    setupScrollMonarchs();
   };
 
   if (document.readyState !== "loading") {

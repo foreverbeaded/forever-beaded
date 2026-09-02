@@ -12,16 +12,23 @@
   <link rel="stylesheet" href="css/book.css" />
   <link rel="stylesheet" href="css/garden.css" />
   <link rel="stylesheet" href="css/animations.css" />
+  <link rel="stylesheet" href="css/site-butterflies.css?v=gentle-1">
+  <link rel="stylesheet" href="css/master-header.css?v=20260731">
 </head>
 <body class="storybook-home storybook-page storybook-page-shell">
   <header class="story-header">
-    <a class="story-brand" href="index.html" aria-label="Forever Beaded home"><span>Forever Beaded</span><small>by Gladlyn</small></a>
-    <button id="storyMenuButton" class="story-menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button>
+    <a class="story-brand" href="index.html" aria-label="Forever Beaded home">
+      <span>Forever Beaded</span>
+      <small>by Gladlyn</small>
+    </a>
+    <button id="storyMenuButton" class="story-menu-button" type="button" aria-label="Open navigation" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
     <nav id="storyNav" class="story-nav" aria-label="Main navigation">
       <a href="collections.html">Collections</a>
       <a href="treasures.html">Treasures</a>
-      <a href="maker.html">Our Story</a>
-      <a href="reviews.html" aria-current="page">Kind Words</a>
+      <a href="index.html#chapterOne">Our Story</a>
+      <a href="reviews.html">Kind Words</a>
       <a href="maker.html">Meet the Maker</a>
       <a href="https://foreverbeadedbyglad.etsy.com" target="_blank" rel="noopener noreferrer">Shop on Etsy</a>
       <a class="nav-order" href="create.html">Create Yours</a>
@@ -48,11 +55,17 @@
         <h2>Real customer reviews</h2>
         <p>Customers can choose stars and write their honest review here.</p>
       </div>
-      <form class="review-form" id="reviewForm">
-        <label>Your name <input id="reviewName" maxlength="40" placeholder="Example: Sarah" required></label>
+      <form class="review-form review-submission-form" id="reviewForm">
+        <label>Display name <input id="reviewName" maxlength="40" placeholder="Example: Sarah" autocomplete="name" required></label>
+        <label>Email <input id="reviewEmail" type="email" maxlength="80" placeholder="you@example.com" autocomplete="email" required></label>
+        <label>Product purchased <input id="reviewProduct" maxlength="80" placeholder="Example: Butterfly keychain"></label>
         <label>Stars <select id="reviewStars" required><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select></label>
-        <label>Your review <textarea id="reviewText" maxlength="220" placeholder="Write your honest review here..." required></textarea></label>
-        <button class="gold-button" type="submit">Add Review</button>
+        <label>Your review <textarea id="reviewText" maxlength="600" placeholder="Write your honest review here..." required></textarea></label>
+        <label>Optional photo <input id="reviewPhoto" type="file" accept="image/*"></label>
+        <label class="review-consent"><input id="reviewConsent" type="checkbox" required> I agree that my display name, review, rating, product name, and approved photo may be shown publicly after review.</label>
+        <p class="review-moderation-note">Reviews are submitted for approval before appearing publicly. Your email is used only to verify the review and will not be displayed.</p>
+        <button class="gold-button" type="submit">Submit Review for Approval</button>
+        <p class="review-form-status" id="reviewFormStatus" role="status" aria-live="polite"></p>
       </form>
       <div class="review-grid" id="reviewGrid"></div>
     </section>
@@ -66,5 +79,7 @@
   <script src="js/butterflies.js?v=butterfly-refine-20260711"></script>
 <script src="js/garden.js?v=final-polish-20260716"></script>
   <script src="js/app.js"></script>
+  <script src="js/site-butterflies.js?v=homepage-book-only-20260731"></script>
+  <script src="js/master-header.js?v=20260731"></script>
 </body>
 </html>

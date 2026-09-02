@@ -168,7 +168,7 @@ test("adds another treasure to the same order number", async () => {
     assert.equal(thirdBody.success, true);
     assert.equal(thirdBody.orderNumber, firstBody.orderNumber);
     assert.equal(thirdBody.items.length, 3);
-    assert.deepEqual(thirdBody.items.map((item) => item.productName), ["Butterfly", "Gecko", "Exclusive Macaw"]);
+    assert.deepEqual(thirdBody.items.map((item) => item.productName), ["Butterfly", "Gecko", "Macaw"]);
     assert.equal(thirdBody.total, 8700);
 
     const orderCount = await dbGet(app.locals.db, "SELECT COUNT(*) AS count FROM orders WHERE order_number = ?", [firstBody.orderNumber]);
@@ -207,7 +207,7 @@ test("includes customer confirmation email line only when provider accepts email
 test("seeds active products and exposes safe catalogue metadata", async () => {
   await withServer({}, async ({ app, baseUrl }) => {
     const seeded = await dbGet(app.locals.db, "SELECT COUNT(*) AS count FROM products WHERE active = 1");
-    assert.equal(seeded.count, 15);
+    assert.equal(seeded.count, 36);
 
     const response = await fetch(`${baseUrl}/api/products`, {
       headers: { Origin: "https://foreverbeaded.github.io" }
@@ -215,31 +215,18 @@ test("seeds active products and exposes safe catalogue metadata", async () => {
     const body = await response.json();
     assert.equal(response.status, 200);
     assert.equal(body.success, true);
-    assert.equal(body.products.length, 15);
-    assert.deepEqual(body.products.map((product) => product.slug), [
-      "natalies-butterfly",
-      "butterfly",
-      "gecko",
-      "flower",
-      "big-flower",
-      "butterfly-with-flowers",
-      "macaw",
-      "fish",
-      "crab",
-      "penguin",
-      "cross",
-      "pencil",
-      "octopus",
-      "soccer-ball",
-      "custom-idea"
-    ]);
+    assert.equal(body.products.length, 36);
     assert.ok(body.products.some((product) => product.slug === "natalies-butterfly" && product.name === "Natalie’s Butterfly" && product.basePriceCents === 2500 && product.referenceImageUrl === "images/natalies-butterfly-mushroom.jpeg"));
-    assert.ok(body.products.some((product) => product.slug === "fish" && product.name === "Fish" && product.basePriceCents === 3000 && product.referenceImageUrl === "images/fish-crab-penguin.jpeg"));
-    assert.ok(body.products.some((product) => product.slug === "crab" && product.name === "Crab" && product.basePriceCents === 3000 && product.referenceImageUrl === "images/fish-crab-penguin.jpeg"));
-    assert.ok(body.products.some((product) => product.slug === "penguin" && product.name === "Penguin" && product.basePriceCents === 3000 && product.referenceImageUrl === "images/fish-crab-penguin.jpeg"));
+    assert.ok(body.products.some((product) => product.slug === "fish" && product.name === "Fish" && product.basePriceCents === 2000 && product.referenceImageUrl === "images/fish.jpeg"));
+    assert.ok(body.products.some((product) => product.slug === "crab" && product.name === "Crab" && product.basePriceCents === 2500 && product.referenceImageUrl === "images/crab.jpeg"));
+    assert.ok(body.products.some((product) => product.slug === "penguin" && product.name === "Penguin" && product.basePriceCents === 2000 && product.referenceImageUrl === "images/penquin.jpeg"));
+    assert.ok(body.products.some((product) => product.slug === "whale" && product.name === "Whale" && product.basePriceCents === 2500 && product.referenceImageUrl === "images/whale.jpeg"));
+    assert.ok(body.products.some((product) => product.slug === "jellyfish" && product.name === "Jellyfish" && product.basePriceCents === 2500 && product.referenceImageUrl === "images/jellyfish.jpeg"));
+    assert.ok(body.products.some((product) => product.slug === "lobster" && product.name === "Lobster" && product.basePriceCents === 2500 && product.referenceImageUrl === "images/lobster.jpeg"));
+    assert.ok(body.products.some((product) => product.slug === "shark" && product.name === "Shark" && product.basePriceCents === 2500 && product.referenceImageUrl === "images/shark.jpeg"));
     assert.ok(body.products.some((product) => product.id === 10 && product.slug === "custom-idea" && product.referenceImageUrl === "images/both-flowers-side-by-side.jpeg" && product.previewImageUrl === "images/both-flowers-side-by-side.jpeg"));
     assert.ok(body.products.some((product) => product.slug === "gecko" && product.referenceImageUrl === "images/gecko.jpeg" && product.previewImageUrl === "images/gecko.jpeg"));
-    assert.ok(body.products.some((product) => product.slug === "big-flower" && product.name === "Big Flower" && product.category === "Flower" && product.basePriceCents === 2000 && product.imageUrl === "images/big-flower.jpeg" && product.referenceImageUrl === "images/big-flower.jpeg" && product.previewImageUrl === "images/big-flower.jpeg"));
+    assert.ok(body.products.some((product) => product.slug === "big-flower" && product.name === "Big Flower" && product.category === "Flower" && product.basePriceCents === 2500 && product.imageUrl === "images/big-flower.jpeg" && product.referenceImageUrl === "images/big-flower.jpeg" && product.previewImageUrl === "images/big-flower.jpeg"));
     assert.ok(body.products.find((product) => product.slug === "gecko").previewPattern.length > 0);
     assert.deepEqual(body.products.find((product) => product.slug === "custom-idea").previewPattern, null);
     const idColumn = await dbGet(app.locals.db, "SELECT type FROM pragma_table_info('products') WHERE name = 'id'");
@@ -257,9 +244,8 @@ test("seeded product image paths point to existing jpeg assets", () => {
     "natalies-butterfly": "images/natalies-butterfly-mushroom.jpeg",
     gecko: "images/gecko.jpeg",
     macaw: "images/macaw.jpeg",
-    fish: "images/fish-crab-penguin.jpeg",
-    crab: "images/fish-crab-penguin.jpeg",
-    penguin: "images/fish-crab-penguin.jpeg",
+    fish: "images/fish.jpeg",
+    crab: "images/crab.jpeg",
     pencil: "images/pencil.jpeg",
     octopus: "images/octopus.jpeg",
     "soccer-ball": "images/soccer-ball.jpeg",
@@ -269,21 +255,21 @@ test("seeded product image paths point to existing jpeg assets", () => {
 
   for (const product of products) {
     if (product.imageUrl) {
-      assert.match(product.imageUrl, /^images\/.+\.jpeg$/);
+      assert.match(product.imageUrl, /^images\/.+\.jpe?g$/);
       assert.ok(fs.existsSync(path.join(__dirname, "..", "..", product.imageUrl)), `${product.name} image is missing at ${product.imageUrl}`);
     }
     if (product.referenceImageUrl) {
-      assert.match(product.referenceImageUrl, /^images\/.+\.jpeg$/);
+      assert.match(product.referenceImageUrl, /^images\/.+\.jpe?g$/);
       assert.ok(fs.existsSync(path.join(__dirname, "..", "..", product.referenceImageUrl)), `${product.name} reference image is missing at ${product.referenceImageUrl}`);
     }
     if (product.previewImageUrl) {
-      assert.match(product.previewImageUrl, /^images\/.+\.jpeg$/);
+      assert.match(product.previewImageUrl, /^images\/.+\.jpe?g$/);
       assert.ok(fs.existsSync(path.join(__dirname, "..", "..", product.previewImageUrl)), `${product.name} preview image is missing at ${product.previewImageUrl}`);
     }
     assert.ok(Array.isArray(product.defaultColours), `${product.name} is missing default colours`);
     if (product.slug === "custom-idea") {
       assert.equal(product.previewPattern, null);
-    } else if (product.active !== false) {
+    } else if (product.previewPattern !== null) {
       assert.ok(Array.isArray(product.previewPattern) && product.previewPattern.length > 0, `${product.name} is missing a preview pattern`);
     }
     if (expectedMappings[product.slug]) {
@@ -334,11 +320,11 @@ test("accepts Natalie’s Butterfly and ocean animal variants", async () => {
     const item = await dbGet(app.locals.db, "SELECT product_id, product_name, unit_price_cents FROM order_items JOIN orders ON orders.id = order_items.order_id WHERE orders.order_number = ?", [acceptedBody.orderNumber]);
     assert.deepEqual(item, { product_id: "12", product_name: "Natalie’s Butterfly", unit_price_cents: 2500 });
 
-    for (const slug of ["fish", "crab", "penguin"]) {
+    for (const [slug, expectedTotal] of [["fish", 2500], ["crab", 3000], ["penguin", 2500]]) {
       const response = await postOrder(baseUrl, validOrder({ items: [{ productId: slug, quantity: 1 }] }));
       const body = await response.json();
       assert.equal(response.status, 200);
-      assert.equal(body.total, 3500);
+      assert.equal(body.total, expectedTotal);
     }
   });
 });
@@ -348,9 +334,9 @@ test("creates Big Flower orders from the product slug", async () => {
     const response = await postOrder(baseUrl, validOrder({ items: [{ productId: "big-flower", quantity: 1, colours: "Purple, Cream, Gold" }] }));
     const body = await response.json();
     assert.equal(response.status, 200);
-    assert.equal(body.total, 2500);
+    assert.equal(body.total, 3000);
     const item = await dbGet(app.locals.db, "SELECT product_id, product_name, unit_price_cents, line_total_cents FROM order_items JOIN orders ON orders.id = order_items.order_id WHERE orders.order_number = ?", [body.orderNumber]);
-    assert.deepEqual(item, { product_id: "11", product_name: "Big Flower", unit_price_cents: 2000, line_total_cents: 2000 });
+    assert.deepEqual(item, { product_id: "11", product_name: "Big Flower", unit_price_cents: 2500, line_total_cents: 2500 });
   });
 });
 

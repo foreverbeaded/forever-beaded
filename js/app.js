@@ -1,186 +1,101 @@
+/* Load the Sandy Beaches card component after page-local styles so every
+   catalogue-driven collection receives the same final card contract. */
+if (document.body?.classList.contains("world-page") && !document.querySelector('link[href*="compact-product-cards.css"]')) {
+  const compactCardsStylesheet = document.createElement("link");
+  compactCardsStylesheet.rel = "stylesheet";
+  compactCardsStylesheet.href = "css/compact-product-cards.css?v=3";
+  document.head.append(compactCardsStylesheet);
+}
+
 const products = [
-  {
-    id: 1,
-    name: "Exclusive Macaw",
-    price: 47,
-    category: "Macaw",
-    image: "images/macaw.jpeg",
-    description: "Forever Beaded Exclusive:A vibrant macaw design, perfect for bird lovers."
-  },
-  {
-    id: 2,
-    name: "Natalie's Butterfly",
-    price: 25,
-    category: "Butterfly",
-    image: "images/natalies-butterfly-mushroom.jpeg",
-    description: "Inspired by Natalie's love for nature, this butterfly design is a delightful addition to any collection."
-  },
-  {
-    id: 3,
-    name: "Butterfly Keychain",
-    price: 20,
-    category: "Butterfly",
-    image: "images/butterfly.jpeg",
-    description: "A charming butterfly keychain, perfect for adding a touch of nature to your keys."
-  },
-  {
-    id: 4,
-    name: "Butterflies collection",
-    price: 22,
-    category: "Butterfly",
-    image: "images/butterflies.jpeg",
-    description: "A beautiful collection of butterfly designs, perfect for nature lovers."
-  },
-  {
-    id: 5,
-    name: "Flower Braided",
-    price: 18,
-    category: "Flower",
-    image: "images/flower-braided.jpeg",
-    description: "A beautiful braided flower design, perfect for adding a touch of nature to your accessories."
-  },
-  {
-    id: 6,
-    name: "Large Flower",
-    price: 20,
-    category: "Flower",
-    image: "images/big-flower.jpeg",
-    description: "A large flower design, perfect for making a statement with your accessories."
-  },
-  {
-    id: 7,
-    name: "Intricated Flower",
-    price: 25,
-    category: "Flower",
-    image: "images/intricated-flower.jpeg",
-    description: "An intricately designed flower, perfect for those who appreciate detailed craftsmanship."
-  },
-  {
-    id: 8,
-    name: "Butterfly and Flower",
-    price: 30,
-    category: "Butterfly & Flower",
-    image: "images/phoenix-butterfly-flower-braided.jpeg",
-    description: "A beautiful combination of butterfly and flower designs, perfect for nature enthusiasts."
-  },
-  {
-    id: 9,
-    name: "Gecko Keychain",
-    price: 20,
-    category: "Animals",
-    image: "images/gecko.jpeg",
-    description: "A cute gecko keychain, perfect for animal lovers."
-  },
-  {
-    id: 10,
-    name: "Baby gecko",
-    price: 18,
-    category: "Animals",
-    image: "images/baby-gecko.jpeg",
-    description: "A adorable baby gecko keychain, perfect for animal lovers."
-  },
-  {
-    id: 11,
-    name: "Gecko and Butterfly",
-    price: 40,
-    category: "Animals",
-    image: "images/gecko-butterfly.jpeg",
-    description: "A beautiful combination of gecko and butterfly designs, perfect for animal and nature enthusiasts."
-  },
-  {
-    id: 12,
-    name: "Canada Flag",
-    price: 20,
-    category: "Flags",
-    image: "images/canada-Flag.jpeg",
-    description: "A patriotic Canada flag design, perfect for showing your national pride."
-  },
-  {
-    id: 13,
-    name: "Soccer Ball",
-    price: 18,
-    category: "Sports",
-    image: "images/soccer-ball.jpeg",
-    description: "A fun soccer ball design, perfect for sports enthusiasts."
-  },
-  {
-    id: 14,
-    name: "Turtle",
-    price: 20,
-    category: "Ocean Animals",
-    image: "images/turtle.jpeg",
-    description: "A cute turtle keychain, perfect for animal lovers."
-  },
-  {
-    id: 15,
-    name: "Octopus",
-    price: 25,
-    category: "Ocean Animals",
-    image: "images/octopus.jpeg",
-    description: "A cute octopus keychain, perfect for animal lovers."
-  },
-  {
-    id: 16,
-    name: "Fish, Crab and Penguin",
-    price: 30,
-    category: "Ocean Animals",
-    image: "images/fish-crab-penguin.jpeg",
-    description: "A delightful combination of fish, crab, and penguin designs, perfect for ocean enthusiasts.",
-    requiresVariantSelection: true,
-    variants: [
-      {
-        id: "fish",
-        name: "Fish",
-        productId: "fish",
-        image: "images/fish-crab-penguin.jpeg",
-        focusClass: "focus-fish"
-      },
-      {
-        id: "crab",
-        name: "Crab",
-        productId: "crab",
-        image: "images/fish-crab-penguin.jpeg",
-        focusClass: "focus-crab"
-      },
-      {
-        id: "penguin",
-        name: "Penguin",
-        productId: "penguin",
-        image: "images/fish-crab-penguin.jpeg",
-        focusClass: "focus-penguin"
-      }
-    ]
-  },
-  {
-    id: 17,
-    name: "Personalized Pencil",
-    price: 15,
-    category: "Stationery",
-    image: "images/pencil.jpeg",
-    description: "A personalized pencil, perfect for those who want a unique gift."
-  },
-  {
-    id: 18,
-    name: "Pencil Collection",
-    price: 18,
-    category: "Stationery",
-    image: "images/pencil-butterflies-baby-geckos.jpeg",
-    description: "A collection of personalized pencils, perfect for those who want a unique gift."
-  },
-  {
-    id: 19,
-    name: "Cross Keychain",
-    price: 18,
-    category: "Faith",
-    image: "images/cross.jpeg",
-    description: "A beautiful cross keychain, perfect for those who want to express their faith."
-  }
-];
+  { id: 1, slug: "macaw", productId: "macaw", name: "Macaw", price: 47, category: "Birds", image: "images/macaw.jpeg", description: "A vibrant Sunset Macaw inspired beaded design for bird lovers." },
+  { id: 2, slug: "natalies-butterfly", name: "Natalie's Butterfly", price: 25, category: "Butterfly", image: "images/natalies-butterfly-mushroom.jpeg", description: "Inspired by Natalie's love for nature, this butterfly design is a delightful addition to any collection." },
+  { id: 3, slug: "butterfly", name: "Butterfly Keychain", price: 20, category: "Butterfly", image: "images/butterfly-purple.jpg", description: "A charming butterfly keychain, handmade bead by bead." },
+  { id: 4, slug: "butterfly-collection", name: "Butterflies Collection", price: 22, category: "Butterfly", image: "images/butterflies.jpeg", description: "A colourful collection of handmade butterfly designs." },
+  { id: 5, slug: "flower-braided", name: "Flower Braided", price: 18, category: "Flower", image: "images/flower-braided.jpeg", description: "A delicate braided flower design." },
+  { id: 6, slug: "big-flower", name: "Large Flower", price: 25, category: "Flower", image: "images/big-flower.jpeg", description: "A large handmade flower designed to make a statement." },
+  { id: 7, slug: "deluxe-flower", name: "Intricated Flower", price: 25, category: "Flower", image: "images/intricated-flower.jpeg", description: "An intricate handmade flower for detail lovers." },
+  { id: 8, slug: "butterfly-with-flowers", name: "Butterfly and Flower", price: 30, category: "Butterfly & Flower", image: "images/phoenix-butterfly-flower-braided.jpeg", description: "A detailed combination of butterfly and flower designs." },
+  { id: 9, slug: "gecko", name: "Gecko Keychain", price: 20, category: "Animals", image: "images/gecko.jpeg", description: "A playful handmade gecko keychain." },
+  { id: 10, slug: "baby-gecko", name: "Baby Gecko", price: 20, category: "Animals", image: "images/baby-gecko.jpeg", description: "A tiny handmade baby gecko keychain." },
+  { id: 11, slug: "gecko-butterfly", name: "Gecko and Butterfly", price: 40, category: "Animals", image: "images/gecko-butterfly.jpeg", description: "A detailed combination of gecko and butterfly designs." },
+  { id: 12, slug: "canada-flag", name: "Canada Flag", price: 20, category: "Flags", image: "images/canada-Flag.jpeg", description: "A handmade Canada flag design." },
+  { id: 13, slug: "soccer-ball", name: "Soccer Ball", price: 20, category: "Sports", image: "images/soccer-ball.jpeg", description: "A handmade soccer ball design for sports fans." },
+  { id: 14, slug: "turtle", name: "Turtle", price: 20, category: "Ocean Animals", image: "images/turtle.jpeg", description: "A cheerful handmade turtle keychain." },
+  { id: 15, slug: "octopus", name: "Octopus", price: 30, category: "Ocean Animals", image: "images/octopus.jpeg", description: "A detailed handmade octopus keychain." },
+  { id: 16, slug: "fish", productId: "fish", name: "Fish", price: 20, category: "Ocean Animals", image: "images/fish.jpeg", description: "A bright handmade beaded fish design." },
+  { id: 20, slug: "crab", productId: "crab", name: "Crab", price: 25, category: "Sandy Beaches", image: "images/crab.jpeg", description: "A playful handmade crab design with coastal charm." },
+  { id: 21, slug: "penguin", productId: "penguin", name: "Penguin", price: 20, category: "Ocean Animals", image: "images/penquin.jpeg", description: "A handmade penguin from the Arctic side of the ocean collection." },
+  { id: 22, slug: "whale", productId: "whale", name: "Whale", price: 25, category: "Ocean Animals", image: "images/whale.jpeg", description: "A calm handmade whale design with deep-ocean charm." },
+  { id: 23, slug: "jellyfish", productId: "jellyfish", name: "Jellyfish", price: 25, category: "Ocean Animals", image: "images/jellyfish.jpeg", description: "A graceful handmade jellyfish inspired by drifting sea light." },
+  { id: 24, slug: "lobster", productId: "lobster", name: "Lobster", price: 25, category: "Ocean Animals", image: "images/lobster.jpeg", description: "A bright handmade lobster design with coastal character." },
+  { id: 25, slug: "shark", productId: "shark", name: "Shark", price: 25, category: "Ocean Animals", image: "images/shark.jpeg", description: "A bold handmade shark design." },
+  { id: 17, slug: "pencil", name: "Colouring Pencil", price: 20, category: "Back to School", image: "images/pencil.jpeg", description: "A handmade colouring pencil keychain." },
+  { id: 19, slug: "faith-cross", productId: "faith-cross", name: "Faith Cross", price: 20, category: "Faith", image: "images/faith-cross.jpg", description: "A handmade purple-and-turquoise cross spelling FAITH." },
+  { id: 33, slug: "joy-cross", productId: "joy-cross", name: "Joy Cross", price: 20, category: "Faith", image: "images/joy-cross.jpg", description: "A handmade blue-and-purple cross spelling JOY." },
+  { id: 34, slug: "peace-cross", productId: "peace-cross", name: "Peace Cross", price: 20, category: "Faith", image: "images/peace-cross.jpg", description: "A handmade pink-and-white cross spelling PEACE." },
+  { id: 26, slug: "ice-cream-keychain", productId: "ice-cream-keychain", name: "Ice Cream Keychain", price: 25, category: "Sweet Treats", image: "images/ice-cream.jpeg", description: "A handmade beaded ice cream keychain." },
+  { id: 27, slug: "ladybug-backpack", name: "Ladybug Backpack", price: 25, category: "Tiny Garden Friends", image: "images/ladybug-backpack.jpeg", description: "A personalized handmade ladybug backpack keychain." },
+  { id: 28, slug: "dragonfly-keychain", name: "Dragonfly Keychain", price: 25, category: "Tiny Garden Friends", image: "images/dragonfly-keychain.jpeg", description: "A colourful handmade dragonfly keychain with optional personalization." },
+  { id: 29, slug: "unicorn", name: "Unicorn", price: 25, category: "Enchanted Beings", image: "images/unicorn.jpeg", description: "A magical handmade beaded unicorn, made to order in your favourite colours." },
+  { id: 30, slug: "giraffe", productId: "giraffe", name: "Giraffe", price: 25, category: "Animals", image: "images/giraffe.jpg", description: "A personalized handmade beaded giraffe keychain." },
+  { id: 31, slug: "ariel", productId: "ariel", name: "Ariel", price: 25, category: "Enchanted Beings", image: "images/ariel.jpg", description: "A handmade beaded mermaid keychain inspired by an undersea fairytale." },
+  { id: 32, slug: "palm-tree", productId: "palm-tree", name: "Palm Tree", price: 20, category: "Sandy Beaches", image: "images/palm-tree.jpg", description: "A handmade beaded palm tree inspired by warm sandy shores." },
+  { id: 35, slug: "fall-fox", name: "Fox", price: 25, category: "Fall Collection", image: "images/fall-collection/fox.jpg", createUrl: "create.html?design=custom-idea&idea=Fox#homeDesignBuilder", description: "A personalized handmade fox keychain." },
+  { id: 36, slug: "fall-acorn", name: "Acorn", price: 20, category: "Fall Collection", image: "images/fall-collection/acorn.jpg", createUrl: "create.html?design=custom-idea&idea=Acorn#homeDesignBuilder", description: "A personalized handmade acorn keychain." },
+  { id: 37, slug: "fall-maple-leaf", name: "Maple Leaf", price: 20, category: "Fall Collection", image: "images/fall-collection/maple-leaf.jpg", createUrl: "create.html?design=custom-idea&idea=Maple%20Leaf#homeDesignBuilder", description: "A personalized handmade maple leaf keychain." },
+  { id: 38, slug: "fall-sunflower", name: "Sunflower", price: 25, category: "Fall Collection", image: "images/fall-collection/sunflower.jpg", createUrl: "create.html?design=custom-idea&idea=Sunflower#homeDesignBuilder", description: "A handmade sunflower keychain." },
+  { id: 39, slug: "pumpkin-spice-latte", name: "Pumpkin Spice Latte", price: 45, category: "Fall Collection", image: "images/pumpkin-spice-latte-september-exclusive.jpg", createUrl: "create.html?design=pumpkin-spice-latte#homeDesignBuilder", description: "September Exclusive Pumpkin Spice Latte keychain." },
+  { id: 40, slug: "owl", name: "Owl", price: 25, category: "Birds", collections: ["Birds", "Fall Collection"], image: "images/fall-collection/owl.jpg", createUrl: "create.html?design=custom-idea&idea=Owl#homeDesignBuilder", description: "A personalized handmade owl keychain." },
+  { id: 41, slug: "fall-coffee-cup", name: "Coffee Cup", price: 25, category: "Fall Collection", image: "images/fall-collection/coffee-cup.jpg", createUrl: "create.html?design=custom-idea&idea=Coffee%20Cup#homeDesignBuilder", description: "A personalized handmade coffee cup keychain." }
+]
+
+function normalizeProductRecord(product) {
+  return {
+    ...product,
+    name: product.name ?? product.title,
+    image: product.image ?? product.imageUrl,
+    price: product.pricePending ? null : (product.price ?? product.startingPrice),
+    category: product.category ?? product.collection
+  };
+}
+
+function productValidationDetails(product) {
+  const missingFields = [];
+  if (!String(product.name || "").trim()) missingFields.push("name/title");
+  if (!String(product.image || "").trim()) missingFields.push("image/imageUrl");
+  if (!product.pricePending && !Number.isFinite(Number(product.price))) missingFields.push("price/startingPrice");
+  if (!String(product.category || "").trim()) missingFields.push("category/collection");
+  return missingFields;
+}
+
+function warnInvalidProduct(product, missingField, attemptedImagePath = product.image || "(none)") {
+  const page = decodeURIComponent(location.pathname.split("/").pop() || "index.html");
+  const productLabel = product.name || product.title || product.slug || product.id || "unknown product";
+  console.warn("[Forever Beaded] Product data warning", {
+    page,
+    product: productLabel,
+    missingField,
+    attemptedImagePath
+  });
+}
+
+products.splice(0, products.length, ...products.map(normalizeProductRecord));
 
 const CART_STORAGE_KEY = "foreverBeadedCart";
 const CART_CHECKOUT_FLAG_KEY = "foreverBeadedCartCheckout";
+const FAVOURITES_STORAGE_KEY = "foreverBeadedFavourites";
 const MAX_CART_QUANTITY = 20;
 const productById = new Map(products.map(product => [String(product.id), product]));
+const CREATE_DESIGN_SLUG_ALIASES = {
+  "flower-braided": "flower"
+};
+
+function createDesignUrl(product) {
+  if (product.createUrl) return product.createUrl;
+  const slug = CREATE_DESIGN_SLUG_ALIASES[product.slug] || product.slug;
+  return `create.html?design=${encodeURIComponent(slug)}`;
+}
 
 let cart = loadCart();
 
@@ -278,11 +193,13 @@ function normalizeStoredCartItem(item) {
     };
   }
 
-  const product = productById.get(String(item.productId || item.id));
+  const product = productById.get(String(item.id))
+    || productById.get(String(item.productId))
+    || products.find(productRecord => String(productRecord.slug || productRecord.productId || "") === String(item.productId || item.slug || ""));
   if (!product) return null;
   return {
     ...product,
-    productId: product.id,
+    productId: product.slug || product.productId || product.id,
     quantity: safeQuantity(item.quantity),
     options: item.options && typeof item.options === "object" ? item.options : {},
     availability: "made to order"
@@ -302,13 +219,73 @@ function loadCart() {
 
 let activeShopCategory = "All";
 let activeShopSearch = "";
+let favouriteProductIds = loadFavouriteProductIds();
+
+function favouriteKey(product) {
+  return String(product?.slug || product?.productId || product?.id || "");
+}
+
+function loadFavouriteProductIds() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(FAVOURITES_STORAGE_KEY) || "[]");
+    if (!Array.isArray(parsed)) return new Set();
+    const validKeys = new Set(products.map(favouriteKey).filter(Boolean));
+    return new Set(parsed.map(String).filter(key => validKeys.has(key)));
+  } catch (error) {
+    localStorage.removeItem(FAVOURITES_STORAGE_KEY);
+    return new Set();
+  }
+}
+
+function saveFavouriteProductIds() {
+  localStorage.setItem(FAVOURITES_STORAGE_KEY, JSON.stringify([...favouriteProductIds]));
+}
+
+function isFavouriteProduct(product) {
+  return favouriteProductIds.has(favouriteKey(product));
+}
+
+function favouriteButtonMarkup(product) {
+  const saved = isFavouriteProduct(product);
+  const label = saved ? `Remove ${product.name} from favourites` : `Save ${product.name} to favourites`;
+  const heart = saved ? "&#9829;" : "&#9825;";
+  return `<button class="favourite-btn${saved ? " is-saved" : ""}" type="button" data-favourite-product-id="${product.id}" aria-label="${escapeHtml(label)}" aria-pressed="${saved ? "true" : "false"}"><span aria-hidden="true">${heart}</span></button>`;
+}
+
+function toggleFavouriteProduct(productId) {
+  const product = products.find(item => String(item.id) === String(productId));
+  if (!product) return;
+  const key = favouriteKey(product);
+  if (favouriteProductIds.has(key)) {
+    favouriteProductIds.delete(key);
+  } else {
+    favouriteProductIds.add(key);
+  }
+  saveFavouriteProductIds();
+  renderProducts();
+}
+
+function collectionDisplayOrder(categories) {
+  const reordered = categories.filter(category => !["Flags", "Sports", "Monthly Exclusives"].includes(category));
+  const flagsIndex = categories.indexOf("Flags");
+  const insertionIndex = flagsIndex < 0
+    ? reordered.length
+    : categories.slice(0, flagsIndex).filter(category => !["Flags", "Sports", "Monthly Exclusives"].includes(category)).length;
+  reordered.splice(insertionIndex, 0, "Flags", "Sports", "Monthly Exclusives");
+  return reordered;
+}
 
 function getProductCategories() {
-  return ["All", ...new Set(products.map(product => product.category))];
+  const categories = [...new Set(products
+    .map(product => product.category)
+    .filter(category => category !== "Butterfly & Flower"))];
+  return ["All", "My Favourites", ...collectionDisplayOrder(categories)];
 }
 
 function productMatchesShopFilters(product) {
-  const categoryMatch = activeShopCategory === "All" || product.category === activeShopCategory;
+  const categoryMatch = activeShopCategory === "All" ||
+    (activeShopCategory === "My Favourites" ? isFavouriteProduct(product) :
+    product.category === activeShopCategory);
   const searchText = `${product.name} ${product.category} ${product.description}`.toLowerCase();
   const searchMatch = !activeShopSearch || searchText.includes(activeShopSearch.toLowerCase());
   return categoryMatch && searchMatch;
@@ -413,14 +390,131 @@ function ensureCartActions() {
   cartPanel.insertBefore(continueButton, checkoutButton || null);
 }
 
+
+const COLLECTION_THEME_CLASSES = [
+  "is-meadow-active",
+  "is-butterfly-garden-active",
+  "is-garden-active",
+  "is-ocean-active",
+  "is-forest-active",
+  "is-desk-active",
+  "is-chapel-active",
+  "is-game-active",
+  "is-sky-active",
+  "is-sundae-active",
+  "is-flags-active",
+  "is-enchanted-active",
+  "is-tiny-garden-active",
+  "is-all-active",
+  "is-favourites-active"
+];
+
+const COLLECTION_THEME_BY_CATEGORY = {
+  All: "is-all-active",
+  "My Favourites": "is-favourites-active",
+  Butterfly: "is-butterfly-garden-active",
+  Flower: "is-garden-active",
+  "Ocean Animals": "is-ocean-active",
+  Animals: "is-forest-active",
+  "Back to School": "is-desk-active",
+  Faith: "is-chapel-active",
+  Sports: "is-game-active",
+  Birds: "is-sky-active",
+  "Monthly Exclusives": "is-sundae-active",
+  Flags: "is-flags-active",
+  "Enchanted Beings": "is-enchanted-active",
+  "Tiny Garden Friends": "is-tiny-garden-active"
+};
+
+const NEXT_COLLECTION_CHAPTERS = {
+  All: { label: "Butterflies", category: "Butterfly" },
+  "My Favourites": { label: "Butterflies", category: "Butterfly" },
+  Butterfly: { label: "Flowers", category: "Flower" },
+  Flower: { label: "Ocean Animals", category: "Ocean Animals" },
+  "Ocean Animals": { label: "Animals", category: "Animals" },
+  Animals: { label: "Birds of the Sky", category: "Birds" },
+  Birds: { label: "Flags of the World", category: "Flags" },
+  Flags: { label: "Enchanted Beings", category: "Enchanted Beings" },
+  "Enchanted Beings": { label: "Tiny Garden Friends", category: "Tiny Garden Friends" },
+  "Tiny Garden Friends": { label: "Back to School", category: "Back to School" },
+  "Back to School": { label: "Faith", category: "Faith" },
+  Faith: { label: "Sports", category: "Sports" },
+  Sports: { label: "Monthly Exclusive", href: "monthly-exclusive.html?v=september-2026" },
+  "Monthly Exclusives": { label: "Create Your Own", href: "create.html?design=custom-idea&idea=Pumpkin%20Spice%20Latte#homeDesignBuilder" }
+};
+
+
+const COLLECTION_WORLD_COPY = {
+  Butterfly: { title: "The Butterfly Flower Garden", description: "Wander through a garden filled with blossoms, petals, and handmade butterflies." },
+  Flower: { title: "The Flower Garden", description: "A blooming garden chapter for floral treasures, soft petals, and colourful keepsakes." },
+  Animals: { title: "The Forest Friends", description: "Step beneath the trees among ferns, mushrooms, moss, and playful woodland treasures." },
+  "Ocean Animals": { title: "The Ocean Shore", description: "Begin on a sandy beach with seashells along the shore, then follow the waves into the sea." },
+  Birds: { title: "Birds of the Sky", description: "Look up into the open blue sky, drifting clouds, and leafy branches." },
+  Flags: { title: "Flags of the World", description: "Celebrate any country with a handmade flag treasure.", detail: "Choose any country flag — Canada is simply the sample shown in the collection." },
+  "Enchanted Beings": { title: "Enchanted Beings", description: "Enter a moonlit world of unicorns, glowing flowers, and handmade magic." },
+  "Tiny Garden Friends": { title: "Tiny Garden Friends", description: "Look closely among the leaves, mushrooms, and flowers for charming little handmade friends." },
+  "Back to School": { title: "The Creative Classroom", description: "A cosy classroom filled with pencils, books, beads, and bright ideas." },
+  Faith: { title: "The Peaceful Bible Garden", description: "A quiet chapter of faith, warm light, and meaningful handmade keepsakes." },
+  Sports: { title: "The Sports Field", description: "A lively field for favourite teams, games, and sporty treasures." },
+  "Monthly Exclusives": { title: "September's Pumpkin Spice Latte", description: "Discover September's cozy fall-inspired handmade treasure." }
+};
+
+function updateCollectionWorldCopy() {
+  const title = document.getElementById("collectionWorldTitle");
+  const description = document.getElementById("collectionWorldDescription");
+  const detail = document.getElementById("collectionWorldDetail");
+  if (!title || !description) return;
+  const copy = COLLECTION_WORLD_COPY[activeShopCategory];
+  title.textContent = copy ? copy.title : "Browse handmade pieces";
+  description.textContent = copy ? copy.description : "Search and filter the current Forever Beaded collection without leaving the storybook.";
+  if (detail) {
+    detail.textContent = copy?.detail || "";
+    detail.hidden = !copy?.detail;
+  }
+}
+
+function updateCollectionChapterTheme() {
+  if (!productGrid) return;
+  const shopSection = productGrid.closest(".ocean-shop-section");
+  if (!shopSection) return;
+  shopSection.classList.remove(...COLLECTION_THEME_CLASSES);
+  const themeClass = COLLECTION_THEME_BY_CATEGORY[activeShopCategory];
+  if (themeClass) shopSection.classList.add(themeClass);
+}
+
+function updateNextCollectionChapter() {
+  const target = document.getElementById("nextCollectionChapter");
+  if (!target) return;
+  const next = NEXT_COLLECTION_CHAPTERS[activeShopCategory] || NEXT_COLLECTION_CHAPTERS.All;
+  if (!next) {
+    target.innerHTML = "";
+    return;
+  }
+  if (next.href) {
+    target.innerHTML = `<a class="next-chapter-anchor" href="${next.href}"><span>Next Chapter</span><strong>${next.label}</strong></a>`;
+    return;
+  }
+  target.innerHTML = `<a class="next-chapter-anchor" href="#shop" data-jump-category="${next.category}"><span>Next Chapter</span><strong>${next.label}</strong></a>`;
+}
 function renderProducts() {
   if (!productGrid) return;
+
+  updateCollectionChapterTheme();
+  updateCollectionWorldCopy();
 
   renderShopFilters();
 
   const visibleProducts = products
     .map((product, index) => ({ product, index }))
-    .filter(({ product }) => productMatchesShopFilters(product));
+    .filter(({ product }) => productMatchesShopFilters(product))
+    .filter(({ product }) => {
+      const missingFields = productValidationDetails(product);
+      if (missingFields.length) {
+        missingFields.forEach(field => warnInvalidProduct(product, field));
+        return false;
+      }
+      return true;
+    });
 
   if (shopResultsCount) {
     const label = activeShopCategory === "All" ? "all categories" : activeShopCategory;
@@ -430,37 +524,50 @@ function renderProducts() {
   }
 
   if (!visibleProducts.length) {
+    updateNextCollectionChapter();
     productGrid.innerHTML = `
       <div class="no-results-card">
-        <h3>No matching pieces yet</h3>
-        <p>Try another search, choose a different category, or use the custom order builder and I can make something just for you.</p>
+        <h3>${activeShopCategory === "My Favourites" ? "No favourites saved yet" : "No matching pieces yet"}</h3>
+        <p>${activeShopCategory === "My Favourites" ? "Tap the heart on any product to save it here for later." : "Try another search, choose a different category, or use the custom order builder and I can make something just for you."}</p>
         <a href="shop.html#designer" class="primary-btn">Create Custom Order</a>
       </div>
     `;
     return;
   }
 
+  updateNextCollectionChapter();
   productGrid.innerHTML = visibleProducts.map(({ product, index }) => {
-    const stats = productSocialStats(product);
+    const createUrl = createDesignUrl(product);
     return `
-      <article class="product-card" data-category="${product.category}">
-        <img src="${product.image}" alt="${product.name}" class="${productImageClass(product)}" data-product-card-image="${product.id}">
-        <span class="badge">${product.id === 1 ? "Exclusive" : "Handmade"}</span>
-        <h3>${product.name}</h3>
-        <div class="social-row">${stats.rating} · ${stats.likes} saved · Made to order</div>
-        <p>${product.description}</p>
-        <strong>${money(product.price)}</strong><br><br>
-        ${variantSelectorMarkup(product)}
-        <button class="add-to-cart-btn" data-product-id="${product.id}"${product.requiresVariantSelection ? " disabled" : ""}>Add to My Request</button>
+      <article class="product-card" data-category="${product.category}" data-create-url="${createUrl}">
+        <a class="product-card-link" href="${createUrl}" aria-label="View ${escapeHtml(product.name)}${product.pricePending ? "" : `, ${money(product.price)}`}">
+          <img src="${product.image}" alt="${product.name}" data-product-card-image="${product.id}">
+          <span class="product-name">${product.name}</span>
+          ${product.pricePending ? "" : `<span class="product-price">${money(product.price)}</span>`}
+        </a>
+        ${favouriteButtonMarkup(product)}
       </article>
     `;
   }).join("");
+
+  productGrid.querySelectorAll(".product-card img").forEach(image => {
+    image.addEventListener("error", () => {
+      const card = image.closest(".product-card");
+      const name = card?.querySelector(".product-name")?.textContent?.trim() || "unknown product";
+      const product = products.find(item => item.name === name) || { name };
+      warnInvalidProduct(product, "image file", image.getAttribute("src") || "(none)");
+      card?.remove();
+    }, { once: true });
+  });
 }
 
 function renderGallery(category = "All") {
   if (!galleryGrid) return;
 
-  const categories = ["All", ...new Set(products.map(product => product.category))];
+  const productCategories = [...new Set(products
+    .map(product => product.category)
+    .filter(productCategory => productCategory !== "Butterfly & Flower"))];
+  const categories = ["All", ...collectionDisplayOrder(productCategories)];
 
   if (galleryFilters) {
     galleryFilters.innerHTML = categories.map(cat => `
@@ -475,18 +582,20 @@ function renderGallery(category = "All") {
   galleryGrid.innerHTML = shownProducts.map((product, index) => {
     const originalIndex = products.findIndex(item => item.id === product.id);
     const stats = productSocialStats(product);
+    const createUrl = createDesignUrl(product);
     return `
-      <article class="gallery-card">
+      <article class="gallery-card" data-create-url="${createUrl}">
         <img src="${product.image}" alt="${product.name}" class="${productImageClass(product).replace("product-image", "gallery-image")}" data-product-card-image="${product.id}">
         <div class="gallery-info">
           <span class="badge">${product.id === 1 ? "Most Loved" : "Customer Favorite"}</span>
           <h3>${product.name}</h3>
           <div class="stars"><strong>Made to order</strong> <span>Customer photos welcome</span></div>
-          <div class="social-row">${stats.likes} saved · Handmade</div>
+          <div class="social-row">Handmade to order</div>
           <p>${product.description}</p>
-          <strong>${money(product.price)}</strong>
+          ${product.pricePending ? "" : `<strong>${money(product.price)}</strong>`}
           ${variantSelectorMarkup(product)}
-          <button class="add-to-cart-btn" data-product-id="${product.id}"${product.requiresVariantSelection ? " disabled" : ""}>Add to My Request</button>
+          ${product.pricePending ? "" : `<button class="add-to-cart-btn" data-product-id="${product.id}"${product.requiresVariantSelection ? " disabled" : ""}>Add to My Request</button>`}
+          <a class="product-create-request-btn" href="${createUrl}">Create Your Own Treasure</a>
         </div>
       </article>
     `;
@@ -514,7 +623,7 @@ function cartItemFromProduct(product, variant = null) {
 
   return {
     ...product,
-    productId: product.id,
+    productId: product.slug || product.productId || product.id,
     quantity: 1,
     options: {},
     availability: "made to order"
@@ -646,7 +755,6 @@ function renderCart() {
     <div class="cart-item">
       ${item.image ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" class="cart-item-image ${escapeHtml(item.imageFocusClass || "")}">` : ""}
       <strong>${escapeHtml(item.name)}</strong>
-      ${item.id === 1 ? `<span class="badge">Exclusive</span>` : ""}
       <p>${escapeHtml(item.description)}</p>
       <p>${escapeHtml(item.availability || "Made to order")} · Quantity: ${item.quantity || 1}</p>
       <p>${money(item.price * (item.quantity || 1))}</p>
@@ -685,7 +793,6 @@ function renderCart() {
     <div class="cart-item">
       ${item.image ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" class="cart-item-image ${escapeHtml(item.imageFocusClass || "")}">` : ""}
       <strong>${escapeHtml(item.name)}</strong>
-      ${item.id === 1 ? `<span class="badge">Exclusive</span>` : ""}
       <p>${escapeHtml(item.description)}</p>
       ${item.options && Object.keys(item.options).length ? `<p>${escapeHtml(Object.entries(item.options).map(([key, value]) => `${key}: ${value}`).join(" | "))}</p>` : ""}
       <p>${escapeHtml(item.availability || "Made to order")}</p>
@@ -974,6 +1081,14 @@ function updatePreview() {
 
 // One click listener for product and remove buttons.
 document.addEventListener("click", (event) => {
+  const favouriteButton = event.target.closest(".favourite-btn");
+  if (favouriteButton) {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleFavouriteProduct(favouriteButton.dataset.favouriteProductId);
+    return;
+  }
+
   const addButton = event.target.closest(".add-to-cart-btn");
   if (addButton) {
     if (addButton.dataset.productId) {
@@ -1086,12 +1201,17 @@ function productIdForOrderItem(item) {
     11: "butterfly-with-flowers",
     12: "custom-idea",
     13: "sports-design",
-    14: "ocean-animal",
-    15: "ocean-animal",
-    16: "ocean-animal",
+    14: "turtle",
+    15: "octopus",
+    16: "fish",
     17: "pencil",
     18: "pencil",
-    19: "cross"
+    19: "cross",
+    20: "crab",
+    22: "whale",
+    23: "jellyfish",
+    24: "lobster",
+    25: "shark"
   };
   if (item.id && legacyMap[item.id]) return legacyMap[item.id];
   const design = String(item.name || item.description || "").toLowerCase();
@@ -1100,7 +1220,11 @@ function productIdForOrderItem(item) {
   if (design.includes("butterfly")) return "butterfly";
   if (design.includes("flower")) return "flower";
   if (design.includes("gecko")) return "gecko";
-  if (design.includes("turtle") || design.includes("octopus") || design.includes("fish") || design.includes("crab") || design.includes("penguin")) return "ocean-animal";
+  if (design.includes("turtle")) return "turtle";
+  if (design.includes("octopus")) return "octopus";
+  if (design.includes("fish")) return "fish";
+  if (design.includes("crab")) return "crab";
+  if (design.includes("penguin")) return "penguin";
   if (design.includes("soccer") || design.includes("sport")) return "sports-design";
   if (design.includes("pencil")) return "pencil";
   if (design.includes("cross")) return "cross";
@@ -1238,6 +1362,11 @@ if (clearShopFilters) {
   });
 }
 
+const pageInitialCategory = document.body?.dataset?.initialCategory;
+const urlInitialCategory = new URLSearchParams(window.location.search).get("category");
+if (productGrid && (pageInitialCategory || urlInitialCategory)) {
+  activeShopCategory = pageInitialCategory || urlInitialCategory;
+}
 const savedCategoryJump = sessionStorage.getItem("foreverBeadedCategory");
 if (savedCategoryJump && productGrid) {
   activeShopCategory = savedCategoryJump;
@@ -1303,6 +1432,12 @@ document.addEventListener("click", (event) => {
   const img = event.target.closest(".gallery-grid img, .product-image");
   if (!img) return;
 
+  const productCard = img.closest(".product-card");
+  if (productCard?.dataset.createUrl) {
+    window.location.href = productCard.dataset.createUrl;
+    return;
+  }
+
   refreshGalleryList();
   const index = galleryList.indexOf(img);
   openGallery(index >= 0 ? index : 0);
@@ -1358,52 +1493,71 @@ document.addEventListener("keydown", (event) => {
 });
 
 
-// Real customer review area. Reviews are saved in this browser until a backend is added.
+// Customer review area. Only approved review data should be displayed publicly.
 const reviewForm = document.getElementById("reviewForm");
 const reviewGrid = document.getElementById("reviewGrid");
-const savedReviewsKey = "foreverBeadedReviews";
-let customerReviews = JSON.parse(localStorage.getItem(savedReviewsKey) || "[]");
+const reviewFormStatus = document.getElementById("reviewFormStatus");
+const approvedReviews = Array.isArray(window.FOREVER_BEADED_APPROVED_REVIEWS)
+  ? window.FOREVER_BEADED_APPROVED_REVIEWS
+  : [];
 
 function starsText(value) {
-  const stars = Number(value) || 5;
+  const stars = Math.min(5, Math.max(1, Number(value) || 5));
   return `${stars} out of 5 stars`;
+}
+
+function formatReviewDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return escapeHtml(value);
+  return date.toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric" });
 }
 
 function renderReviews() {
   if (!reviewGrid) return;
-  if (!customerReviews.length) {
+  const publicReviews = approvedReviews.filter(review => review && review.approved === true);
+  if (!publicReviews.length) {
     reviewGrid.innerHTML = `
       <article class="review-card empty-review">
-        <div class="review-stars">5 out of 5 stars</div>
-        <p>Reviews will appear here after real customers add them.</p>
-        <strong>— Forever Beaded</strong>
+        <div class="review-stars" aria-label="No approved reviews yet">No approved reviews yet</div>
+        <p>Real customer reviews will appear here after they have been approved for public display.</p>
+        <strong>Forever Beaded</strong>
       </article>
     `;
     return;
   }
 
-  reviewGrid.innerHTML = customerReviews.map(review => `
-    <article class="review-card">
-      <div class="review-stars">${starsText(review.stars)}</div>
-      <p>“${escapeHtml(review.text)}”</p>
-      <strong>— ${escapeHtml(review.name)}</strong>
-    </article>
-  `).join("");
+  reviewGrid.innerHTML = publicReviews.map(review => {
+    const name = escapeHtml(review.displayName || review.name || "Forever Beaded customer");
+    const product = String(review.product || "").trim();
+    const date = formatReviewDate(review.date || review.createdAt);
+    const photo = review.photoUrl || review.productPhotoUrl;
+    return `
+      <article class="review-card approved-review-card">
+        ${photo ? `<img class="review-photo" src="${escapeHtml(photo)}" alt="${product ? escapeHtml(product) : "Approved customer review photo"}">` : ""}
+        <div class="review-stars" aria-label="${Number(review.stars) || 5} out of 5 stars">${starsText(review.stars)}</div>
+        <p>&quot;${escapeHtml(review.text || "")}&quot;</p>
+        <strong>${name}</strong>
+        ${product ? `<span class="review-product">${escapeHtml(product)}</span>` : ""}
+        ${date ? `<time class="review-date" datetime="${escapeHtml(review.date || review.createdAt)}">${date}</time>` : ""}
+      </article>
+    `;
+  }).join("");
 }
 
 if (reviewForm) {
   reviewForm.addEventListener("submit", event => {
     event.preventDefault();
-    const name = document.getElementById("reviewName").value.trim();
-    const stars = document.getElementById("reviewStars").value;
-    const text = document.getElementById("reviewText").value.trim();
-    if (!name || !text) return;
-    customerReviews.unshift({ name, stars, text, date: new Date().toISOString() });
-    customerReviews = customerReviews.slice(0, 12);
-    localStorage.setItem(savedReviewsKey, JSON.stringify(customerReviews));
+    const name = document.getElementById("reviewName")?.value.trim();
+    const email = document.getElementById("reviewEmail")?.value.trim();
+    const text = document.getElementById("reviewText")?.value.trim();
+    const consent = document.getElementById("reviewConsent")?.checked;
+    if (!name || !email || !text || !consent) return;
     reviewForm.reset();
-    renderReviews();
-    showForeverBeadedMessage("Thank you for leaving a real review.");
+    if (reviewFormStatus) {
+      reviewFormStatus.textContent = "Thank you. Your review has been prepared for approval before it appears publicly.";
+    }
+    showForeverBeadedMessage("Thank you. Your review will need approval before it appears publicly.");
   });
 }
 
@@ -1478,16 +1632,6 @@ renderReviews();
     dust.className = "living-dust";
     layer.appendChild(dust);
 
-    for(let i = 0; i < 4; i += 1){
-      const butterfly = document.createElement("span");
-      butterfly.className = `living-butterfly living-butterfly-${i + 1}`;
-      butterfly.innerHTML = `
-        <span class="monarch-shadow"></span>
-        <img class="monarch-whole" src="images/monarch-cover-realistic.png" alt="" draggable="false" decoding="async">
-        <i></i><b></b>
-      `;
-      layer.appendChild(butterfly);
-    }
 
     for(let i = 0; i < 8; i += 1){
       const mote = document.createElement("span");

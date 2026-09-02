@@ -40,16 +40,16 @@
   };
 
   const setupExclusiveProductLinks = () => {
-    document.querySelectorAll("[data-exclusive-product='macaw']").forEach((element) => {
+    document.querySelectorAll("[data-exclusive-product='ice-cream-keychain']").forEach((element) => {
       element.addEventListener("click", (event) => {
         if (event.target.closest("a")) return;
-        window.location.href = "create.html?design=macaw#homeDesignBuilder";
+        window.location.href = "ice-cream.html";
       });
       element.addEventListener("keydown", (event) => {
         if (event.key !== "Enter" && event.key !== " ") return;
         if (event.target.closest("a")) return;
         event.preventDefault();
-        window.location.href = "create.html?design=macaw#homeDesignBuilder";
+        window.location.href = "ice-cream.html";
       });
     });
   };
@@ -171,6 +171,80 @@
     || productCatalogue[0]
     || null;
 
+  // Primary showcase photography for the most frequently selected designs.
+  // Other catalogue designs use their own existing imageUrl below.
+  const designImages = Object.freeze({
+    butterfly: "images/butterfly-purple.jpg",
+    fish: "images/fish.jpeg",
+    gecko: "images/gecko.jpeg",
+    flower: "images/flower-braided.jpeg",
+    turtle: "images/turtle.jpeg",
+    unicorn: "images/unicorn.jpeg"
+  });
+  let showcaseImageRequest = 0;
+  let customReferenceImageDataUrl = "";
+  let customReferenceImageName = "";
+
+  const updateShowcaseProductImage = (product) => {
+    const image = document.getElementById("homeShowcaseProductImage");
+    const fallbackMessage = document.getElementById("homeShowcaseImageFallback");
+    if (!image) return;
+
+    const productName = product?.name || "Butterfly";
+    const customDesignSelected = product?.slug === "custom-idea";
+    const requestedUrl = customDesignSelected
+      ? customReferenceImageDataUrl
+      : (designImages[product?.slug] || product?.imageUrl || product?.referenceImageUrl || "");
+    const requestedAlt = `${productName} handmade beaded keychain`;
+
+    const showFallbackMessage = (message = `${productName} image coming soon.`) => {
+      image.classList.remove("is-changing");
+      image.removeAttribute("src");
+      image.hidden = true;
+      if (fallbackMessage) {
+        fallbackMessage.textContent = message;
+        fallbackMessage.hidden = false;
+      }
+    };
+
+    if (!requestedUrl) {
+      if (!customDesignSelected) {
+        console.warn(`[Forever Beaded] No selected design image is available for: ${productName}`);
+      }
+      showFallbackMessage(customDesignSelected ? "Your Custom Treasure" : undefined);
+      return;
+    }
+
+    if (image.getAttribute("src") === requestedUrl) {
+      image.alt = requestedAlt;
+      image.hidden = false;
+      if (fallbackMessage) fallbackMessage.hidden = true;
+      image.classList.remove("is-changing");
+      return;
+    }
+
+    const requestId = ++showcaseImageRequest;
+    image.classList.add("is-changing");
+
+    const commitImage = (url, alt) => {
+      if (requestId !== showcaseImageRequest) return;
+      image.src = url;
+      image.alt = alt;
+      image.hidden = false;
+      if (fallbackMessage) fallbackMessage.hidden = true;
+      requestAnimationFrame(() => image.classList.remove("is-changing"));
+    };
+
+    const preload = new Image();
+    preload.onload = () => commitImage(requestedUrl, requestedAlt);
+    preload.onerror = () => {
+      if (requestId !== showcaseImageRequest) return;
+      console.warn(`[Forever Beaded] Unable to load selected design image: ${requestedUrl}`);
+      showFallbackMessage();
+    };
+    preload.src = requestedUrl;
+  };
+
   const getSelectedProduct = () => {
     const designDropdown = document.getElementById("homeTreasureDesign");
     const selectedProduct = productCatalogue.find(product => product.slug === designDropdown?.value) || fallbackProduct;
@@ -224,13 +298,18 @@
     const referenceFrame = referenceImage?.closest(".workspace-photo-primary");
     const selectedPhoto = document.getElementById("homeSelectedProductPhoto");
     const selectedFrame = selectedPhoto?.closest(".home-selected-product-photo");
+    const referenceProductPhoto = document.getElementById("homeReferenceProductPhoto");
+    const referenceProductFrame = referenceProductPhoto?.closest(".home-reference-product-photo");
     if (!product) return;
+
+    updateShowcaseProductImage(product);
 
     const designPhotoUrl = product.referenceImageUrl || product.imageUrl;
     setProductImage(referenceImage, referenceFrame, product, designPhotoUrl, "reference image");
-    setProductImage(selectedPhoto, selectedFrame, product, designPhotoUrl, "product photo");
+    setProductImage(selectedPhoto, selectedFrame, product, product.imageUrl || designPhotoUrl, "product photo");
+    setProductImage(referenceProductPhoto, referenceProductFrame, product, product.previewImageUrl || designPhotoUrl, "reference photo");
 
-    [referenceFrame, selectedFrame].forEach((frame) => {
+    [referenceFrame, selectedFrame, referenceProductFrame].forEach((frame) => {
       if (!frame) return;
       Array.from(frame.classList)
         .filter(className => className.startsWith("focus-"))
@@ -263,8 +342,8 @@
     }
     if (text) {
       text.textContent = tone === "silver"
-        ? "Silver ring and clasp sample"
-        : "Gold ring and clasp sample";
+        ? "Silver ring and clasp"
+        : "Gold ring and clasp";
     }
   };
 
@@ -303,17 +382,49 @@
     }).join("");
   };
 
+  const designDropdownGroups = [
+    { label: "Flower Garden", slugs: ["big-flower", "flower", "deluxe-flower"] },
+    { label: "Butterfly Garden", slugs: ["natalies-butterfly", "butterfly", "butterfly-with-flowers", "butterfly-collection"] },
+    { label: "Animal Friends", slugs: ["gecko", "baby-gecko", "gecko-butterfly", "giraffe"] },
+    { label: "Birds of the Sky", slugs: ["macaw"] },
+    { label: "Ocean Friends", slugs: ["turtle", "octopus", "fish", "penguin", "whale", "jellyfish", "lobster", "shark"] },
+    { label: "Sandy Beaches", slugs: ["crab", "palm-tree"] },
+    { label: "Tiny Garden Friends", slugs: ["mushroom", "ladybug-backpack", "dragonfly-keychain"] },
+    { label: "Enchanted Beings", slugs: ["unicorn", "ariel"] },
+    { label: "Flags of the World", slugs: ["canada-flag"] },
+    { label: "Sports", slugs: ["soccer-ball"] },
+    { label: "Back to School", slugs: ["pencil"] },
+    { label: "Faith Collection", slugs: ["faith-cross", "joy-cross", "peace-cross"] },
+    { label: "Sweet Treats", slugs: [] },
+    { label: "Monthly Exclusive", slugs: ["pumpkin-spice-latte"] }
+  ];
+
   const populateDesignOptions = () => {
     const select = document.getElementById("homeTreasureDesign");
-    if (!select || !productCatalogue.length) return;
+    const selectableProducts = productCatalogue.filter(isSelectableProduct);
+    if (!select || !selectableProducts.length) return;
     const currentValue = select.value;
-    select.innerHTML = productCatalogue.map((product) => {
-      const disabled = !isSelectableProduct(product);
-      const note = disabled ? ` — ${product.disabledReason || "coming soon"}` : "";
-      return `<option value="${product.slug}"${disabled ? " disabled" : ""}>${product.name}${note}</option>`;
-    }).join("");
-    const currentProduct = productCatalogue.find(product => product.slug === currentValue && isSelectableProduct(product));
-    select.value = currentProduct?.slug || fallbackProduct?.slug || productCatalogue.find(isSelectableProduct)?.slug || productCatalogue[0].slug;
+    const productBySlug = new Map(selectableProducts.map(product => [product.slug, product]));
+    const groupedSlugs = new Set(designDropdownGroups.flatMap(group => group.slugs));
+    const groups = designDropdownGroups.map((group) => {
+      const options = group.slugs
+        .map(slug => productBySlug.get(slug))
+        .filter(Boolean)
+        .map(product => `<option value="${product.slug}">${product.name}</option>`)
+        .join("");
+      return options ? `<optgroup label="${group.label}">${options}</optgroup>` : "";
+    });
+    const remainingOptions = selectableProducts
+      .filter(product => !groupedSlugs.has(product.slug) && product.slug !== "custom-idea")
+      .map(product => `<option value="${product.slug}">${product.name}</option>`)
+      .join("");
+    const customIdea = productBySlug.get("custom-idea");
+    const customIdeaOption = customIdea
+      ? `<optgroup label="Custom Design"><option value="${customIdea.slug}">${customIdea.name}</option></optgroup>`
+      : "";
+    select.innerHTML = [...groups, remainingOptions, customIdeaOption].filter(Boolean).join("");
+    const currentProduct = selectableProducts.find(product => product.slug === currentValue);
+    select.value = currentProduct?.slug || fallbackProduct?.slug || selectableProducts[0].slug;
   };
 
   const requestedDesignSlug = () => {
@@ -322,12 +433,23 @@
     return productCatalogue.some(product => product.slug === requested && isSelectableProduct(product)) ? requested : "";
   };
 
+  const applyRequestedIdea = () => {
+    const params = new URLSearchParams(window.location.search);
+    const requestedIdea = String(params.get("idea") || "").trim();
+    const description = document.getElementById("homeCustomDescription");
+    if (!requestedIdea || !description || description.value.trim()) return false;
+    description.value = requestedIdea;
+    description.dispatchEvent(new Event("input", { bubbles: true }));
+    return true;
+  };
+
   const applyRequestedDesignSelection = () => {
     const requested = requestedDesignSlug();
     const select = document.getElementById("homeTreasureDesign");
     if (!requested || !select || select.value === requested) return false;
     select.value = requested;
     select.dispatchEvent(new Event("change", { bubbles: true }));
+    applyRequestedIdea();
     return true;
   };
 
@@ -441,12 +563,56 @@
       : (product?.defaultColours || ["Custom colours"]).map(titleCase).join(", ");
 
     const previewTitle = document.getElementById("homeTreasurePreviewTitle");
+    const selectedDesignSummary = document.getElementById("selectedDesignSummary");
+    const previewSelectedDesign = document.getElementById("homeTreasurePreviewSelected");
     const previewMeta = document.getElementById("homeTreasurePreviewMeta");
     const previewDescription = document.getElementById("homeTreasurePreviewDescription");
     const previewPersonalization = document.getElementById("homeTreasurePreviewPersonalization");
+    const customIdeaPreviewText = document.getElementById("homeCustomIdeaPreviewText");
+    const editorialShowcase = document.querySelector(".world-create .editorial-showcase");
+    const customConceptCard = document.getElementById("homeCustomConceptCard");
+    const customConceptIdea = document.getElementById("homeCustomConceptIdea");
+    const customConceptColours = document.getElementById("homeCustomConceptColours");
+    const customConceptHardware = document.getElementById("homeCustomConceptHardware");
+    const customConceptQuantity = document.getElementById("homeCustomConceptQuantity");
+    const customSelected = isCustomProduct(product);
     updateProductImages(product);
     renderBeadPattern(preview, product, colours);
     syncHardwarePreviewSample();
+
+    if (editorialShowcase) editorialShowcase.classList.toggle("is-custom-idea", customSelected);
+    if (customConceptCard) customConceptCard.hidden = !customSelected;
+    if (customConceptIdea) {
+      customConceptIdea.textContent = customDescription || "Start typing your custom idea to see it here.";
+    }
+    if (customConceptHardware) customConceptHardware.textContent = hardware;
+    if (customConceptQuantity) customConceptQuantity.textContent = String(quantity || 1);
+    if (customConceptColours) {
+      const colourLabels = String(colourInput || "")
+        .split(",")
+        .map(part => titleCase(part.trim()))
+        .filter(Boolean);
+      const labels = colourLabels.length ? colourLabels : ["Custom colours"];
+      customConceptColours.replaceChildren(...labels.map((label, index) => {
+        const swatch = document.createElement("span");
+        swatch.className = "custom-concept-swatch";
+        swatch.style.setProperty("--swatch", colours[index % colours.length] || "#8f8f8f");
+        swatch.textContent = label;
+        return swatch;
+      }));
+    }
+
+    if (selectedDesignSummary) {
+      selectedDesignSummary.textContent = `Selected Design: ${design}`;
+    }
+    if (previewSelectedDesign) {
+      previewSelectedDesign.textContent = `Selected Design: ${design}`;
+    }
+    if (customIdeaPreviewText) {
+      const showCustomIdeaText = isCustomProduct(product) && Boolean(customDescription);
+      customIdeaPreviewText.hidden = !showCustomIdeaText;
+      customIdeaPreviewText.textContent = showCustomIdeaText ? `Custom Idea: ${customDescription}` : "";
+    }
 
     if (previewTitle) {
       previewTitle.textContent = isCustomProduct(product)
@@ -1312,12 +1478,19 @@
     const wrap = document.getElementById("homeCustomDescriptionWrap");
     const textarea = document.getElementById("homeCustomDescription");
     const count = document.getElementById("homeCustomDescriptionCount");
+    const referenceWrap = document.getElementById("homeCustomReferenceWrap");
+    const referenceInput = document.getElementById("homeCustomReferenceImage");
     if (!wrap || !textarea) return;
 
     const isCustom = isCustomProduct(product);
     textarea.required = isCustom;
     textarea.disabled = !isCustom;
     wrap.setAttribute("aria-hidden", String(!isCustom));
+    if (referenceWrap) {
+      referenceWrap.hidden = !isCustom;
+      referenceWrap.setAttribute("aria-hidden", String(!isCustom));
+    }
+    if (referenceInput) referenceInput.disabled = !isCustom;
 
     if (isCustom) {
       wrap.hidden = false;
@@ -1344,8 +1517,6 @@
     let message = "";
     if (!value) {
       message = "Please describe your custom design.";
-    } else if (value.length < 10) {
-      message = "Please describe your custom design in at least 10 characters.";
     } else if (value.length > 500) {
       message = "Please keep your custom design description under 500 characters.";
     }
@@ -1377,8 +1548,14 @@
     13: "soccer-ball",
     14: "turtle",
     15: "octopus",
+    16: "fish",
     17: "pencil",
-    19: "cross"
+    19: "cross",
+    20: "crab",
+    22: "whale",
+    23: "jellyfish",
+    24: "lobster",
+    25: "shark"
   };
 
   const productBySlug = (slug) => productCatalogue.find(product => product.slug === slug) || null;
@@ -1579,9 +1756,12 @@
       const referenceFrame = referenceImage?.closest(".workspace-photo-primary");
       const selectedPhoto = document.getElementById("homeSelectedProductPhoto");
       const selectedFrame = selectedPhoto?.closest(".home-selected-product-photo");
+      const referenceProductPhoto = document.getElementById("homeReferenceProductPhoto");
+      const referenceProductFrame = referenceProductPhoto?.closest(".home-reference-product-photo");
       setProductImage(referenceImage, referenceFrame, imageProduct, item.image, "reference image");
       setProductImage(selectedPhoto, selectedFrame, imageProduct, item.image, "product photo");
-      [referenceFrame, selectedFrame].forEach((frame) => {
+      setProductImage(referenceProductPhoto, referenceProductFrame, imageProduct, item.image, "reference photo");
+      [referenceFrame, selectedFrame, referenceProductFrame].forEach((frame) => {
         if (!frame) return;
         Array.from(frame.classList)
           .filter(className => className.startsWith("focus-"))
@@ -1653,6 +1833,8 @@
       personalizationType: personalization.type,
       personalizationText: personalization.text,
       customDescription,
+      customReferenceImage: isCustomProduct(product) ? customReferenceImageDataUrl : "",
+      customReferenceImageName: isCustomProduct(product) ? customReferenceImageName : "",
       quantity
     }];
 
@@ -1785,6 +1967,7 @@
 
     populateDesignOptions();
     applyRequestedDesignSelection();
+    applyRequestedIdea();
     form.addEventListener("input", renderHomeTreasurePreview);
     form.addEventListener("change", () => {
       syncCustomDescriptionField();
@@ -1810,6 +1993,33 @@
       syncCustomDescriptionField();
       validateCustomDescription();
       renderHomeTreasurePreview();
+    });
+    document.getElementById("homeCustomReferenceImage")?.addEventListener("change", (event) => {
+      const file = event.currentTarget.files?.[0] || null;
+      customReferenceImageDataUrl = "";
+      customReferenceImageName = "";
+      if (!file) {
+        renderHomeTreasurePreview();
+        return;
+      }
+      if (!file.type.startsWith("image/")) {
+        event.currentTarget.value = "";
+        setOrderStatus("Please choose an image file for your custom reference.", true);
+        renderHomeTreasurePreview();
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        customReferenceImageDataUrl = typeof reader.result === "string" ? reader.result : "";
+        customReferenceImageName = file.name;
+        renderHomeTreasurePreview();
+      };
+      reader.onerror = () => {
+        console.warn(`[Forever Beaded] Unable to read custom reference image: ${file.name}`);
+        setOrderStatus("That reference image could not be read. Please try another image.", true);
+        renderHomeTreasurePreview();
+      };
+      reader.readAsDataURL(file);
     });
     document.getElementById("homeTreasureHardware")?.addEventListener("change", () => {
       syncHardwarePreviewSample();
@@ -2103,40 +2313,10 @@
 
   document.addEventListener("click", saveCategoryJump);
 
-  const setupPageTransitions = () => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    document.body.classList.add("page-ready");
-    document.addEventListener("click", (event) => {
-      const link = event.target.closest("a[href]");
-      if (!link || event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-
-      const href = link.getAttribute("href");
-      if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:") || link.target === "_blank") return;
-
-      let url;
-      try {
-        url = new URL(href, window.location.href);
-      } catch {
-        return;
-      }
-
-      if (url.origin !== window.location.origin || !url.pathname.endsWith(".html")) return;
-
-      event.preventDefault();
-      document.body.classList.add("page-turning");
-      window.setTimeout(() => {
-        window.location.href = url.href;
-      }, 280);
-    });
-  };
-
   const setupPage = () => {
-    setupBackToTop();
+    if (!document.body.classList.contains("world-create")) setupBackToTop();
     setupExclusiveProductLinks();
     setupHomeDesignBuilder();
-    setupChapterTwoButterflies();
-    setupPageTransitions();
   };
 
   if (document.readyState === "loading") {

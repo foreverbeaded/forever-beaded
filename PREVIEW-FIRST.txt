@@ -1,0 +1,23 @@
+FOREVER BEADED — CORRECTED PREVIEW BUILD
+
+This build was created from the uploaded working Forever-Beaded-GitHub project.
+The cinematic opening files and timing logic were NOT replaced.
+
+Changes included:
+- Ice Cream Keychain is the only August Exclusive.
+- Ice Cream has its own ice-cream.html Sundae Shop page.
+- Macaw is a regular Birds product at $47 CAD.
+- Birds of the Sky category styling is included.
+- Ice Cream is $25 CAD; Silver included; Gold +$5.
+- Corrected catalogue prices are used in Collections.
+- Existing cart, checkout, Gmail, backend, custom domain, and opening animation code were preserved.
+
+PREVIEW SAFELY:
+1. Extract this ZIP into a new folder.
+2. Do not merge it into the live project yet.
+3. Open the extracted folder in VS Code.
+4. Use Live Server on index.html, or run: python -m http.server 8000
+5. Visit http://localhost:8000/index.html
+6. Test Home, Collections, Ice Cream Sundae Page, Create Yours, cart, and checkout.
+
+Only merge after you approve the preview.

@@ -1,0 +1,902 @@
+/* Shared collection layout — Stationery is the geometry reference. */
+:root {
+  --collection-content-width: 1040px;
+  --collection-heading-width: 980px;
+  --collection-search-width: 620px;
+  --collection-card-width: 329px;
+  --collection-gap: 26px;
+  --collection-ink: #4f2d3d;
+  --collection-panel: rgba(255, 249, 242, .88);
+}
+
+/* Final collection hero contrast sweep: colour and lightweight text treatment only. */
+.hero-flower-garden .page-heading h1 { color:#fff0d2!important; text-shadow:0 3px 10px rgba(63,20,55,.92),0 0 20px rgba(63,20,55,.5)!important; }
+.hero-flower-garden .page-heading .page-subtitle { color:#fff7e7!important; background:rgba(49,18,40,.25); border-radius:8px; box-shadow:0 0 0 5px rgba(49,18,40,.25); text-shadow:0 2px 7px rgba(27,9,23,.9)!important; }
+
+.world-butterflies .world-hero h1 { color:#fff1d7!important; text-shadow:0 3px 10px rgba(74,24,66,.88),0 0 18px rgba(74,24,66,.46)!important; }
+.world-butterflies .world-kicker,
+.world-butterflies .world-hero-copy>p:not(.world-kicker) { color:#fff7e8!important; text-shadow:0 2px 8px rgba(54,16,49,.92)!important; }
+
+.hero-animal-friends .page-heading h1 { color:#fff0d2!important; text-shadow:0 3px 10px rgba(24,52,31,.95),0 0 20px rgba(50,31,19,.66)!important; }
+.hero-animal-friends .page-heading .page-subtitle { color:#fff8e8!important; background:rgba(22,45,28,.34); border-radius:8px; box-shadow:0 0 0 5px rgba(22,45,28,.34); text-shadow:0 2px 8px rgba(17,29,19,.96)!important; }
+
+.hero-ocean-friends .page-heading h1 { color:#dffcff!important; text-shadow:0 3px 10px rgba(3,34,69,.96),0 0 18px rgba(3,34,69,.62)!important; }
+.hero-ocean-friends .page-kicker,
+.hero-ocean-friends .page-heading .page-subtitle { color:#fff8e8!important; text-shadow:0 2px 8px rgba(1,30,65,.98)!important; }
+.hero-ocean-friends .page-heading .page-subtitle { background:none; border-radius:0; box-shadow:none; }
+
+.hero-birds-sky .page-heading h1 { text-shadow:0 2px 8px rgba(49,30,20,.72),0 0 14px rgba(255,244,211,.72)!important; }
+.hero-birds-sky .page-kicker,
+.hero-birds-sky .page-heading .page-subtitle { text-shadow:0 2px 7px rgba(41,28,20,.72),0 0 10px rgba(255,246,218,.48)!important; }
+
+.hero-sandy-beaches .page-heading h1 { text-shadow:0 2px 8px rgba(255,246,218,.95),0 0 16px rgba(255,238,195,.64)!important; }
+.hero-sandy-beaches .page-heading .page-subtitle { color:#3d2b20!important; text-shadow:0 1px 5px rgba(255,248,224,.96)!important; }
+
+.world-faith .world-hero h1 { color:#fff1d7!important; text-shadow:0 3px 10px rgba(76,46,25,.92),0 0 18px rgba(76,46,25,.46)!important; }
+.world-faith .world-kicker,
+.world-faith .world-hero-copy>p:not(.world-kicker) { color:#fff8e8!important; text-shadow:0 2px 8px rgba(67,39,23,.92)!important; }
+
+.world-enchanted .world-hero h1 { color:#fff0dc!important; text-shadow:0 3px 11px rgba(26,13,59,.94),0 0 21px rgba(183,139,229,.62)!important; }
+.world-enchanted .world-kicker,
+.world-enchanted .world-hero-copy>p:not(.world-kicker) { color:#fff5e7!important; text-shadow:0 2px 9px rgba(20,10,49,.98),0 0 14px rgba(145,104,205,.5)!important; }
+
+.world-flags .world-hero h1 { color:#15365f!important; text-shadow:0 1px 0 #fff5dc,0 3px 10px rgba(255,245,220,.96),0 0 20px rgba(197,154,69,.58)!important; }
+.world-flags .world-kicker,
+.world-flags .world-hero-copy>p:not(.world-kicker) { color:#102d50!important; text-shadow:0 1px 0 #fff8e8,0 2px 8px rgba(255,248,232,.98)!important; }
+
+.world-sports .world-hero h1 { color:#244f36!important; text-shadow:0 1px 0 #fff4d9,0 3px 10px rgba(255,244,217,.96),0 0 18px rgba(255,244,217,.62)!important; }
+.world-sports .world-kicker,
+.world-sports .world-hero-copy>p:not(.world-kicker) { color:#2f271f!important; text-shadow:0 1px 0 #fff4d9,0 2px 8px rgba(255,244,217,.98)!important; }
+
+/* Authoritative hero readability for every collection template. */
+.flower-page .page-heading h1,
+.animal-page .page-heading h1,
+.ocean-page .page-heading h1,
+.birds-page .page-heading h1,
+.sandy-page .page-heading h1,
+.sweet-page .page-heading h1,
+.stationery-page .page-heading h1,
+.world-page:not(.world-create) .world-hero h1 {
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: 0 2px 4px rgba(0,0,0,.9), 0 0 12px rgba(0,0,0,.55) !important;
+}
+.flower-page .page-subtitle,
+.animal-page .page-subtitle,
+.ocean-page .page-subtitle,
+.birds-page .page-subtitle,
+.sandy-page .page-subtitle,
+.sweet-page .page-subtitle,
+.stationery-page .page-subtitle,
+.world-page:not(.world-create) .world-hero-copy>p {
+  opacity: 1 !important;
+  filter: none !important;
+  font-weight: 600 !important;
+  text-shadow: 0 2px 4px rgba(0,0,0,.9), 0 0 12px rgba(0,0,0,.55) !important;
+}
+.ocean-page .page-kicker,
+.birds-page .page-kicker,
+.world-page:not(.world-create) .world-kicker {
+  opacity: 1 !important;
+  filter: none !important;
+  font-weight: 800 !important;
+  text-shadow: 0 2px 4px rgba(0,0,0,.9), 0 0 12px rgba(0,0,0,.55) !important;
+}
+
+/* Flower Garden: warm ivory over the sunset. */
+.hero-flower-garden .page-heading h1 {
+  color: #fff7df !important;
+  text-shadow: 0 2px 4px rgba(44,10,38,.98), 0 0 12px rgba(44,10,38,.78), 0 0 24px rgba(18,5,16,.5) !important;
+}
+.hero-flower-garden .page-heading .page-subtitle {
+  color: #fffaf0 !important;
+  background: linear-gradient(90deg, transparent, rgba(39,10,31,.38) 16%, rgba(39,10,31,.38) 84%, transparent);
+  text-shadow: 0 2px 4px rgba(30,6,24,.98), 0 0 12px rgba(30,6,24,.72) !important;
+}
+
+/* Butterfly Garden: cream with a deep rose-plum shadow. */
+.world-butterflies .world-hero h1 {
+  color: #fff7df !important;
+  text-shadow: 0 2px 4px rgba(62,15,51,.98), 0 0 12px rgba(62,15,51,.82), 0 0 22px rgba(43,18,12,.52) !important;
+}
+.world-butterflies .world-kicker,
+.world-butterflies .world-hero-copy>p:not(.world-kicker) {
+  color: #fffaf0 !important;
+  text-shadow: 0 2px 4px rgba(53,12,44,.98), 0 0 12px rgba(53,12,44,.8) !important;
+}
+
+/* Animal Friends: maximum light-on-forest contrast. */
+.hero-animal-friends .page-heading h1 {
+  color: #fff7df !important;
+  text-shadow: 0 2px 4px rgba(8,28,15,1), 0 0 12px rgba(8,28,15,.94), 0 0 24px rgba(24,12,7,.72) !important;
+}
+.hero-animal-friends .page-heading .page-subtitle {
+  color: #fffaf0 !important;
+  background: linear-gradient(90deg, transparent, rgba(8,30,16,.52) 14%, rgba(8,30,16,.52) 86%, transparent);
+  text-shadow: 0 2px 4px rgba(4,20,10,1), 0 0 12px rgba(4,20,10,.88) !important;
+}
+
+/* Enchanted Beings: luminous ivory with a deep navy magical halo. */
+.world-enchanted .world-hero h1 {
+  color: #fff7df !important;
+  text-shadow: 0 2px 4px rgba(8,17,52,1), 0 0 12px rgba(8,17,52,.94), 0 0 24px rgba(139,91,199,.66) !important;
+}
+.world-enchanted .world-kicker,
+.world-enchanted .world-hero-copy>p:not(.world-kicker) {
+  color: #fffaf0 !important;
+  text-shadow: 0 2px 4px rgba(7,14,44,1), 0 0 12px rgba(7,14,44,.94) !important;
+}
+
+/* Flags: deep navy with a visible warm-cream outline over sky and flags. */
+.world-flags .world-hero h1 {
+  color: #17233f !important;
+  text-shadow: -1px -1px 0 #fff4d4, 1px -1px 0 #fff4d4, -1px 1px 0 #fff4d4, 1px 1px 0 #fff4d4, 0 2px 4px rgba(0,0,0,.72), 0 0 14px rgba(255,222,151,.96) !important;
+}
+.world-flags .world-kicker,
+.world-flags .world-hero-copy>p:not(.world-kicker) {
+  color: #17233f !important;
+  background: none !important;
+  text-shadow: 0 1px 2px rgba(255,255,255,1), 0 0 8px rgba(255,244,212,.98) !important;
+}
+
+/* Sports: forest green outlined in cream; dark readable introduction. */
+.world-sports .world-hero h1 {
+  color: #173d2d !important;
+  text-shadow: -1px -1px 0 #fff4d9, 1px -1px 0 #fff4d9, -1px 1px 0 #fff4d9, 1px 1px 0 #fff4d9, 0 2px 4px rgba(0,0,0,.72), 0 0 12px rgba(255,244,217,.96) !important;
+}
+.world-sports .world-kicker,
+.world-sports .world-hero-copy>p:not(.world-kicker) {
+  color: #1f1b18 !important;
+  background: none !important;
+  text-shadow: 0 1px 2px rgba(255,255,255,1), 0 0 8px rgba(255,244,217,.98) !important;
+}
+
+/* Tiny Garden Friends only: compact Flower Garden-aligned catalogue cards. */
+.world-bugs .product-grid {
+  grid-template-columns: repeat(2, minmax(280px, 329px)) !important;
+  justify-content: center !important;
+  align-items: start !important;
+  gap: 32px !important;
+}
+.world-bugs .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) {
+  height: auto !important;
+  min-height: 0 !important;
+  align-self: start !important;
+  flex: 0 0 auto !important;
+  justify-content: flex-start !important;
+}
+.world-bugs .product-card-content {
+  height: auto !important;
+  min-height: 0 !important;
+  flex: 0 0 auto !important;
+}
+.world-bugs .product-card-link,
+.world-enchanted .product-card-link,
+.world-flags .product-card-link,
+.world-sports .product-card-link,
+.world-exclusive .product-card-link {
+  position: absolute;
+  inset: 0;
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.world-bugs .product-name,
+.world-enchanted .product-name,
+.world-flags .product-name,
+.world-sports .product-name,
+.world-exclusive .product-name {
+  position: absolute;
+  inset: auto 8% 5% 8%;
+  z-index: 3;
+  height: 46px !important;
+  display: grid;
+  place-items: center;
+  padding: 4px 13px;
+  border: 1px solid rgba(139,87,109,.28);
+  border-radius: 10px !important;
+  background: rgba(255,246,248,.95) !important;
+  color: #4f2d3d !important;
+  font: 400 clamp(14px,1.5vw,20px)/1.05 Georgia,"Times New Roman",serif !important;
+  text-align: center;
+  box-shadow: 0 5px 16px rgba(77,41,57,.18);
+}
+.world-bugs .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) > .product-image {
+  flex-basis: 178px !important;
+  height: 178px !important;
+  padding: 10px !important;
+}
+.world-bugs .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) > h3 {
+  flex-basis: 42px !important;
+  min-height: 42px !important;
+  margin: -54px 12px 10px !important;
+}
+.world-bugs .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) > .social-row { margin: 0 18px 5px !important; }
+.world-bugs .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) > p {
+  display: -webkit-box !important;
+  min-height: 0 !important;
+  max-height: 42px;
+  margin: 0 18px 7px !important;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  font-size: 13px !important;
+  line-height: 1.35 !important;
+}
+.world-bugs .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) > strong {
+  margin: 0 18px 7px !important;
+  font-size: 17px !important;
+}
+.world-bugs .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) > .add-to-cart-btn,
+.world-bugs .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) > .product-create-request-btn {
+  width: calc(100% - 36px) !important;
+  min-height: 38px !important;
+  margin: 0 18px 7px !important;
+  padding: 8px 13px !important;
+}
+.world-bugs .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) > .product-create-request-btn { margin-bottom: 14px !important; }
+@media (max-width: 700px) {
+  .world-bugs .product-grid { grid-template-columns: minmax(0, 360px) !important; gap: 24px !important; }
+  .world-bugs .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) { height: auto !important; min-height: 0 !important; }
+  .world-bugs .product-name,
+  .world-enchanted .product-name,
+  .world-flags .product-name,
+  .world-sports .product-name,
+  .world-exclusive .product-name { inset: auto 6% 5% 6%; height: 38px !important; padding: 3px 7px; font-size: 14px !important; }
+}
+
+html, body { width: 100%; margin: 0; }
+body { overflow-x: hidden; }
+
+/* The common header remains the homepage/master header. */
+.story-header { min-height: 76px; }
+
+/* Both existing collection templates share one content frame. */
+.page-scroll {
+  width: 100%;
+  min-height: 0 !important;
+  padding: 118px clamp(12px, 2vw, 32px) 72px !important;
+}
+.page-scroll > main,
+body.world-page > main {
+  width: min(var(--collection-content-width), calc(100% - 24px));
+  min-height: 0 !important;
+  margin: 0 auto;
+}
+body.world-page > main { padding: 118px 0 72px !important; }
+
+/* Stationery-aligned hero/title geometry. */
+.page-heading,
+.world-page .world-hero-copy {
+  position: relative;
+  width: min(var(--collection-heading-width), 100%);
+  max-width: var(--collection-heading-width);
+  margin: 0 auto;
+  text-align: center;
+}
+.page-heading .page-kicker {
+  position: absolute;
+  inset: -25px 0 auto;
+  margin: 0 !important;
+  font: 700 .76rem/1.2 Arial, sans-serif !important;
+  letter-spacing: .2em;
+}
+.world-page .world-hero {
+  min-height: 0 !important;
+  display: block !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+.world-page .world-hero::before { content: none !important; }
+.world-page .world-hero-copy {
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.page-heading h1,
+.world-page .world-hero h1 {
+  margin: 0 0 22px !important;
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: clamp(48px, 7vw, 96px) !important;
+  font-weight: 500 !important;
+  line-height: .95 !important;
+  letter-spacing: -.035em !important;
+}
+.page-subtitle,
+.world-page .world-hero p:last-child {
+  max-width: 650px !important;
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem auto 22px !important;
+  font: 400 1.05rem/1.7 Georgia, "Times New Roman", serif !important;
+}
+.world-page .world-kicker {
+  position: absolute;
+  inset: -25px 0 auto;
+  margin: 0 !important;
+  font: 700 .76rem/1.2 Arial, sans-serif !important;
+  letter-spacing: .2em;
+}
+.world-page .world-hero-copy { position: relative; }
+
+/* Readable but still soft and storybook-like over every themed world. */
+.page-heading,
+.world-page .world-hero-copy {
+  color: var(--collection-text, #fff8e8) !important;
+  text-shadow: 0 2px 7px rgba(16, 10, 24, .82), 0 0 20px rgba(24, 14, 36, .38) !important;
+}
+.page-heading h1,
+.world-page .world-hero h1,
+.world-page .world-kicker { color: inherit !important; }
+body:not(.world-page) .page-heading {
+  color: var(--collection-text, #4f2d3d) !important;
+  text-shadow: 0 2px 8px rgba(255, 248, 240, .92), 0 0 18px rgba(255, 248, 240, .5) !important;
+}
+
+/* Search is identical in size and placement. */
+.search-wrap,
+.world-page .world-search-row {
+  width: min(var(--collection-search-width), 100%) !important;
+  margin: 0 auto !important;
+}
+.world-page .world-browser {
+  width: 100% !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.world-page .world-search-row {
+  position: relative;
+  display: block;
+  align-items: center;
+}
+.search-wrap input,
+.world-page .world-search-row input {
+  width: 100% !important;
+  min-height: 56px !important;
+  padding: 0 26px !important;
+  border: 1px solid rgba(91, 61, 76, .34) !important;
+  border-radius: 999px !important;
+  background: rgba(255, 249, 242, .94) !important;
+  color: #3e2933 !important;
+  font: 500 clamp(15px, 1.4vw, 18px)/1.2 Arial, sans-serif !important;
+  box-shadow: 0 12px 32px rgba(36, 24, 32, .18) !important;
+  outline: none;
+}
+.world-page .tiny-link-btn { min-height: 42px; border-radius: 999px; }
+.world-page .world-search-row input { padding-right: 105px !important; }
+.world-page .world-search-row .tiny-link-btn {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  z-index: 2;
+  min-height: 42px;
+}
+
+/* One navigation-chip contract everywhere. */
+.chapter-order-nav,
+.page-heading > .chapter-order-nav,
+.world-browser > .chapter-order-nav {
+  width: min(var(--collection-heading-width), 100%) !important;
+  margin: 24px auto 28px !important;
+  gap: 8px !important;
+  justify-content: center !important;
+}
+.page-heading > .chapter-order-nav { margin-bottom: 28px !important; }
+.world-browser > .chapter-order-nav { margin-bottom: 28px !important; }
+.chapter-order-nav__link {
+  min-height: 34px !important;
+  padding: 7px 13px !important;
+  border-radius: 999px !important;
+  font: 700 12px/1.15 Arial, sans-serif !important;
+}
+
+/* Align catalogue status without changing its content or behavior. */
+.world-page .shop-results-row {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  min-height: 0 !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Stationery card width, spacing, corner radius, and image treatment. */
+.product-grid,
+.world-page .product-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(280px, var(--collection-card-width))) !important;
+  justify-content: center !important;
+  align-items: stretch !important;
+  gap: var(--collection-gap) !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+.product-card,
+.world-page .product-card {
+  position: relative !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 5px solid rgba(255, 246, 240, .92) !important;
+  border-radius: 18px !important;
+  background: rgba(255, 248, 244, .9) !important;
+  box-shadow: 0 16px 36px rgba(31, 23, 34, .28), inset 0 0 0 1px rgba(112, 75, 93, .22) !important;
+}
+.product-card:has(.product-card-link) { aspect-ratio: 1.48 / 1 !important; }
+.product-card img,
+.world-page .product-card img {
+  display: block;
+  width: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  padding: 12px !important;
+  filter: none !important;
+  opacity: 1 !important;
+}
+.product-card:has(.product-card-link) img { height: 100% !important; }
+.world-page .product-card .product-image {
+  height: 220px !important;
+  aspect-ratio: auto !important;
+  border-radius: 13px !important;
+  background: rgba(255, 255, 255, .54) !important;
+}
+
+/*
+ * Flower Garden is the master product-card design.  Older catalogue pages
+ * retain their product copy, price and actions, but use the same shell,
+ * image area, name strip, heart placement and spacing as the compact cards.
+ */
+.world-page .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  height: 620px !important;
+  text-align: center !important;
+}
+.world-page .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) > .product-image {
+  flex: 0 0 220px !important;
+  order: 1;
+  margin: 0 !important;
+  border-radius: 13px 13px 0 0 !important;
+}
+.world-page .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) > .badge {
+  position: absolute !important;
+  z-index: 3;
+  top: 12px !important;
+  left: 12px !important;
+  margin: 0 !important;
+  padding: 6px 10px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 246, 240, .94) !important;
+  color: #492d3a !important;
+  font-size: 11px !important;
+  letter-spacing: .06em;
+}
+.world-page .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) > h3 {
+  order: 2;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 46px;
+  width: calc(100% - 24px);
+  min-height: 46px;
+  margin: -58px 12px 18px !important;
+  padding: 5px 12px !important;
+  position: relative;
+  z-index: 2;
+  border-radius: 10px !important;
+  background: rgba(255, 246, 240, .94) !important;
+  color: #492d3a !important;
+  font: 400 clamp(14px, 1.5vw, 20px)/1.05 Georgia, "Times New Roman", serif !important;
+}
+.world-page .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) > .social-row {
+  order: 3;
+  margin: 0 20px 10px !important;
+  color: #725567 !important;
+  font-size: 12px !important;
+  letter-spacing: .04em;
+}
+.world-page .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) > p {
+  order: 4;
+  min-height: 66px;
+  margin: 0 20px 12px !important;
+  color: #59434f !important;
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+}
+.world-page .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) > strong {
+  order: 5;
+  margin: 0 20px 12px !important;
+  color: #492d3a !important;
+  font-size: 18px !important;
+}
+.world-page .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) > br {
+  display: none !important;
+}
+.world-page .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) > .variant-selector {
+  order: 6;
+  margin: 0 20px 12px !important;
+}
+.world-page .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) > .add-to-cart-btn {
+  order: 7;
+  width: calc(100% - 40px) !important;
+  margin: auto 20px 10px !important;
+}
+.world-page .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) > .product-create-request-btn {
+  order: 8;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: calc(100% - 40px) !important;
+  margin: 0 20px 20px !important;
+  padding: 10px 16px !important;
+}
+.product-name,
+.product-card-link > span {
+  height: 46px !important;
+  border-radius: 10px !important;
+  background: rgba(255, 246, 240, .94) !important;
+  color: #492d3a !important;
+  font: 400 clamp(14px, 1.5vw, 20px)/1.05 Georgia, "Times New Roman", serif !important;
+}
+.world-page .product-card-content { padding: 1rem !important; }
+.world-page .product-card-content h3 { margin-top: 0; }
+.world-page .product-card button:not(.favourite-btn),
+.world-page .product-create-request-btn {
+  min-height: 42px;
+  border-radius: 999px !important;
+}
+.favourite-btn {
+  top: 10px !important;
+  right: 10px !important;
+  width: 42px !important;
+  height: 42px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  z-index: 5 !important;
+}
+
+/* No alternate footer or painted strip after the chapter ending. */
+body > .storybook-footer { display: none !important; }
+.chapter-navigation { margin-bottom: 0 !important; }
+
+/* Page-specific storybook accents: colour only; geometry remains shared. */
+.world-flags {
+  --page-accent: #15365f;
+  --page-accent-dark: #0b2342;
+  --page-accent-soft: #a83b3f;
+  --page-gold: #c59a45;
+  --page-cream: #fff5dc;
+}
+.world-sports {
+  --page-accent: #244f36;
+  --page-accent-dark: #3b2a20;
+  --page-accent-soft: #5c7651;
+  --page-gold: #b9924a;
+  --page-cream: #fff4d9;
+}
+.world-exclusive {
+  --page-accent: #5b2c67;
+  --page-accent-dark: #391b47;
+  --page-accent-soft: #8a6aa4;
+  --page-gold: #d2ae68;
+  --page-cream: #fff4e1;
+}
+
+.world-flags .world-hero-copy,
+.world-sports .world-hero-copy,
+.world-exclusive .world-hero-copy {
+  color: var(--page-accent-dark) !important;
+  text-shadow: 0 1px 0 var(--page-cream), 0 2px 9px rgba(255, 247, 225, .9), 0 0 22px rgba(197, 154, 69, .38) !important;
+}
+.world-flags .world-hero h1,
+.world-sports .world-hero h1,
+.world-exclusive .world-hero h1 {
+  color: var(--page-accent) !important;
+  text-shadow: 0 1px 0 var(--page-cream), 0 3px 11px rgba(255, 247, 225, .95), 0 0 25px color-mix(in srgb, var(--page-gold) 48%, transparent) !important;
+}
+.world-flags .world-kicker,
+.world-sports .world-kicker,
+.world-exclusive .world-kicker {
+  color: var(--page-accent-dark) !important;
+  text-shadow: 0 1px 5px var(--page-cream) !important;
+}
+
+.world-flags .chapter-order-nav__link,
+.world-sports .chapter-order-nav__link,
+.world-exclusive .chapter-order-nav__link {
+  border-color: color-mix(in srgb, var(--page-accent) 28%, transparent) !important;
+  background: rgba(255, 248, 232, .92) !important;
+  color: var(--page-accent-dark) !important;
+  box-shadow: 0 5px 13px color-mix(in srgb, var(--page-accent-dark) 14%, transparent) !important;
+}
+.world-flags .chapter-order-nav__link[aria-current="page"],
+.world-sports .chapter-order-nav__link[aria-current="page"],
+.world-exclusive .chapter-order-nav__link[aria-current="page"] {
+  border-color: var(--page-gold) !important;
+  background: var(--page-accent) !important;
+  color: var(--page-cream) !important;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--page-accent-dark) 30%, transparent), inset 0 0 0 1px rgba(255, 244, 217, .24) !important;
+}
+.world-flags .tiny-link-btn,
+.world-sports .tiny-link-btn,
+.world-exclusive .tiny-link-btn {
+  border-color: color-mix(in srgb, var(--page-gold) 72%, var(--page-accent)) !important;
+  background: var(--page-accent) !important;
+  color: var(--page-cream) !important;
+  box-shadow: 0 7px 16px color-mix(in srgb, var(--page-accent-dark) 24%, transparent) !important;
+}
+
+.world-flags .product-card,
+.world-sports .product-card,
+.world-exclusive .product-card {
+  border-color: color-mix(in srgb, var(--page-cream) 76%, var(--page-gold)) !important;
+  box-shadow: 0 16px 36px color-mix(in srgb, var(--page-accent-dark) 28%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--page-gold) 34%, transparent) !important;
+}
+.world-flags .product-card h3,
+.world-sports .product-card h3,
+.world-exclusive .product-card h3,
+.world-flags .product-name,
+.world-sports .product-name,
+.world-exclusive .product-name {
+  color: var(--page-accent-dark) !important;
+}
+.world-flags .favourite-btn,
+.world-sports .favourite-btn,
+.world-exclusive .favourite-btn {
+  color: var(--page-accent) !important;
+  text-shadow: 0 1px 0 var(--page-cream), 0 2px 7px color-mix(in srgb, var(--page-accent-dark) 28%, transparent) !important;
+}
+.world-flags .favourite-btn.is-favourite,
+.world-flags .favourite-btn[aria-pressed="true"] { color: #a83b3f !important; }
+.world-sports .favourite-btn.is-favourite,
+.world-sports .favourite-btn[aria-pressed="true"] { color: #79502f !important; }
+.world-exclusive .favourite-btn.is-favourite,
+.world-exclusive .favourite-btn[aria-pressed="true"] { color: #8a5aa0 !important; }
+
+.world-flags .product-card button:not(.favourite-btn),
+.world-flags .product-create-request-btn,
+.world-sports .product-card button:not(.favourite-btn),
+.world-sports .product-create-request-btn,
+.world-exclusive .product-card button:not(.favourite-btn),
+.world-exclusive .product-create-request-btn {
+  border: 1px solid var(--page-gold) !important;
+  background: var(--page-accent) !important;
+  color: var(--page-cream) !important;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--page-accent-dark) 26%, transparent) !important;
+}
+
+@media (max-width: 900px) {
+  .page-scroll { padding-top: 102px !important; }
+  body.world-page > main {
+    width: min(calc(100% - 56px), var(--collection-content-width));
+    padding-top: 102px !important;
+  }
+  .chapter-order-nav,
+  .page-heading > .chapter-order-nav,
+  .world-browser > .chapter-order-nav { margin-bottom: 20px !important; }
+  .product-grid,
+  .world-page .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 20px !important;
+  }
+}
+
+@media (max-width: 620px) {
+  .page-scroll { padding: 92px 12px 48px !important; }
+  body.world-page > main { width: min(100% - 48px, var(--collection-content-width)); padding: 92px 0 48px !important; }
+  .page-heading,
+  .world-page .world-hero-copy { margin-bottom: 0; }
+  .page-heading h1,
+  .world-page .world-hero h1 { margin-bottom: 18px !important; font-size: clamp(44px, 15vw, 64px) !important; }
+  .search-wrap input,
+  .world-page .world-search-row input { min-height: 50px !important; padding-inline: 20px !important; }
+  .world-page .world-search-row { display: block; }
+  .chapter-order-nav,
+  .page-heading > .chapter-order-nav,
+  .world-browser > .chapter-order-nav { gap: 6px !important; margin-bottom: 20px !important; }
+  .chapter-order-nav__link { min-height: 32px !important; padding: 6px 10px !important; font-size: 11px !important; }
+  .product-grid,
+  .world-page .product-grid { grid-template-columns: 1fr !important; gap: 26px !important; }
+  .product-card,
+  .world-page .product-card { width: min(360px, 100%) !important; justify-self: center; border-width: 3px !important; }
+  .product-name,
+  .product-card-link > span { height: 38px !important; font-size: 14px !important; }
+  .world-page .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) {
+    height: 600px !important;
+  }
+}
+
+/* These two themed pages define colour rules above; keep final hero contrast authoritative. */
+.world-flags .world-hero h1 { color:#17233f!important; text-shadow:-1px -1px 0 #fff4d4,1px -1px 0 #fff4d4,-1px 1px 0 #fff4d4,1px 1px 0 #fff4d4,0 2px 4px rgba(0,0,0,.72),0 0 14px rgba(255,222,151,.96)!important; }
+.world-flags .world-kicker,
+.world-flags .world-hero-copy>p:not(.world-kicker) { color:#17233f!important; background:none!important; text-shadow:0 1px 2px rgba(255,255,255,1),0 0 8px rgba(255,244,212,.98)!important; }
+.world-sports .world-hero h1 { color:#173d2d!important; text-shadow:-1px -1px 0 #fff4d9,1px -1px 0 #fff4d9,-1px 1px 0 #fff4d9,1px 1px 0 #fff4d9,0 2px 4px rgba(0,0,0,.72),0 0 12px rgba(255,244,217,.96)!important; }
+.world-sports .world-kicker,
+.world-sports .world-hero-copy>p:not(.world-kicker) { color:#1f1b18!important; background:none!important; text-shadow:0 1px 2px rgba(255,255,255,1),0 0 8px rgba(255,244,217,.98)!important; }
+
+/* Flags and Sports hero text stays letter-only: no rules, strips, or pseudo decorations. */
+.world-flags .world-hero-copy,
+.world-flags .world-kicker,
+.world-flags .world-hero h1,
+.world-flags .world-hero-copy>p,
+.world-sports .world-hero-copy,
+.world-sports .world-kicker,
+.world-sports .world-hero h1,
+.world-sports .world-hero-copy>p {
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.world-flags .world-hero-copy::before,
+.world-flags .world-hero-copy::after,
+.world-flags .world-kicker::before,
+.world-flags .world-kicker::after,
+.world-flags .world-hero h1::before,
+.world-flags .world-hero h1::after,
+.world-sports .world-hero-copy::before,
+.world-sports .world-hero-copy::after,
+.world-sports .world-kicker::before,
+.world-sports .world-kicker::after,
+.world-sports .world-hero h1::before,
+.world-sports .world-hero h1::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Sandy Beaches is the canonical compact product-card component. */
+.product-grid,
+.world-page .product-grid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 320px)) !important;
+  justify-content: start !important;
+  justify-items: start !important;
+  align-items: start !important;
+  gap: clamp(18px, 2vw, 28px) !important;
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: auto !important;
+}
+
+.product-card,
+.world-page .product-card,
+.world-page .product-card:not(.butterfly-compact-card):not(:has(.product-card-link)) {
+  position: relative !important;
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: 1.48 / 1 !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  border: 5px solid rgba(255, 246, 240, .92) !important;
+  border-radius: 18px !important;
+  background: rgba(255, 248, 244, .9) !important;
+  box-shadow: 0 16px 36px rgba(31, 23, 34, .28), inset 0 0 0 1px rgba(112, 75, 93, .22) !important;
+  text-align: center !important;
+}
+
+.product-card-link {
+  position: absolute !important;
+  inset: 0 !important;
+  display: block !important;
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+.product-card img,
+.world-page .product-card img,
+.world-page .product-card .product-image {
+  position: static !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 12px 12px 68px !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  border-radius: 13px !important;
+  background: transparent !important;
+  filter: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.product-card .product-name,
+.product-card-link > .product-name {
+  position: absolute !important;
+  z-index: 3 !important;
+  inset: auto 8% 31px !important;
+  display: grid !important;
+  place-items: center !important;
+  width: auto !important;
+  height: 34px !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 3px 11px !important;
+  border: 1px solid rgba(132, 91, 110, .24) !important;
+  border-bottom: 0 !important;
+  border-radius: 10px 10px 0 0 !important;
+  background: rgba(255, 246, 240, .95) !important;
+  color: #492d3a !important;
+  font: 600 clamp(13px, 1.35vw, 18px)/1.05 Georgia, "Times New Roman", serif !important;
+  box-shadow: 0 5px 16px rgba(52, 39, 48, .16) !important;
+  pointer-events: none !important;
+}
+
+.product-card .product-price,
+.product-card-link > .product-price {
+  position: absolute !important;
+  z-index: 3 !important;
+  inset: auto 8% 7px !important;
+  display: grid !important;
+  place-items: center !important;
+  height: 25px !important;
+  margin: 0 !important;
+  padding: 2px 10px 4px !important;
+  border: 1px solid rgba(132, 91, 110, .24) !important;
+  border-top: 0 !important;
+  border-radius: 0 0 10px 10px !important;
+  background: rgba(255, 246, 240, .95) !important;
+  color: #63344e !important;
+  font: 800 12px/1.1 Inter, Arial, sans-serif !important;
+  letter-spacing: .02em !important;
+  box-shadow: 0 5px 16px rgba(52, 39, 48, .16) !important;
+  pointer-events: none !important;
+}
+
+.product-card .favourite-btn,
+.world-page .product-card .favourite-btn {
+  position: absolute !important;
+  z-index: 6 !important;
+  top: 10px !important;
+  right: 10px !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 42px !important;
+  height: 42px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #713b62 !important;
+  font: 700 25px/1 Arial, sans-serif !important;
+  box-shadow: none !important;
+  text-shadow: 0 1px 3px rgba(255,255,255,.95), 0 1px 5px rgba(0,0,0,.3) !important;
+}
+
+.product-card .favourite-btn.is-saved { color: #922d62 !important; }
+.product-card:hover,
+.product-card:focus-within {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 0 0 4px rgba(255,250,245,.78), 0 18px 38px rgba(48,30,42,.3) !important;
+}
+
+@media (max-width: 620px) {
+  .product-grid,
+  .world-page .product-grid { grid-template-columns: minmax(0, 320px) !important; }
+  .product-card,
+  .world-page .product-card { justify-self: start !important; border-width: 3px !important; }
+}

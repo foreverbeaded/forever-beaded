@@ -1,0 +1,70 @@
+.chapter-order-nav {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: min(1120px, calc(100% - 24px));
+  margin: 18px auto 26px;
+}
+
+.chapter-order-nav__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 7px 13px;
+  border: 1px solid rgba(72, 47, 35, .34);
+  border-radius: 999px;
+  background: rgba(255, 250, 236, .94);
+  box-shadow: 0 5px 16px rgba(28, 20, 17, .18);
+  color: #422b21;
+  font: 700 12px/1.15 Inter, Arial, sans-serif;
+  text-align: center;
+  text-decoration: none;
+  transition: transform .16s ease, background-color .16s ease, box-shadow .16s ease;
+}
+
+.chapter-order-nav__link:hover,
+.chapter-order-nav__link:focus-visible {
+  background: #fff9e8;
+  box-shadow: 0 7px 20px rgba(28, 20, 17, .24);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.chapter-order-nav__link[aria-current="page"] {
+  border-color: #3c261d;
+  background: #4a3025;
+  color: #fff9e8;
+  box-shadow: 0 7px 20px rgba(28, 20, 17, .3);
+}
+
+.world-browser > .chapter-order-nav {
+  width: 100%;
+  margin-top: 2px;
+}
+
+.page-heading > .chapter-order-nav {
+  width: min(980px, 100%);
+  margin-top: 24px;
+  margin-bottom: 0;
+}
+
+.world-create main > .chapter-order-nav {
+  margin-top: 1.25rem;
+}
+
+@media (max-width: 560px) {
+  .chapter-order-nav {
+    gap: 6px;
+    width: min(100% - 12px, 1120px);
+  }
+
+  .chapter-order-nav__link {
+    min-height: 32px;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+}

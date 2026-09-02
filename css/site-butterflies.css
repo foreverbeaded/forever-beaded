@@ -1,0 +1,94 @@
+body {
+  isolation: isolate;
+}
+
+.site-butterfly-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  contain: layout paint;
+}
+
+.site-butterfly {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  will-change: transform;
+  filter: drop-shadow(0 3px 5px rgba(25, 18, 10, 0.22));
+}
+
+.monthly-exclusive-butterfly-layer {
+  z-index: 80;
+  display: block;
+}
+
+.monthly-exclusive-butterfly {
+  width: clamp(54px, 6vw, 82px);
+  opacity: 0;
+  filter: drop-shadow(0 7px 9px rgba(36, 20, 10, .3));
+}
+
+.exclusive-reveal-glow {
+  position: fixed;
+  z-index: -1;
+  border-radius: 24px;
+  pointer-events: none;
+  animation: exclusive-reveal-glow 2.8s ease-out forwards;
+}
+
+.exclusive-reveal-glow::before,
+.exclusive-reveal-glow::after {
+  content: "";
+  position: absolute;
+  inset: -18px;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 12% 28%, rgba(255,247,178,.95) 0 3px, transparent 4px),
+    radial-gradient(circle at 82% 18%, rgba(255,224,132,.9) 0 2px, transparent 3px),
+    radial-gradient(circle at 91% 72%, rgba(255,250,205,.9) 0 3px, transparent 4px),
+    radial-gradient(circle at 24% 84%, rgba(255,215,116,.82) 0 2px, transparent 3px);
+  animation: exclusive-sparkles 2.4s ease-out forwards;
+}
+
+.exclusive-reveal-glow::after {
+  inset: -28px;
+  transform: rotate(20deg);
+  animation-delay: .14s;
+}
+
+@keyframes exclusive-reveal-glow {
+  0% { opacity: 0; box-shadow: 0 0 0 rgba(255,224,126,0); }
+  24% { opacity: 1; box-shadow: 0 0 24px 9px rgba(255,224,126,.72), 0 0 58px 18px rgba(255,245,191,.38); }
+  70% { opacity: .82; box-shadow: 0 0 18px 6px rgba(255,224,126,.48), 0 0 42px 14px rgba(255,245,191,.24); }
+  100% { opacity: 0; box-shadow: 0 0 0 rgba(255,224,126,0); }
+}
+
+@keyframes exclusive-sparkles {
+  0% { opacity: 0; transform: scale(.8) rotate(0deg); }
+  28% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.18) rotate(8deg); }
+}
+
+/* Retire the competing page-specific ambient systems. */
+.flying-butterfly,
+.living-butterfly,
+.create-butterfly,
+.ambient-butterfly,
+.chapter-two-butterfly-layer,
+.exclusive-discovery-butterfly {
+  display: none !important;
+}
+
+/* The one post-opening guide remains exclusive to the homepage feature card. */
+body.storybook-home .exclusive-discovery-butterfly {
+  display: block !important;
+}
+body.storybook-home .exclusive-discovery-butterfly.is-resting .left-wing,
+body.storybook-home .exclusive-discovery-butterfly.is-resting .right-wing {
+  animation-duration: 2.4s !important;
+}

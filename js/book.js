@@ -9,6 +9,8 @@ const state = {
   audio: null
 };
 
+const INTRO_PLAYED_KEY = "foreverBeadedIntroPlayed";
+
 const butterflyPlans = [
   {
     delay: 650,
@@ -1037,7 +1039,7 @@ function setupExclusiveDiscoveryObserver() {
     const rect = feature.getBoundingClientRect();
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
     return rect.top >= viewportHeight * .14 &&
-      rect.top <= viewportHeight * .68 &&
+      rect.top <= viewportHeight * .82 &&
       rect.bottom >= viewportHeight * .36 &&
       rect.left < window.innerWidth &&
       rect.right > 0;
@@ -1081,23 +1083,26 @@ function startExclusiveDiscovery() {
   const butterfly = document.createElement("span");
   butterfly.className = "svg-monarch exclusive-discovery-butterfly";
   butterfly.innerHTML = monarchMarkup();
-  document.documentElement.appendChild(butterfly);
+  document.body.appendChild(butterfly);
 
   const getTargets = () => {
     const targetRect = feature.getBoundingClientRect();
     const image = feature.querySelector("img");
     const imageRect = image?.getBoundingClientRect() || targetRect;
+    const useRightSide = targetRect.right + 150 < window.innerWidth;
+    const side = useRightSide ? 1 : -1;
+    const edgeX = useRightSide ? targetRect.right : targetRect.left;
     const center = {
-      x: clamp(targetRect.left + (targetRect.width * .52), 120, window.innerWidth - 120),
-      y: clamp(targetRect.top + (targetRect.height * .42), 130, window.innerHeight - 130)
+      x: clamp(edgeX + (side * 94), 78, window.innerWidth - 78),
+      y: clamp(targetRect.top + (targetRect.height * .36), 96, window.innerHeight - 96)
     };
     const hover = {
-      x: clamp(imageRect.right + Math.min(44, targetRect.width * .08), 104, window.innerWidth - 104),
-      y: clamp(imageRect.top + (imageRect.height * .45), 116, window.innerHeight - 116)
+      x: clamp(edgeX + (side * 82), 74, window.innerWidth - 74),
+      y: clamp(targetRect.top + (targetRect.height * .22), 90, window.innerHeight - 90)
     };
     const land = {
-      x: clamp(targetRect.right - 10, 104, window.innerWidth - 82),
-      y: clamp(targetRect.top + 12, 104, window.innerHeight - 104)
+      x: clamp(targetRect.right - 34, 54, window.innerWidth - 54),
+      y: clamp(targetRect.top + 4, 54, window.innerHeight - 54)
     };
     return { targetRect, center, hover, land };
   };
@@ -1136,8 +1141,8 @@ function startExclusiveDiscovery() {
       const t = (raw - .3) / .2;
       const angle = (t * Math.PI * 2) - Math.PI * .15;
       pos = {
-        x: center.x + Math.cos(angle) * Math.min(112, targetRect.width * .34),
-        y: center.y + Math.sin(angle) * Math.min(82, targetRect.height * .34)
+        x: center.x + Math.cos(angle) * Math.min(24, targetRect.width * .08),
+        y: center.y + Math.sin(angle) * Math.min(48, targetRect.height * .16)
       };
       bank = Math.sin(angle) * 18;
       scale = .9 + Math.sin(t * Math.PI) * .08;
@@ -1195,9 +1200,9 @@ function startCinematicIntro() {
   state.opening?.classList.add("cinematic-book-visible");
   state.butterflyScene = setupOpeningMonarchs();
 
-  const openingDelay = 12800;
-  const revealDelay = 18800;
-  const finishDelay = 22000;
+  const openingDelay = 2400;
+  const revealDelay = 7600;
+  const finishDelay = 10800;
 
   window.setTimeout(() => {
     state.bookOpeningAt = performance.now();
@@ -1214,6 +1219,18 @@ function startCinematicIntro() {
   image?.addEventListener("error", () => {
     state.opening?.classList.add("image-load-failed");
   }, { once: true });
+}
+
+function showOpenedBookWithoutIntro() {
+  state.completed = true;
+  state.opening = document.getElementById("openingScene");
+  state.opening?.classList.add("is-inside-book");
+  document.body.classList.remove("intro-active");
+  document.body.classList.add("book-opened", "ambient-nature-active");
+}
+
+function startIntroOncePerSession() {
+  startCinematicIntro();
 }
 
 function setupUi() {
@@ -1235,4 +1252,4 @@ function setupUi() {
 }
 
 setupUi();
-startCinematicIntro();
+startIntroOncePerSession();

@@ -11,6 +11,106 @@
   <link rel="stylesheet" href="css/book.css" />
   <link rel="stylesheet" href="css/garden.css" />
   <link rel="stylesheet" href="css/animations.css" />
+  <link rel="stylesheet" href="css/site-butterflies.css?v=exclusive-landing-20260731">
+  <link rel="stylesheet" href="css/master-header.css?v=20260731">
+  <style>
+    /* Homepage-only September Exclusive spotlight; the existing landing class controls timing. */
+    body.storybook-home .august-exclusive-feature {
+      filter: brightness(.76) saturate(.88);
+      border-color: rgba(218, 174, 92, .34);
+      transition: filter 1.45s ease, border-color 1.45s ease, box-shadow 1.45s ease, transform 1.45s ease;
+    }
+    body.storybook-home .august-exclusive-feature::before {
+      content: "";
+      position: absolute;
+      z-index: 1;
+      inset: -10%;
+      border-radius: inherit;
+      background:
+        radial-gradient(circle at 24% 48%, rgba(255, 226, 157, .58), rgba(224, 181, 100, .2) 27%, transparent 58%),
+        radial-gradient(circle at 76% 22%, rgba(194, 156, 232, .38), transparent 48%);
+      opacity: 0;
+      filter: blur(18px);
+      pointer-events: none;
+      transform: scale(.84);
+      transition: opacity 1.45s ease, transform 1.45s ease;
+    }
+    body.storybook-home .august-exclusive-feature > * {
+      position: relative;
+      z-index: 2;
+    }
+    body.storybook-home .august-exclusive-feature img,
+    body.storybook-home .august-exclusive-feature h2,
+    body.storybook-home .august-exclusive-feature p,
+    body.storybook-home .august-exclusive-feature .text-link {
+      transition: filter 1.45s ease, color 1.45s ease, text-shadow 1.45s ease, box-shadow 1.45s ease;
+    }
+    body.storybook-home .august-exclusive-feature.treasure-found {
+      filter: brightness(1.12) saturate(1.06);
+      border-color: rgba(255, 222, 145, .96);
+      background:
+        radial-gradient(circle at 22% 48%, rgba(255, 222, 142, .34), transparent 34%),
+        radial-gradient(circle at 78% 16%, rgba(184, 143, 225, .25), transparent 42%),
+        linear-gradient(145deg, rgba(74, 34, 83, .94), rgba(29, 11, 36, .96));
+      box-shadow:
+        0 0 0 2px rgba(255, 224, 153, .36),
+        0 0 38px rgba(255, 204, 111, .58),
+        0 0 72px rgba(177, 128, 221, .34),
+        0 34px 110px rgba(0, 0, 0, .38),
+        inset 0 0 34px rgba(255, 224, 153, .2);
+      animation: homepageExclusiveSpotlight 2.5s ease-in-out 1 both;
+    }
+    body.storybook-home .august-exclusive-feature.treasure-found::before {
+      opacity: .94;
+      transform: scale(1.08);
+    }
+    body.storybook-home .august-exclusive-feature.treasure-found img {
+      filter: brightness(1.13) saturate(1.1) drop-shadow(0 0 19px rgba(255, 211, 122, .7));
+      box-shadow: 0 0 24px rgba(255, 222, 151, .42), 0 0 38px rgba(189, 149, 227, .24);
+    }
+    body.storybook-home .august-exclusive-feature.treasure-found .chapter-kicker {
+      color: #ffe6a8;
+      text-shadow: 0 0 9px rgba(255, 213, 126, .92), 0 0 18px rgba(190, 145, 225, .48);
+    }
+    body.storybook-home .august-exclusive-feature.treasure-found h2 {
+      color: #fff0c8;
+      text-shadow: 0 0 10px rgba(255, 215, 135, .9), 0 0 22px rgba(188, 145, 226, .54);
+    }
+    body.storybook-home .august-exclusive-feature.treasure-found p:not(.chapter-kicker) {
+      color: #fff5df;
+      text-shadow: 0 1px 7px rgba(25, 9, 29, .92);
+    }
+    body.storybook-home .august-exclusive-feature.treasure-found .text-link {
+      color: #ffe6ad;
+      text-shadow: 0 0 9px rgba(255, 210, 119, .62);
+    }
+    body.storybook-home .exclusive-discovery-butterfly.is-resting {
+      filter:
+        drop-shadow(0 10px 12px rgba(0, 0, 0, .25))
+        drop-shadow(0 0 15px rgba(255, 210, 117, .82))
+        drop-shadow(0 0 26px rgba(183, 139, 225, .5))
+        saturate(1.45) brightness(1.18);
+    }
+    @keyframes homepageExclusiveSpotlight {
+      0% { box-shadow: 0 0 12px rgba(255, 204, 111, .2), 0 34px 110px rgba(0, 0, 0, .38); }
+      52% { box-shadow: 0 0 0 3px rgba(255, 229, 166, .48), 0 0 58px rgba(255, 210, 122, .78), 0 0 94px rgba(187, 142, 229, .48), 0 34px 110px rgba(0, 0, 0, .38), inset 0 0 42px rgba(255, 229, 166, .3); }
+      100% { box-shadow: 0 0 0 2px rgba(255, 224, 153, .36), 0 0 38px rgba(255, 204, 111, .58), 0 0 72px rgba(177, 128, 221, .34), 0 34px 110px rgba(0, 0, 0, .38), inset 0 0 34px rgba(255, 224, 153, .2); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      body.storybook-home .august-exclusive-feature {
+        filter: brightness(1.12) saturate(1.06) !important;
+        border-color: rgba(255, 222, 145, .96) !important;
+        box-shadow: 0 0 0 2px rgba(255, 224, 153, .36), 0 0 38px rgba(255, 204, 111, .58), 0 0 72px rgba(177, 128, 221, .34), 0 34px 110px rgba(0, 0, 0, .38), inset 0 0 34px rgba(255, 224, 153, .2) !important;
+        animation: none !important;
+        transition: none !important;
+      }
+      body.storybook-home .august-exclusive-feature::before { opacity: .94 !important; transform: scale(1.08) !important; transition: none !important; }
+      body.storybook-home .august-exclusive-feature img { filter: brightness(1.13) saturate(1.1) drop-shadow(0 0 19px rgba(255, 211, 122, .7)); }
+      body.storybook-home .august-exclusive-feature .chapter-kicker { color:#ffe6a8; text-shadow:0 0 9px rgba(255,213,126,.92),0 0 18px rgba(190,145,225,.48); }
+      body.storybook-home .august-exclusive-feature h2 { color:#fff0c8; text-shadow:0 0 10px rgba(255,215,135,.9),0 0 22px rgba(188,145,226,.54); }
+      body.storybook-home .august-exclusive-feature p:not(.chapter-kicker) { color:#fff5df; }
+    }
+  </style>
 </head>
 <body class="storybook-home intro-active">
   <section id="openingScene" class="opening-scene" aria-label="Cinematic heirloom storybook opening">
@@ -72,6 +172,7 @@
     <nav id="storyNav" class="story-nav" aria-label="Main navigation">
       <a href="collections.html">Collections</a>
       <a href="treasures.html">Treasures</a>
+      <a href="index.html#chapterOne">Our Story</a>
       <a href="reviews.html">Kind Words</a>
       <a href="maker.html">Meet the Maker</a>
       <a href="https://foreverbeadedbyglad.etsy.com" target="_blank" rel="noopener noreferrer">Shop on Etsy</a>
@@ -81,12 +182,8 @@
 
   <main id="chapterOne">
     <div id="ambientNatureLayer" class="ambient-nature-layer" aria-hidden="true">
-      <span class="ambient-butterfly ambient-butterfly-one"><i></i><b></b></span>
-      <span class="ambient-butterfly ambient-butterfly-two"><i></i><b></b></span>
-      <span class="ambient-butterfly ambient-butterfly-three"><i></i><b></b></span>
       <span class="ambient-particle-field"></span>
     </div>
-    <div id="chapterTwoButterflyLayer" class="chapter-two-butterfly-layer" aria-hidden="true"></div>
 
     <section class="chapter-hero" aria-labelledby="heroTitle">
       <div class="garden-sky" aria-hidden="true"></div>
@@ -111,17 +208,17 @@
         </div>
       </div>
 
-      <article class="hero-feature" data-exclusive-product="macaw" role="link" tabindex="0" aria-label="Order this month's exclusive Sunset Macaw">
-        <p class="chapter-kicker">This Month's Exclusive</p>
-        <img src="images/macaw.jpeg" alt="Handmade beaded Macaw by Forever Beaded" loading="lazy" decoding="async">
-        <h2>Sunset Macaw</h2>
-        <p>Available until July 30. A vivid, detailed keepsake with collector energy.</p>
-        <a href="create.html?design=macaw#homeDesignBuilder" class="text-link" data-exclusive-product="macaw">Order the Sunset Macaw</a>
+      <article class="hero-feature august-exclusive-feature" role="link" tabindex="0" aria-label="Visit the September Pumpkin Spice Latte Exclusive">
+        <p class="chapter-kicker">September Exclusive</p>
+        <img src="images/pumpkin-spice-latte-september-exclusive.jpg" alt="Handmade beaded Pumpkin Spice Latte keychain by Forever Beaded" loading="lazy" decoding="async">
+        <h2>Pumpkin Spice Latte</h2>
+        <p>Discover this cozy fall-inspired handmade treasure.</p>
+        <a href="monthly-exclusive.html?v=september-2026" class="text-link">Visit the September Exclusive</a>
       </article>
 
       <div class="hero-story-tiles" aria-label="Forever Beaded story paths">
         <a href="collections.html" class="story-tile tile-story">
-          <img src="images/butterfly.jpeg" alt="Handmade beaded butterfly" loading="lazy" decoding="async">
+          <img src="images/butterfly-purple.jpg" alt="Handmade beaded butterfly" loading="lazy" decoding="async">
           <span>Chapter One</span>
           <strong>Explore the collection</strong>
         </a>
@@ -130,10 +227,10 @@
           <span>Chapter Two</span>
           <strong>Create your own treasure</strong>
         </a>
-        <a href="create.html?design=macaw#homeDesignBuilder" class="story-tile tile-exclusive" data-exclusive-product="macaw">
-          <img src="images/macaw.jpeg" alt="Sunset Macaw handmade beaded exclusive" loading="lazy" decoding="async">
-          <span>This Month's Exclusive</span>
-          <strong>Sunset Macaw</strong>
+        <a href="monthly-exclusive.html?v=september-2026" class="story-tile tile-exclusive">
+          <img src="images/pumpkin-spice-latte-september-exclusive.jpg" alt="Pumpkin Spice Latte handmade beaded keychain" loading="lazy" decoding="async">
+          <span>September Exclusive</span>
+          <strong>Pumpkin Spice Latte</strong>
         </a>
       </div>
     </section>
@@ -152,8 +249,10 @@
     </nav>
   </footer>
 
-  <script src="js/book.js?v=butterfly-refine-20260711d"></script>
+  <script src="js/book.js?v=exclusive-landing-20260731"></script>
   <script src="js/butterflies.js?v=butterfly-refine-20260711d"></script>
-<script src="js/garden.js?v=final-polish-20260716"></script>
+<script src="js/garden.js?v=homepage-book-only-20260731"></script>
+  <script src="js/site-butterflies.js?v=homepage-book-only-20260731"></script>
+  <script src="js/master-header.js?v=20260731"></script>
 </body>
 </html>

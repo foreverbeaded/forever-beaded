@@ -1,0 +1,237 @@
+
+/* Forever Beaded clean scrolling worlds — intentionally animation-free. */
+:root{--world-ink:#35203f;--world-plum:#5e356d;--world-gold:#c79248;--world-paper:rgba(255,252,246,.92)}
+html{scroll-behavior:auto!important}
+body.world-page{margin:0;color:var(--world-ink);background:#f7efe7;font-family:Inter,system-ui,sans-serif;overflow-x:hidden}
+body.world-page::before{content:"";position:fixed;inset:0;z-index:-3;background:var(--world-bg);background-size:cover;pointer-events:none}
+body.world-page::after{content:"";position:fixed;inset:0;z-index:-2;background:var(--world-overlay,none);pointer-events:none;opacity:.72}
+.world-page *{box-sizing:border-box}
+.world-page .story-header{position:sticky;top:0;z-index:40;background:rgba(255,252,248,.94);backdrop-filter:blur(12px);border-bottom:1px solid rgba(88,52,96,.15)}
+.world-page main{min-height:1600px;padding-bottom:6rem}
+.world-hero{min-height:440px;display:grid;place-items:center;text-align:center;padding:7rem 1.25rem 4rem;position:relative;overflow:hidden}
+.world-hero::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,12,28,.12),rgba(255,255,255,.02) 55%,rgba(255,255,255,.36));pointer-events:none}
+.world-hero-copy{position:relative;z-index:2;max-width:780px;padding:2rem 2.25rem;border-radius:30px;background:rgba(255,252,247,.82);border:1px solid rgba(255,255,255,.8);box-shadow:0 22px 60px rgba(47,29,56,.18);backdrop-filter:blur(8px)}
+.world-kicker{text-transform:uppercase;letter-spacing:.2em;font-size:.76rem;font-weight:800;color:#825b2d;margin:0 0 .65rem}
+.world-hero h1{font-family:"Cormorant Garamond",serif;font-size:clamp(3rem,8vw,6.4rem);line-height:.88;margin:0;color:#4b2857;text-shadow:0 2px 0 rgba(255,255,255,.6)}
+.world-hero p:last-child{font-size:1.05rem;line-height:1.7;margin:1rem auto 0;max-width:650px}
+.world-browser{width:min(1180px,calc(100% - 2rem));margin:-1.4rem auto 0;position:relative;z-index:3;padding:1.2rem;border-radius:30px;background:rgba(255,252,247,.84);border:1px solid rgba(255,255,255,.8);box-shadow:0 24px 70px rgba(48,27,55,.2);backdrop-filter:blur(10px)}
+.world-search-row{display:grid;grid-template-columns:minmax(220px,1fr) auto;gap:.9rem;align-items:center;margin-bottom:1rem}
+.world-search-row input{width:100%;min-height:50px;border:1px solid rgba(83,48,90,.28);border-radius:999px;padding:0 1.25rem;background:#fff;color:#111!important;font-size:1rem;outline:none}
+.world-search-row input::placeholder{color:#59515d!important;opacity:1}
+.world-search-row input:focus{border-color:#8a5597;box-shadow:0 0 0 4px rgba(138,85,151,.14)}
+.world-search-row .tiny-link-btn{white-space:nowrap}
+.world-page .shop-filters{display:flex;gap:.55rem;overflow-x:auto;padding:.15rem 0 .6rem;scrollbar-width:thin}
+.world-page .filter-btn{flex:0 0 auto;border:1px solid rgba(83,48,90,.2);background:rgba(255,255,255,.9);color:#4a2d51;border-radius:999px;padding:.7rem 1rem;font-weight:750;cursor:pointer}
+.world-page .filter-btn.active,.world-page .filter-btn:hover{background:#5e356d;color:#fff;border-color:#5e356d}
+.world-page .shop-results-row{display:flex;justify-content:space-between;gap:1rem;align-items:center;margin:.5rem .35rem 1.1rem;color:#4d4051}
+.world-page .product-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.2rem}
+.world-page .product-card,.world-page .no-results-card{background:rgba(255,255,255,.93);border:1px solid rgba(255,255,255,.9);border-radius:24px;box-shadow:0 16px 44px rgba(45,26,52,.17);overflow:hidden}
+.world-page .product-card img{
+  aspect-ratio:1/1;
+  object-fit:contain!important;
+  object-position:center!important;
+  padding:12px;
+  background:rgba(255,255,255,.82);
+  filter:none!important;
+  opacity:1!important;
+  animation:none!important;
+  transform:none!important;
+}
+.world-page .product-card-content{padding:1rem}
+.world-page .next-chapter-link{margin:2rem auto 0;text-align:center}
+.world-page .next-chapter-anchor{display:inline-flex;flex-direction:column;text-decoration:none;background:rgba(255,255,255,.9);padding:1rem 2rem;border-radius:999px;color:#4b2857;box-shadow:0 12px 32px rgba(45,26,52,.15)}
+.world-selector{width:min(1180px,calc(100% - 2rem));margin:0 auto 2rem;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;position:relative;z-index:3}
+.world-selector a{min-height:170px;border-radius:24px;display:flex;align-items:flex-end;padding:1.25rem;text-decoration:none;color:#fff;font-family:"Cormorant Garamond",serif;font-size:1.9rem;font-weight:700;box-shadow:0 16px 38px rgba(33,21,40,.22);background:var(--tile);background-size:cover;position:relative;overflow:hidden}
+.world-selector a::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent,rgba(24,14,30,.78))}
+.world-selector a span{position:relative;z-index:1}
+.world-selector .flowers{--tile:linear-gradient(135deg,#f6b7cc,#8059a3 70%,#315d39)}
+.world-selector .butterflies{--tile:linear-gradient(135deg,#f8d77f,#e884a8 45%,#4b8f53)}
+.world-selector .animals{--tile:linear-gradient(135deg,#a6c87c,#32533b 60%,#172f29)}
+.world-selector .birds{--tile:linear-gradient(135deg,#84d5f4,#e7f5ff 48%,#4b7e4a 49%,#224a32)}
+.world-selector .ocean{--tile:linear-gradient(160deg,#f2d39f 0 23%,#63c9de 24% 45%,#075a86 46% 72%,#032f53)}
+.world-selector .flags{--tile:linear-gradient(135deg,#e4c793,#77b8de 44%,#c84a55 45% 58%,#fff 59% 70%,#2e6296 71%)}
+.world-selector .enchanted{--tile:radial-gradient(circle at 70% 28%,#f6d7ff,transparent 18%),linear-gradient(135deg,#201638,#6d3f8f 55%,#173d39)}
+.world-selector .bugs{--tile:radial-gradient(circle at 25% 35%,#e7544d 0 8%,#1c1b1b 9% 11%,transparent 12%),linear-gradient(135deg,#b9d86d,#437b3e 60%,#244c2e)}
+.world-selector .stationery{--tile:linear-gradient(135deg,#c58c55,#8a5534 55%,#5d3824)}
+.world-selector .sweet{--tile:linear-gradient(135deg,#ffd3e5,#bcdff8 48%,#f6c56f 49% 63%,#e889a7 64%)}
+.world-selector .faith{--tile:url('../images/faith-garden-clean.png') center/cover}
+.world-selector .exclusive{--tile:radial-gradient(circle at 50% 45%,#fff6c2 0 10%,#d7a54f 11% 20%,#662a77 50%,#2f1740)}
+.world-selector .favourites{--tile:radial-gradient(circle at 30% 30%,#ffd3df,transparent 25%),linear-gradient(135deg,#8b446f,#d988a6 55%,#4f315f)}
+/* Worlds continue for the full listing, changing gradually down the page. */
+.world-all{--world-bg:linear-gradient(180deg,#b8ddf0 0 13%,#c6dfa0 14% 28%,#f4c8d9 29% 42%,#497e4d 43% 58%,#e6cc9f 59% 68%,#58bcd1 69% 82%,#073c67 83% 100%);--world-overlay:radial-gradient(circle at 15% 30%,rgba(255,255,255,.7),transparent 18%),radial-gradient(circle at 78% 18%,rgba(255,230,167,.6),transparent 16%)}
+.world-butterflies{--world-bg:linear-gradient(180deg,#d7c6b0 0 10%,#afc887 11% 24%,#8fc86d 25% 47%,#e0a7c6 48% 68%,#824b9b 69% 100%);--world-overlay:radial-gradient(circle at 15% 30%,#fff3a5 0 1.2%,transparent 1.4%),radial-gradient(circle at 75% 45%,#ff9cc2 0 1.2%,transparent 1.4%),radial-gradient(circle at 45% 72%,#fdf8d2 0 1.1%,transparent 1.3%)}
+.world-flowers{--world-bg:linear-gradient(180deg,#d9c7b3 0 10%,#a8c87e 11% 26%,#77a85d 27% 44%,#e8b3ca 45% 66%,#9c5a99 67% 83%,#4b793f 84% 100%);--world-overlay:radial-gradient(circle at 25% 38%,rgba(255,235,244,.8),transparent 10%),radial-gradient(circle at 73% 62%,rgba(255,219,124,.65),transparent 9%)}
+.world-butterflies-flowers{--world-bg:linear-gradient(180deg,#d7c5ad 0 9%,#b6cd8a 10% 23%,#7ca85d 24% 38%,#efbad0 39% 62%,#a56ba4 63% 80%,#4d7841 81%);--world-overlay:radial-gradient(circle at 18% 35%,rgba(255,255,209,.8),transparent 12%),radial-gradient(circle at 80% 52%,rgba(255,157,201,.55),transparent 13%)}
+.world-animals{--world-bg:linear-gradient(180deg,#bbd3a1 0 10%,#6f9364 11% 27%,#3f6e4c 28% 47%,#234936 48% 70%,#152f29 71% 100%);--world-overlay:radial-gradient(ellipse at 50% 0%,rgba(255,241,174,.68),transparent 30%),linear-gradient(105deg,transparent 0 35%,rgba(217,235,178,.18) 36% 40%,transparent 41%)}
+.world-birds{--world-bg:linear-gradient(180deg,#7ec9ec 0 30%,#d8eff9 31% 47%,#96bd82 48% 60%,#4d7d50 61% 78%,#244933 79%);--world-overlay:radial-gradient(ellipse at 22% 18%,rgba(255,255,255,.9),transparent 12%),radial-gradient(ellipse at 72% 27%,rgba(255,255,255,.75),transparent 14%)}
+.world-ocean{--world-bg:linear-gradient(180deg,#edcf9b 0 12%,#f4e5bf 13% 18%,#7dd4dd 19% 33%,#168eb1 34% 52%,#075d88 53% 73%,#042f55 74% 100%);--world-overlay:radial-gradient(circle at 15% 10%,rgba(255,255,255,.68),transparent 12%),radial-gradient(circle at 80% 48%,rgba(207,249,255,.22),transparent 16%),radial-gradient(circle at 30% 75%,rgba(41,190,179,.22),transparent 14%)}
+.world-flags{--world-bg:linear-gradient(180deg,#8dc8ea 0 25%,#e9d4a8 26% 43%,#bd8456 44% 60%,#6e9a65 61% 76%,#465d47 77%);--world-overlay:repeating-linear-gradient(25deg,transparent 0 80px,rgba(193,57,67,.24) 81px 104px,rgba(255,255,255,.24) 105px 128px,rgba(43,98,155,.24) 129px 152px,transparent 153px 220px)}
+.world-stationery{--world-bg:linear-gradient(180deg,#d4aa77 0 14%,#b27d4f 15% 40%,#8d5d38 41% 66%,#6c432b 67% 100%);--world-overlay:linear-gradient(90deg,rgba(255,255,255,.18) 0 18%,transparent 19% 55%,rgba(255,245,203,.16) 56% 82%,transparent 83%),repeating-linear-gradient(0deg,transparent 0 95px,rgba(74,39,20,.09) 96px 99px)}
+.world-faith{--world-bg:linear-gradient(rgba(255,246,224,.22),rgba(40,54,35,.26)),url('../images/faith-garden-clean.png') center top/cover fixed;--world-overlay:linear-gradient(180deg,transparent 0 55%,rgba(73,87,52,.35) 100%)}
+.world-enchanted{--world-bg:linear-gradient(180deg,#17132d 0 15%,#3b295d 16% 40%,#5c3a77 41% 62%,#244844 63% 82%,#122f2e 83%);--world-overlay:radial-gradient(circle at 75% 18%,rgba(255,244,201,.85) 0 5%,transparent 6%),radial-gradient(circle at 25% 45%,rgba(204,147,255,.32),transparent 17%),radial-gradient(circle at 68% 72%,rgba(101,255,206,.2),transparent 14%)}
+.world-bugs{--world-bg:linear-gradient(180deg,#b4d482 0 12%,#7dad5b 13% 32%,#4c853f 33% 55%,#356b38 56% 76%,#23492d 77%);--world-overlay:radial-gradient(circle at 15% 28%,rgba(255,75,70,.55) 0 1.2%,rgba(25,25,25,.7) 1.3% 1.6%,transparent 1.7%),radial-gradient(circle at 73% 51%,rgba(255,215,75,.55) 0 1%,transparent 1.2%),radial-gradient(circle at 40% 76%,rgba(255,255,255,.35) 0 1.2%,transparent 1.4%)}
+.world-sweet{--world-bg:linear-gradient(180deg,#cbe8f7 0 14%,#f8d2e2 15% 31%,#f3b5ce 32% 51%,#f7cf77 52% 67%,#e892b1 68% 83%,#9a5887 84%);--world-overlay:repeating-linear-gradient(115deg,transparent 0 65px,rgba(255,255,255,.22) 66px 72px,transparent 73px 118px),radial-gradient(circle at 78% 28%,rgba(255,255,255,.5),transparent 13%)}
+.world-exclusive{--world-bg:linear-gradient(180deg,#2b173d 0 20%,#60316f 21% 48%,#ae6e8a 49% 68%,#d6aa62 69% 84%,#5a2d60 85%);--world-overlay:radial-gradient(circle at 50% 27%,rgba(255,245,189,.95) 0 8%,rgba(255,211,110,.32) 9% 23%,transparent 24%),radial-gradient(circle at 22% 63%,rgba(255,255,255,.22),transparent 12%)}
+.world-sports{--world-bg:linear-gradient(180deg,#8acbe8 0 19%,#d8eef4 20% 29%,#5d9b4c 30% 100%);--world-overlay:linear-gradient(90deg,transparent 0 8%,rgba(255,255,255,.5) 8.2% 8.8%,transparent 9% 49%,rgba(255,255,255,.5) 49.2% 49.8%,transparent 50% 91%,rgba(255,255,255,.5) 91.2% 91.8%,transparent 92%),repeating-linear-gradient(0deg,transparent 0 120px,rgba(255,255,255,.24) 121px 124px)}
+.world-favourites{--world-bg:linear-gradient(180deg,#efc1d2 0 18%,#d892ae 19% 42%,#9b5f89 43% 65%,#5f456d 66% 82%,#3d314d 83%);--world-overlay:radial-gradient(circle at 20% 32%,rgba(255,255,255,.45),transparent 12%),radial-gradient(circle at 80% 62%,rgba(255,218,231,.42),transparent 14%)}
+.world-create{--world-bg:linear-gradient(rgba(255,244,222,.08),rgba(71,39,22,.34)),url('../images/create-treasure-room.png') center top/cover fixed}
+.world-page .storybook-footer{background:rgba(35,24,38,.94)}
+@media(max-width:850px){.world-page .product-grid,.world-selector{grid-template-columns:repeat(2,minmax(0,1fr))}.world-hero{min-height:360px;padding-top:5.5rem}.world-search-row{grid-template-columns:1fr}.world-search-row .tiny-link-btn{justify-self:start}}
+@media(max-width:560px){.world-page .product-grid,.world-selector{grid-template-columns:1fr}.world-browser{width:min(100% - 1rem,1180px);padding:.75rem;border-radius:22px}.world-hero-copy{padding:1.35rem 1rem}.world-hero h1{font-size:3.1rem}.world-selector a{min-height:135px}.world-page .shop-results-row{align-items:flex-start;flex-direction:column}}
+
+/* All Collections — approved full-page garden world */
+body.world-all{
+  background:#dcebd0;
+  min-height:100vh;
+}
+body.world-all::before{
+  position:fixed;
+  inset:0;
+  background:
+    linear-gradient(rgba(255,255,255,.10),rgba(255,255,255,.10)),
+    url('../images/all-collections-reference.jpeg') center top/cover no-repeat;
+  z-index:-3;
+}
+body.world-all::after{
+  background:linear-gradient(180deg,rgba(255,248,238,.10),rgba(28,73,48,.18));
+  opacity:1;
+}
+.world-all .story-header{background:rgba(255,252,246,.88)}
+.collections-world-main{min-height:calc(100vh - 70px)!important;padding:0 0 5rem!important}
+.collections-world{width:min(1180px,calc(100% - 2rem));margin:0 auto;padding:7rem 0 4rem}
+.collections-intro{width:min(760px,100%);margin:0 auto 3rem;text-align:center;padding:2rem 2.2rem;border-radius:38px;background:rgba(255,250,242,.74);border:1px solid rgba(255,255,255,.84);box-shadow:0 22px 65px rgba(44,63,42,.22);backdrop-filter:blur(8px)}
+.collections-intro h1{font-family:"Cormorant Garamond",serif;font-size:clamp(3rem,7vw,5.8rem);line-height:.9;margin:0;color:#54335e;text-shadow:0 2px 0 rgba(255,255,255,.72)}
+.collections-intro>p:last-of-type{font-size:1.05rem;line-height:1.65;margin:1rem auto 1.35rem;max-width:620px}
+.collection-search{display:block;max-width:620px;margin:0 auto}
+.collection-search input{width:100%;min-height:58px;border:1px solid rgba(84,51,94,.28);border-radius:999px;background:rgba(255,255,255,.94);padding:0 1.45rem;font-size:1rem;color:#342238;box-shadow:0 10px 30px rgba(56,48,45,.12);outline:none}
+.collection-search input:focus{border-color:#8a5597;box-shadow:0 0 0 4px rgba(138,85,151,.16),0 10px 30px rgba(56,48,45,.12)}
+.collection-portals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.5rem;align-items:center}
+.collection-portals .portal{min-height:205px;border-radius:50%;display:grid;place-items:end center;padding:1.3rem;text-decoration:none;position:relative;overflow:hidden;background:var(--portal-bg);background-position:center;background-size:cover;border:7px solid rgba(255,250,237,.92);box-shadow:0 20px 45px rgba(31,55,37,.3),inset 0 0 0 2px rgba(126,89,72,.2);transform:translateZ(0);transition:transform .2s ease,box-shadow .2s ease}
+.collection-portals .portal::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.02) 32%,rgba(31,26,37,.76) 100%)}
+.collection-portals .portal span{position:relative;z-index:1;font-family:"Cormorant Garamond",serif;font-size:clamp(1.55rem,3vw,2.15rem);font-weight:700;color:#fff;text-align:center;text-shadow:0 2px 12px rgba(0,0,0,.5)}
+.collection-portals .portal:hover,.collection-portals .portal:focus-visible{transform:translateY(-7px) scale(1.02);box-shadow:0 26px 55px rgba(31,55,37,.38),0 0 0 5px rgba(255,255,255,.35);outline:none}
+.collection-portals .portal[hidden]{display:none}
+.collection-portals .flowers{--portal-bg:linear-gradient(135deg,#f3b5cf,#74518c 62%,#315d39)}
+.collection-portals .butterflies{--portal-bg:linear-gradient(145deg,#ffe291,#f197bb 45%,#4d9655)}
+.collection-portals .butterflies-flowers{--portal-bg:radial-gradient(circle at 30% 35%,#ffe8a2 0 7%,transparent 8%),linear-gradient(135deg,#e8aac7,#895b9e 58%,#4a854c)}
+.collection-portals .animals{--portal-bg:linear-gradient(145deg,#b9d98d,#456e48 55%,#193a2b)}
+.collection-portals .birds{--portal-bg:linear-gradient(180deg,#7fcff2 0 55%,#edf9ff 56% 65%,#40784b 66%)}
+.collection-portals .ocean{--portal-bg:linear-gradient(180deg,#f0d09b 0 22%,#6bd0df 23% 48%,#075c8a 49% 75%,#032f52)}
+.collection-portals .flags{--portal-bg:linear-gradient(145deg,#76bae2 0 42%,#e6d19e 43% 58%,#c34c55 59% 70%,#fff 71% 79%,#2f659b 80%)}
+.collection-portals .enchanted{--portal-bg:radial-gradient(circle at 68% 25%,#f7dfff 0 8%,transparent 9%),linear-gradient(145deg,#251740,#70418e 56%,#183e3a)}
+.collection-portals .bugs{--portal-bg:radial-gradient(circle at 28% 38%,#ee5e55 0 8%,#1f1f1f 9% 11%,transparent 12%),linear-gradient(145deg,#b9dc70,#4c843e 58%,#214b2c)}
+.collection-portals .stationery{--portal-bg:linear-gradient(145deg,#ddb17c,#a66f42 50%,#63402a)}
+.collection-portals .sweet{--portal-bg:linear-gradient(145deg,#ffd5e6,#bddff5 46%,#f4c674 47% 63%,#e68dab 64%)}
+.collection-portals .faith{--portal-bg:url('../images/faith-garden-clean.png')}
+.collection-portals .exclusive{--portal-bg:radial-gradient(circle at 50% 42%,#fff4b2 0 10%,#d9a44b 11% 22%,#7b3d82 48%,#321941)}
+.collection-portals .sports{--portal-bg:linear-gradient(180deg,#8acdea 0 38%,#e8f6fb 39% 48%,#5e9d50 49%)}
+.collection-portals .favourites{--portal-bg:radial-gradient(circle at 28% 28%,#ffd8e4 0 13%,transparent 14%),linear-gradient(145deg,#9b4e79,#dc8eaa 57%,#52325f)}
+.collection-empty{text-align:center;width:max-content;max-width:100%;margin:2rem auto;padding:.9rem 1.3rem;border-radius:999px;background:rgba(255,250,242,.88);box-shadow:0 12px 30px rgba(44,63,42,.18)}
+.world-all .storybook-footer{background:rgba(31,47,35,.88)}
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+@media(max-width:850px){.collection-portals{grid-template-columns:repeat(2,minmax(0,1fr))}.collections-world{padding-top:5.5rem}.collection-portals .portal{min-height:180px}}
+@media(max-width:560px){body.world-all::before{background-position:center top}.collections-world{width:min(100% - 1rem,1180px)}.collections-intro{padding:1.5rem 1rem;border-radius:28px}.collection-portals{grid-template-columns:1fr;gap:1.1rem}.collection-portals .portal{min-height:150px;border-radius:999px}.collections-intro h1{font-size:3.2rem}}
+
+/* Create Your Own Treasure — same garden world as the collection entry page */
+body.world-create{
+  --world-bg:
+    linear-gradient(rgba(255,250,239,.08),rgba(41,75,46,.10)),
+    url('../images/create-page-garden.png') center top/cover fixed;
+  --world-overlay:linear-gradient(180deg,rgba(255,250,239,.02),rgba(255,250,239,.08) 50%,rgba(34,68,42,.14));
+  background:#e6d6aa;
+}
+.world-create main{padding:5.5rem 0 7rem;min-height:1800px}
+.world-create .story-header{background:rgba(255,252,246,.86)}
+.world-create .storybook-footer{background:rgba(49,38,34,.82);backdrop-filter:blur(8px)}
+
+.create-table-hero{
+  width:min(1180px,calc(100% - 2rem));
+  margin:0 auto 2.5rem;
+  border:8px solid rgba(255,249,233,.92);
+  border-radius:38px;
+  overflow:hidden;
+  box-shadow:0 28px 75px rgba(63,45,28,.30);
+  position:relative;
+  z-index:2;
+  background:rgba(255,249,233,.8);
+}
+.create-table-hero img{display:block;width:100%;height:auto}
+
+.world-create .chapter-two-story{
+  width:min(1240px,calc(100% - 2rem));
+  margin:0 auto;
+  padding:2.2rem;
+  border-radius:38px;
+  background:rgba(255,250,241,.72);
+  border:1px solid rgba(255,255,255,.86);
+  box-shadow:0 26px 72px rgba(58,48,37,.24);
+  backdrop-filter:blur(10px);
+}
+.world-create .chapter-two-story::before{display:none}
+.world-create .section-heading h1,.world-create .section-heading p,.world-create .chapter-kicker{color:#4b2f3e}
+.world-create .workspace-scene{
+  min-height:640px;
+  background:
+    linear-gradient(rgba(36,18,17,.05),rgba(36,18,17,.20)),
+    url('../images/create-treasure-room.png') center/cover no-repeat;
+  border-color:rgba(255,248,226,.9);
+}
+.world-create .workspace-scene > *{display:none!important}
+.world-create .treasure-builder{background:rgba(255,252,247,.90);color:#35263c;border-color:rgba(255,255,255,.92)}
+.world-create .treasure-builder h3,.world-create .treasure-builder h4,.world-create .treasure-builder label{color:#3e2944}
+
+.create-butterflies{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.create-butterfly{position:absolute;width:34px;height:26px;animation:createButterflyFlight 19s linear infinite;opacity:.9}
+.create-butterfly::before,.create-butterfly::after{content:"";position:absolute;top:4px;width:18px;height:22px;background:linear-gradient(135deg,#f6a7c5,#8d5fb4 58%,#f6d37d);border:1px solid rgba(76,44,72,.28);border-radius:80% 20% 75% 30%;transform-origin:100% 55%;animation:createWing .42s ease-in-out infinite alternate}
+.create-butterfly::before{left:0}
+.create-butterfly::after{right:0;transform:scaleX(-1);transform-origin:0 55%}
+.create-butterfly.b1{top:18%;left:-5%;animation-duration:22s}
+.create-butterfly.b2{top:42%;left:-8%;animation-duration:27s;animation-delay:-9s;transform:scale(.78)}
+.create-butterfly.b3{top:68%;left:-6%;animation-duration:24s;animation-delay:-15s;transform:scale(1.08)}
+.create-butterfly.b4{top:82%;left:-10%;animation-duration:30s;animation-delay:-4s;transform:scale(.62)}
+@keyframes createButterflyFlight{0%{translate:-8vw 4vh rotate(-8deg)}25%{translate:30vw -5vh rotate(7deg)}50%{translate:60vw 5vh rotate(-5deg)}75%{translate:88vw -3vh rotate(8deg)}100%{translate:112vw 3vh rotate(-4deg)}}
+@keyframes createWing{from{scale:.35 1}to{scale:1 1}}
+@media(max-width:850px){.world-create main{padding-top:4.5rem}.world-create .chapter-two-story{padding:1rem}.create-table-hero{border-width:5px;border-radius:24px}}
+@media(prefers-reduced-motion:reduce){.create-butterfly{animation:none}.create-butterfly::before,.create-butterfly::after{animation:none}}
+
+/* =========================================================
+   TINY GARDEN FRIENDS — COMPACT CARDS
+   ========================================================= */
+
+body.world-page.world-bugs.tiny-garden-friends .product-grid {
+  align-items: start !important;
+  grid-auto-rows: max-content !important;
+}
+
+body.world-page.world-bugs.tiny-garden-friends .product-card {
+  height: fit-content !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  align-self: start !important;
+  justify-content: flex-start !important;
+}
+
+body.world-page.world-bugs.tiny-garden-friends
+.product-card-content {
+  height: auto !important;
+  min-height: 0 !important;
+  flex: none !important;
+}
+
+body.world-page.world-bugs.tiny-garden-friends
+.product-card-content > * {
+  flex-grow: 0 !important;
+}
+
+body.world-page.world-bugs.tiny-garden-friends
+.product-card .product-actions {
+  margin-top: 14px !important;
+  position: static !important;
+}
+
+body.world-page.world-bugs.tiny-garden-friends
+.product-card button,
+body.world-page.world-bugs.tiny-garden-friends
+.product-card .btn {
+  margin-top: 0 !important;
+}

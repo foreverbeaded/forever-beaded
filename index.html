@@ -5,10 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Forever Beaded is Gladlyn's handmade storybook bead boutique for custom keepsakes, gifts, flowers, butterflies, animals, and one-of-a-kind treasures." />
   <title>Forever Beaded | A Cinematic Storybook Boutique</title>
+  <script>
+    // Always begin the normal homepage at its opening section, not a restored scroll offset.
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/book.css" />
+  <link rel="stylesheet" href="css/book.css?v=chapter-intro-flow-20260911" />
   <link rel="stylesheet" href="css/garden.css" />
   <link rel="stylesheet" href="css/animations.css" />
   <link rel="stylesheet" href="css/site-butterflies.css?v=exclusive-landing-20260731">
@@ -113,6 +118,7 @@
   </style>
 </head>
 <body class="storybook-home intro-active">
+  <button id="skipOpening" class="skip-opening" type="button" aria-controls="chapterOne">Skip Intro</button>
   <section id="openingScene" class="opening-scene" aria-label="Cinematic heirloom storybook opening">
     <div class="webgl-stage">
       <canvas id="storybookCanvas" class="butterfly-webgl" aria-hidden="true"></canvas>
@@ -210,7 +216,7 @@
 
       <article class="hero-feature august-exclusive-feature" role="link" tabindex="0" aria-label="Visit the September Pumpkin Spice Latte Exclusive">
         <p class="chapter-kicker">September Exclusive</p>
-        <img src="images/pumpkin-spice-latte-september-exclusive.jpg" alt="Handmade beaded Pumpkin Spice Latte keychain by Forever Beaded" loading="lazy" decoding="async">
+        <img src="etsy/images-branded/pumpkin-spice-latte-etsy-branded.jpg" alt="Handmade beaded Pumpkin Spice Latte keychain by Forever Beaded" loading="lazy" decoding="async">
         <h2>Pumpkin Spice Latte</h2>
         <p>Discover this cozy fall-inspired handmade treasure.</p>
         <a href="monthly-exclusive.html?v=september-2026" class="text-link">Visit the September Exclusive</a>
@@ -218,19 +224,19 @@
 
       <div class="hero-story-tiles" aria-label="Forever Beaded story paths">
         <a href="collections.html" class="story-tile tile-story">
-          <img src="images/butterfly-purple.jpg" alt="Handmade beaded butterfly" loading="lazy" decoding="async">
+          <img src="images/homepage-chapter-one-candidate-v2.png" alt="A magical display of assorted handmade Forever Beaded keychains" loading="lazy" decoding="async">
           <span>Chapter One</span>
           <strong>Explore the collection</strong>
         </a>
         <a href="create.html" class="story-tile tile-custom">
-          <img src="images/phoenix-butterfly-flower-braided.jpeg" alt="Custom handmade beaded design" loading="lazy" decoding="async">
+          <img src="images/homepage-chapter-two-candidate-v2.png" alt="Personalized Forever Beaded bracelets with colourful bead choices" loading="lazy" decoding="async">
           <span>Chapter Two</span>
-          <strong>Create your own treasure</strong>
+          <strong>Create Your Own Treasured Piece</strong>
         </a>
-        <a href="monthly-exclusive.html?v=september-2026" class="story-tile tile-exclusive">
-          <img src="images/pumpkin-spice-latte-september-exclusive.jpg" alt="Pumpkin Spice Latte handmade beaded keychain" loading="lazy" decoding="async">
-          <span>September Exclusive</span>
-          <strong>Pumpkin Spice Latte</strong>
+        <a href="maker.html" class="story-tile tile-exclusive">
+          <img src="images/gladlyn-maker-portrait.jpg" alt="Gladlyn sharing her handmade Forever Beaded craftsmanship" loading="lazy" decoding="async">
+          <span>Chapter Three</span>
+          <strong>Made With Love</strong>
         </a>
       </div>
     </section>
@@ -249,7 +255,7 @@
     </nav>
   </footer>
 
-  <script src="js/book.js?v=exclusive-landing-20260731"></script>
+  <script src="js/book.js?v=chapter-intro-flow-20260911"></script>
   <script src="js/butterflies.js?v=butterfly-refine-20260711d"></script>
 <script src="js/garden.js?v=homepage-book-only-20260731"></script>
   <script src="js/site-butterflies.js?v=homepage-book-only-20260731"></script>

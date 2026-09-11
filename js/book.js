@@ -9,7 +9,7 @@ const state = {
   audio: null
 };
 
-const INTRO_PLAYED_KEY = "foreverBeadedIntroPlayed";
+const INTRO_VISIT_COUNT_KEY = "foreverBeadedIntroVisitCount";
 
 const butterflyPlans = [
   {
@@ -1028,7 +1028,8 @@ function completeOpening() {
 function setupExclusiveDiscoveryObserver() {
   if (state.exclusiveObserverStarted || state.exclusiveStarted) return;
   const feature = document.querySelector(".hero-feature");
-  if (!feature) return;
+  const hero = feature?.closest(".chapter-hero");
+  if (!hero) return;
 
   state.exclusiveObserverStarted = true;
   let animationFrame = 0;
@@ -1077,16 +1078,27 @@ function setupExclusiveDiscoveryObserver() {
 function startExclusiveDiscovery() {
   if (state.exclusiveStarted) return;
   const feature = document.querySelector(".hero-feature");
-  if (!feature) return;
+  const hero = feature?.closest(".chapter-hero");
+  if (!hero) return;
 
   state.exclusiveStarted = true;
   const butterfly = document.createElement("span");
   butterfly.className = "svg-monarch exclusive-discovery-butterfly";
   butterfly.innerHTML = monarchMarkup();
-  document.body.appendChild(butterfly);
+  const layer = document.createElement("div");
+  layer.className = "hero-butterfly-layer";
+  layer.setAttribute("aria-hidden", "true");
+  layer.appendChild(butterfly);
+  // Keep the existing feature-highlight timing without rendering a butterfly
+  // outside the opening intro. The animation below operates on detached nodes.
 
   const getTargets = () => {
-    const targetRect = feature.getBoundingClientRect();
+    const heroRect = hero.getBoundingClientRect();
+    const rect = feature.getBoundingClientRect();
+    const targetRect = {
+      left: rect.left - heroRect.left, right: rect.right - heroRect.left,
+      top: rect.top - heroRect.top, width: rect.width, height: rect.height
+    };
     const image = feature.querySelector("img");
     const imageRect = image?.getBoundingClientRect() || targetRect;
     const useRightSide = targetRect.right + 150 < window.innerWidth;
@@ -1183,7 +1195,7 @@ function startExclusiveDiscovery() {
     if (raw < 1) {
       window.requestAnimationFrame(animate);
     } else {
-      butterfly.remove();
+      layer.remove();
     }
   }
 
@@ -1191,6 +1203,7 @@ function startExclusiveDiscovery() {
 }
 
 function startCinematicIntro() {
+  window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   state.opening = document.getElementById("openingScene");
   const image = document.querySelector(".intro-book-image");
   state.introStartedAt = performance.now();
@@ -1200,11 +1213,12 @@ function startCinematicIntro() {
   state.opening?.classList.add("cinematic-book-visible");
   state.butterflyScene = setupOpeningMonarchs();
 
-  const openingDelay = 2400;
-  const revealDelay = 7600;
-  const finishDelay = 10800;
+  const openingDelay = 1070;
+  const revealDelay = 3380;
+  const finishDelay = 4800;
 
   window.setTimeout(() => {
+    if (state.completed) return;
     state.bookOpeningAt = performance.now();
     state.opening?.classList.add("intro-opening");
   }, openingDelay);
@@ -1230,10 +1244,41 @@ function showOpenedBookWithoutIntro() {
 }
 
 function startIntroOncePerSession() {
+  let introVisitCount = 0;
+  let storageAvailable = true;
+
+  try {
+    const storedCount = Number.parseInt(window.localStorage.getItem(INTRO_VISIT_COUNT_KEY) || "0", 10);
+    introVisitCount = Number.isFinite(storedCount) && storedCount > 0 ? storedCount : 0;
+  } catch (_) {
+    storageAvailable = false;
+  }
+
+  if (introVisitCount >= 2) {
+    showOpenedBookWithoutIntro();
+    return;
+  }
+
+  document.body.classList.add(introVisitCount === 0 ? "first-visit-intro" : "second-visit-intro");
+
+  if (storageAvailable) {
+    try {
+      window.localStorage.setItem(INTRO_VISIT_COUNT_KEY, String(introVisitCount + 1));
+    } catch (_) {}
+  }
+
   startCinematicIntro();
 }
 
 function setupUi() {
+  document.getElementById("skipOpening")?.addEventListener("click", () => {
+    completeOpening();
+    state.opening?.classList.add("is-skipped");
+    const main = document.getElementById("chapterOne");
+    main?.setAttribute("tabindex", "-1");
+    main?.focus({ preventScroll: true });
+    main?.scrollIntoView({ behavior: "instant", block: "start" });
+  });
   const menuButton = document.getElementById("storyMenuButton");
   const nav = document.getElementById("storyNav");
 

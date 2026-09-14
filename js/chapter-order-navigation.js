@@ -1,4 +1,10 @@
 (() => {
+  // Collection entrances are shared without changing the navigation itself.
+  if (!document.querySelector('script[src*="collection-entrances.js"]')) {
+    const entranceScript = document.createElement("script");
+    entranceScript.src = "js/collection-entrances.js?v=20260909-fix2";
+    document.head.append(entranceScript);
+  }
   const collectionChapters = [
     ["flowers.html", "Flower Garden"],
     ["butterflies.html", "Butterfly Garden"],
@@ -12,8 +18,10 @@
     ["fall-collection.html", "Fall Collection"],
     ["tiny-garden-friends.html", "Tiny Garden Friends"],
     ["enchanted-beings.html", "Enchanted Beings"],
+    ["outer-space.html", "Outer Space"],
     ["flags-of-the-world.html", "Flags of the World"],
     ["sports.html", "Sports"],
+    ["accessories.html", "Accessories"],
     ["monthly-exclusive.html", "Monthly Exclusive"],
     ["create.html", "Create Your Own Treasure"]
   ];
@@ -25,13 +33,26 @@
   const currentFile = decodeURIComponent(location.pathname.split("/").pop() || "").toLowerCase();
   const collectionIndex = collectionChapters.findIndex(([file]) => file === currentFile);
   const utilityIndex = utilityPages.findIndex(([file]) => file === currentFile);
-  if ((collectionIndex < 0 && utilityIndex < 0) || document.querySelector(".chapter-order-nav")) return;
+  if (collectionIndex < 0 && utilityIndex < 0) return;
 
   /* Back to School begins the shared master order; only the active page rotates forward. */
   const backToSchoolIndex = collectionChapters.findIndex(([file]) => file === "back-to-school.html");
   const masterOrder = collectionChapters
     .slice(backToSchoolIndex)
     .concat(collectionChapters.slice(0, backToSchoolIndex), utilityPages);
+  const existingNavigation = document.querySelector(".chapter-order-nav");
+  if (existingNavigation) {
+    const present = new Set([...existingNavigation.querySelectorAll("a")].map((link) => link.getAttribute("href")));
+    masterOrder.forEach(([file, label]) => {
+      if (present.has(file)) return;
+      const link = document.createElement("a");
+      link.className = "chapter-order-nav__link";
+      link.href = file;
+      link.textContent = label;
+      existingNavigation.append(link);
+    });
+    return;
+  }
   const activeChapter = masterOrder.find(([file]) => file === currentFile);
   const orderedChapters = activeChapter
     ? [activeChapter, ...masterOrder.filter(([file]) => file !== currentFile)]

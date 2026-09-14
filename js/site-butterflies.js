@@ -5,7 +5,7 @@
     document.querySelectorAll(
       ".site-butterfly-layer, .scroll-monarch-layer, .flying-butterfly, " +
       ".living-butterfly, .create-butterfly, .ambient-butterfly, " +
-      ".chapter-two-butterfly-layer, .exclusive-discovery-butterfly"
+      ".chapter-two-butterfly-layer"
     ).forEach(element => element.remove());
   }
 

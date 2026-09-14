@@ -9,8 +9,6 @@ const state = {
   audio: null
 };
 
-const INTRO_VISIT_COUNT_KEY = "foreverBeadedIntroVisitCount";
-
 const butterflyPlans = [
   {
     delay: 650,
@@ -1010,6 +1008,8 @@ function renderButterflyScene(scene, now) {
 function completeOpening() {
   if (state.completed) return;
   state.completed = true;
+  state.butterflyScene?.layer?.remove();
+  state.butterflyScene = null;
   state.opening?.classList.add("is-inside-book");
   document.body.classList.remove("intro-active");
   document.body.classList.add("book-opened");
@@ -1089,8 +1089,7 @@ function startExclusiveDiscovery() {
   layer.className = "hero-butterfly-layer";
   layer.setAttribute("aria-hidden", "true");
   layer.appendChild(butterfly);
-  // Keep the existing feature-highlight timing without rendering a butterfly
-  // outside the opening intro. The animation below operates on detached nodes.
+  hero.appendChild(layer);
 
   const getTargets = () => {
     const heroRect = hero.getBoundingClientRect();
@@ -1101,21 +1100,43 @@ function startExclusiveDiscovery() {
     };
     const image = feature.querySelector("img");
     const imageRect = image?.getBoundingClientRect() || targetRect;
-    const useRightSide = targetRect.right + 150 < window.innerWidth;
+    const useRightSide = targetRect.right + 150 < heroRect.width;
     const side = useRightSide ? 1 : -1;
     const edgeX = useRightSide ? targetRect.right : targetRect.left;
     const center = {
-      x: clamp(edgeX + (side * 94), 78, window.innerWidth - 78),
-      y: clamp(targetRect.top + (targetRect.height * .36), 96, window.innerHeight - 96)
+      x: clamp(edgeX + (side * 94), 78, heroRect.width - 78),
+      y: clamp(targetRect.top + (targetRect.height * .36), 96, heroRect.height - 96)
     };
     const hover = {
-      x: clamp(edgeX + (side * 82), 74, window.innerWidth - 74),
-      y: clamp(targetRect.top + (targetRect.height * .22), 90, window.innerHeight - 90)
+      x: clamp(edgeX + (side * 82), 74, heroRect.width - 74),
+      y: clamp(targetRect.top + (targetRect.height * .22), 90, heroRect.height - 90)
     };
-    const land = {
-      x: clamp(targetRect.right - 34, 54, window.innerWidth - 54),
-      y: clamp(targetRect.top + 4, 54, window.innerHeight - 54)
-    };
+    // Let the butterfly straddle the card border instead of covering the
+    // right-aligned desktop copy. Its inner wing still visibly rests on-card.
+    const landingX = clamp(targetRect.right + 20, 54, heroRect.width - 24);
+    const copyRects = [...feature.querySelectorAll("h2, p, .text-link")].map((element) => {
+      const copyRect = element.getBoundingClientRect();
+      return {
+        left: copyRect.left - heroRect.left,
+        right: copyRect.right - heroRect.left,
+        top: copyRect.top - heroRect.top,
+        bottom: copyRect.bottom - heroRect.top
+      };
+    });
+    const landingCandidates = [.16, .34, .5, .66, .82].map((ratio) => ({
+      x: landingX,
+      y: clamp(targetRect.top + (targetRect.height * ratio), 54, heroRect.height - 54)
+    }));
+    const overlapScore = (candidate) => copyRects.reduce((score, copyRect) => {
+      const overlapWidth = Math.max(0, Math.min(candidate.x + 46, copyRect.right) - Math.max(candidate.x - 46, copyRect.left));
+      const overlapHeight = Math.max(0, Math.min(candidate.y + 44, copyRect.bottom) - Math.max(candidate.y - 44, copyRect.top));
+      return score + (overlapWidth * overlapHeight);
+    }, 0);
+    // Choose a responsive card-edge perch with the least overlap rather than
+    // assuming the desktop and stacked mobile copy occupy the same area.
+    const land = landingCandidates.reduce((best, candidate) =>
+      overlapScore(candidate) < overlapScore(best) ? candidate : best
+    );
     return { targetRect, center, hover, land };
   };
 
@@ -1134,7 +1155,6 @@ function startExclusiveDiscovery() {
   function animate() {
     const raw = clamp((Date.now() - started) / duration, 0, 1);
     const { targetRect, center, hover, land } = getTargets();
-    const exit = { x: window.innerWidth + 140, y: Math.max(96, center.y - 94) };
     const c1 = { x: window.innerWidth * .28, y: window.innerHeight * .24 };
     const c2 = { x: Math.max(120, center.x - (window.innerWidth * .24)), y: Math.min(window.innerHeight - 110, center.y + 150) };
     let pos;
@@ -1170,8 +1190,8 @@ function startExclusiveDiscovery() {
       scale = .82 - (t * .08);
       feature.classList.add("treasure-found");
       resting = t > .72;
-    } else if (raw < .89) {
-      const t = (raw - .72) / .17;
+    } else {
+      const t = (raw - .72) / .28;
       pos = {
         x: land.x + (Math.sin(t * Math.PI * 2) * 2),
         y: land.y + (Math.sin(t * Math.PI * 3) * 1.6)
@@ -1179,23 +1199,16 @@ function startExclusiveDiscovery() {
       bank = -4 + (Math.sin(t * Math.PI * 2) * 2);
       scale = .74;
       resting = true;
-    } else {
-      const t = easeInOut((raw - .89) / .11);
-      pos = point(land, { x: land.x + 60, y: land.y - 80 }, { x: window.innerWidth * .74, y: center.y - 44 }, exit, t);
-      bank = -8 + Math.sin(t * Math.PI * 2.4) * 16;
-      scale = .78 - (t * .08);
     }
 
     const bob = resting ? 0 : Math.sin(raw * Math.PI * 9) * 8;
     butterfly.classList.add("is-flying");
     butterfly.classList.toggle("is-resting", resting);
-    butterfly.style.opacity = String(raw < .06 ? raw / .06 : raw > .95 ? (1 - raw) / .05 : 1);
+    butterfly.style.opacity = String(raw < .06 ? raw / .06 : 1);
     butterfly.style.transform = `translate3d(${pos.x}px, ${pos.y + bob}px, 0) translate(-50%, -50%) rotate(${bank}deg) scale(${scale})`;
 
     if (raw < 1) {
       window.requestAnimationFrame(animate);
-    } else {
-      layer.remove();
     }
   }
 
@@ -1244,29 +1257,10 @@ function showOpenedBookWithoutIntro() {
 }
 
 function startIntroOncePerSession() {
-  let introVisitCount = 0;
-  let storageAvailable = true;
-
-  try {
-    const storedCount = Number.parseInt(window.localStorage.getItem(INTRO_VISIT_COUNT_KEY) || "0", 10);
-    introVisitCount = Number.isFinite(storedCount) && storedCount > 0 ? storedCount : 0;
-  } catch (_) {
-    storageAvailable = false;
-  }
-
-  if (introVisitCount >= 2) {
-    showOpenedBookWithoutIntro();
-    return;
-  }
-
-  document.body.classList.add(introVisitCount === 0 ? "first-visit-intro" : "second-visit-intro");
-
-  if (storageAvailable) {
-    try {
-      window.localStorage.setItem(INTRO_VISIT_COUNT_KEY, String(introVisitCount + 1));
-    } catch (_) {}
-  }
-
+  // The opening is the homepage entrance, so every fresh homepage load starts
+  // with the existing cinematic sequence. The previous persisted visit count
+  // made the book and its butterflies disappear after two visits.
+  document.body.classList.add("first-visit-intro");
   startCinematicIntro();
 }
 

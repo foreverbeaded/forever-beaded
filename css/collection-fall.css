@@ -1,0 +1,78 @@
+.collection-fall-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: .55;
+}
+
+.collection-fall-item {
+  position: absolute;
+  top: -12vh;
+  left: var(--fall-left);
+  color: var(--fall-color, rgba(255,255,255,.62));
+  font: 400 var(--fall-size)/1 Georgia, "Times New Roman", serif;
+  text-shadow: 0 1px 7px rgba(255,255,255,.52);
+  opacity: 0;
+  animation: collectionSoftFall var(--fall-duration) linear var(--fall-delay) infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes collectionSoftFall {
+  0% { transform: translate3d(0,-8vh,0) rotate(0deg); opacity: 0; }
+  12% { opacity: .48; }
+  82% { opacity: .32; }
+  100% { transform: translate3d(var(--fall-drift),116vh,0) rotate(270deg); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collection-fall-layer { display: none; }
+}
+
+body > header,
+body > main,
+body > .page-scroll,
+body > .chapter-navigation { position: relative; z-index: 2; }
+
+/* Fall only: a few leaves in the margins, anchored to the document. */
+body.fall-leaves-page { position: relative; isolation: isolate; }
+.collection-fall-layer--autumn {
+  position: absolute;
+  inset: 0;
+  opacity: 1;
+  user-select: none;
+}
+.autumn-drifting-leaf {
+  position: absolute;
+  top: -40px;
+  width: 20px;
+  height: 25px;
+  color: #ae622f;
+  opacity: 0;
+  pointer-events: none;
+  animation: autumnLeafDrift var(--leaf-duration) linear var(--leaf-delay) infinite;
+}
+.autumn-drifting-leaf svg { display: block; width: 100%; height: 100%; }
+.autumn-drifting-leaf:nth-child(1) { left: 1%; }
+.autumn-drifting-leaf:nth-child(2) { right: 1%; color: #b98845; }
+.autumn-drifting-leaf:nth-child(3) { left: 3%; width: 16px; }
+.autumn-drifting-leaf:nth-child(4) { right: 3%; width: 18px; color: #985235; }
+@keyframes autumnLeafDrift {
+  0% { transform: translate3d(0,0,0) rotate(-18deg); opacity: 0; }
+  12% { opacity: .2; }
+  30% { transform: translate3d(5px,calc(var(--leaf-travel) * .3),0) rotate(12deg); }
+  60% { transform: translate3d(-4px,calc(var(--leaf-travel) * .6),0) rotate(-10deg); }
+  85% { opacity: .16; }
+  100% { transform: translate3d(2px,var(--leaf-travel),0) rotate(24deg); opacity: 0; }
+}
+@media (max-width: 620px) {
+  .autumn-drifting-leaf { width: 8px; height: 12px; }
+  .autumn-drifting-leaf:nth-child(1) { left: 0; }
+  .autumn-drifting-leaf:nth-child(2) { right: 0; }
+  .autumn-drifting-leaf:nth-child(n+3) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .collection-fall-layer--autumn { display: none; }
+  .autumn-drifting-leaf { animation: none; }
+}

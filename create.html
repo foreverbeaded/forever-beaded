@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="stylesheet" data-collection-entrances href="css/collection-entrances.css?v=20260909-fix2">
+  <script>
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.documentElement.classList.add("collection-enter-boot");
+      setTimeout(() => document.documentElement.classList.remove("collection-enter-boot"), 5000);
+    }
+  </script>
+  <script defer src="js/collection-entrances.js?v=20260909-fix2"></script>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Create your own Forever Beaded handmade treasure with Gladlyn." />
@@ -408,6 +417,30 @@
       font: 700 clamp(2rem, 5vw, 3.25rem)/.98 "Cormorant Garamond", serif;
       overflow-wrap: anywhere;
     }
+    .world-create .custom-concept-visual {
+      display: block;
+      width: min(100%, 520px);
+      aspect-ratio: 1;
+      margin: 20px auto 14px;
+      border: 1px solid rgba(255,244,220,.28);
+      border-radius: 20px;
+      background: #fff8ee;
+      box-shadow: 0 18px 40px rgba(7,2,12,.28);
+    }
+    .world-create .custom-concept-existing-image {
+      display: block;
+      width: min(100%, 520px);
+      aspect-ratio: 1;
+      margin: 20px auto 14px;
+      object-fit: cover;
+      border-radius: 22px;
+      box-shadow: 0 18px 48px rgba(18, 8, 22, .32);
+    }
+    .world-create .custom-concept-disclaimer {
+      margin: 0 auto 12px;
+      color: rgba(255,244,220,.76);
+      font: 500 .78rem/1.45 Inter, sans-serif;
+    }
     .world-create .custom-concept-idea {
       max-width: 42ch;
       margin: 22px auto 0;
@@ -737,11 +770,14 @@
       <div class="chapter-two-layout">
         <aside class="editorial-showcase" aria-label="Forever Beaded butterfly and flower inspiration">
           <figure class="editorial-photo editorial-photo-main">
-            <img id="homeShowcaseProductImage" src="images/butterfly-purple.jpg" alt="Butterfly handmade beaded keychain" loading="eager" decoding="async">
+            <img id="homeShowcaseProductImage" src="etsy/images-branded/butterfly-owner-approved-master.jpg" alt="Butterfly handmade beaded keychain" loading="eager" decoding="async">
             <p id="homeShowcaseImageFallback" class="showcase-image-fallback" role="status" hidden>Product image coming soon.</p>
             <article id="homeCustomConceptCard" class="custom-concept-card" aria-label="Your custom treasure concept preview" hidden>
               <p class="custom-concept-kicker">Concept preview</p>
               <h2>Your Custom Treasure</h2>
+              <img id="homeCustomConceptExistingImage" class="custom-concept-existing-image" alt="Matching Forever Beaded product" hidden>
+              <canvas id="homeCustomConceptVisual" class="custom-concept-visual" width="720" height="720" role="img" aria-label="Concept Preview of the requested custom beaded keychain"></canvas>
+              <p class="custom-concept-disclaimer">Concept Preview — a visualization only. Your final handmade treasure may vary slightly.</p>
               <p id="homeCustomConceptIdea" class="custom-concept-idea">Start typing your custom idea to see it here.</p>
               <div class="custom-concept-details">
                 <div>
@@ -749,13 +785,16 @@
                   <div id="homeCustomConceptColours" class="custom-concept-swatches"></div>
                 </div>
                 <div class="custom-concept-specs">
+                  <div class="custom-concept-spec"><span class="custom-concept-label">Product Name</span><strong id="homeCustomConceptProductName">Not entered</strong></div>
                   <div class="custom-concept-spec"><span class="custom-concept-label">Hardware</span><strong id="homeCustomConceptHardware">Gold</strong></div>
+                  <div class="custom-concept-spec"><span class="custom-concept-label">Personalization / Name</span><strong id="homeCustomConceptPersonalization">None</strong></div>
                   <div class="custom-concept-spec"><span class="custom-concept-label">Quantity</span><strong id="homeCustomConceptQuantity">1</strong></div>
                 </div>
               </div>
             </article>
           </figure>
           <p id="homeCustomIdeaPreviewText" class="custom-idea-preview-text" aria-live="polite" hidden></p>
+          <p id="homeProductPersonalizationPreview" class="custom-idea-preview-text" aria-live="polite">Product Name / Personalization: None</p>
           <div class="editorial-motion-lines" aria-hidden="true"><span></span><span></span></div>
           <div class="editorial-floating-beads" aria-hidden="true">
             <span></span><span></span><span></span><span></span><span></span><span></span>
@@ -787,28 +826,19 @@
             <label>Province <input id="homeProvince" name="province" type="text" autocomplete="address-level1"></label>
             <label>Postal Code <input id="homePostalCode" name="postalCode" type="text" autocomplete="postal-code"></label>
             <label>Country <input id="homeCountry" name="country" type="text" autocomplete="country-name" value="Canada"></label>
-            <label>Would you like personalization?
-              <select id="homePersonalizationEnabled" name="personalizationEnabled">
-                <option value="no" selected>No</option>
-                <option value="yes">Yes</option>
-              </select>
+            <label id="homeProductNameWrap" class="custom-description-field" for="homeProductName" hidden aria-hidden="true">Product Name
+              <input id="homeProductName" name="productName" type="text" placeholder="e.g. Teddy Bear, Butterfly, or Flower" autocomplete="off" maxlength="80">
             </label>
-            <label id="homePersonalizationKindWrap" class="personalization-text-field" for="homePersonalizationKind" hidden aria-hidden="true">What would you like to add?
-              <select id="homePersonalizationKind" name="personalizationType">
-                <option value="name" selected>Name</option>
-                <option value="initials">Initials</option>
-              </select>
-            </label>
-            <label id="homePersonalizationTextWrap" class="personalization-text-field" for="homePersonalizationText" hidden aria-hidden="true">Name to add
-              <input id="homePersonalizationText" name="personalizationText" type="text" placeholder="e.g. Becky" autocomplete="off" maxlength="40">
+            <label id="homePersonalizationTextWrap" class="personalization-text-field is-visible" for="homePersonalizationText">Personalization / Name <span class="field-help">(optional)</span>
+              <input id="homePersonalizationText" name="personalizationText" type="text" placeholder="e.g. Natalie" autocomplete="off" maxlength="40">
             </label>
             <label>Design <select id="homeTreasureDesign" name="design"><option value="">Loading designs...</option></select></label>
-            <label id="homeCustomDescriptionWrap" class="custom-description-field" for="homeCustomDescription" hidden aria-hidden="true">Describe your custom idea
-              <textarea id="homeCustomDescription" name="customDescription" maxlength="500" placeholder="Tell me what you would like — for example, Lion." aria-describedby="homeCustomDescriptionHelp homeCustomDescriptionCount"></textarea>
+            <label id="homeCustomDescriptionWrap" class="custom-description-field" for="homeCustomDescription" hidden aria-hidden="true">Custom Idea / Description
+              <textarea id="homeCustomDescription" name="customDescription" maxlength="500" placeholder="What would you like made? For example: Teddy bear in brown, black and tan." aria-describedby="homeCustomDescriptionHelp homeCustomDescriptionCount"></textarea>
               <span id="homeCustomDescriptionHelp" class="field-help">Required when Custom Idea is selected.</span>
               <span id="homeCustomDescriptionCount" class="field-help">0 / 500</span>
             </label>
-            <label id="homeCustomReferenceWrap" class="custom-description-field" for="homeCustomReferenceImage" hidden aria-hidden="true">Upload a reference image <span class="field-help">(optional)</span>
+            <label id="homeCustomReferenceWrap" class="custom-description-field" for="homeCustomReferenceImage" hidden aria-hidden="true">Upload an inspiration image <span class="field-help">(optional)</span>
               <input id="homeCustomReferenceImage" name="customReferenceImage" type="file" accept="image/*">
             </label>
             <label>Colours <input id="homeTreasureColours" name="colours" type="text" value="Purple, Cream, Gold" autocomplete="off"></label>
@@ -846,7 +876,8 @@
   <script src="js/garden.js?v=selected-design-flow-1"></script>
   <script src="js/world-pages.js?v=clean-worlds-1"></script>
   <script src="js/site-butterflies.js?v=homepage-book-only-20260731"></script>
-  <script src="js/chapter-order-navigation.js?v=chapter-order-3"></script>
-  <script src="js/master-header.js?v=20260731"></script>
+  <script src="js/chapter-order-navigation.js?v=accessories-integrated-20260913"></script>
+  <script src="js/master-header.js?v=accessories-nav-20260913"></script>
+  <script src="js/collection-fall.js?v=2"></script>
 </body>
 </html>

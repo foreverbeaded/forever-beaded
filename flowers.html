@@ -1,6 +1,15 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <link rel="stylesheet" data-collection-entrances href="css/collection-entrances.css?v=20260909-fix2">
+  <script>
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.documentElement.classList.add("collection-enter-boot");
+      setTimeout(() => document.documentElement.classList.remove("collection-enter-boot"), 5000);
+    }
+  </script>
+  <script defer src="js/collection-entrances.js?v=20260909-fix2"></script>
+
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Explore real handmade flower bead products from Forever Beaded.">
@@ -314,6 +323,7 @@
   <link rel="stylesheet" href="css/chapter-order-navigation.css?v=chapter-order-2">
   <link rel="stylesheet" href="css/master-header.css?v=20260731">
   <link rel="stylesheet" href="css/collection-layout.css?v=stationery-master-1">
+  <link rel="stylesheet" href="css/collection-fall.css?v=1">
 </head>
 <body class="hero-flower-garden">
   <header class="story-header">
@@ -350,9 +360,9 @@
       </div>
 
       <div class="product-grid">
-        <article class="product-card" data-favourite-key="flower-braided"><a class="product-card-link" href="create.html?design=flower"><img src="images/flower-braided.jpeg" alt="Handmade beaded Flower"><span class="product-name">Flower</span><span class="product-price">$18 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Flower to favourites" aria-pressed="false"><span aria-hidden="true">♡</span></button></article>
-        <article class="product-card" data-favourite-key="big-flower"><a class="product-card-link" href="create.html?design=big-flower"><img src="images/big-flower.jpeg" alt="Handmade beaded Big Flower"><span class="product-name">Big Flower</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Big Flower to favourites" aria-pressed="false"><span aria-hidden="true">♡</span></button></article>
-        <article class="product-card" data-favourite-key="deluxe-flower"><a class="product-card-link" href="create.html?design=deluxe-flower"><img src="images/intricated-flower.jpeg" alt="Handmade beaded Deluxe Flower"><span class="product-name">Deluxe Flower</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Deluxe Flower to favourites" aria-pressed="false"><span aria-hidden="true">♡</span></button></article>
+        <article class="product-card" data-favourite-key="flower-braided"><a class="product-card-link" href="create.html?design=flower"><img src="etsy/images-branded/flower-owner-approved-master.jpg" alt="Handmade beaded Flower"><span class="product-name">Flower</span><span class="product-price">$18 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Flower to favourites" aria-pressed="false"><span aria-hidden="true">♡</span></button></article>
+        <article class="product-card" data-favourite-key="big-flower"><a class="product-card-link" href="create.html?design=big-flower"><img src="etsy/images-branded/big-flower-approved-master.jpg" alt="Handmade beaded Big Flower"><span class="product-name">Big Flower</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Big Flower to favourites" aria-pressed="false"><span aria-hidden="true">♡</span></button></article>
+        <article class="product-card" data-favourite-key="deluxe-flower"><a class="product-card-link" href="create.html?design=deluxe-flower"><img src="etsy/images-branded/deluxe-flower-owner-approved-master.jpg" alt="Handmade beaded Deluxe Flower"><span class="product-name">Deluxe Flower</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Deluxe Flower to favourites" aria-pressed="false"><span aria-hidden="true">♡</span></button></article>
       </div>
       <p class="product-empty" id="productEmpty" hidden>No flower treasure found</p>
     </main>
@@ -429,7 +439,8 @@
     })();
   </script>
   <script src="js/site-butterflies.js?v=homepage-book-only-20260731"></script>
-  <script src="js/chapter-order-navigation.js?v=chapter-order-3"></script>
-  <script src="js/master-header.js?v=20260731"></script>
+  <script src="js/chapter-order-navigation.js?v=accessories-integrated-20260913"></script>
+  <script src="js/master-header.js?v=accessories-nav-20260913"></script>
+  <script src="js/collection-fall.js?v=1"></script>
 </body>
 </html>

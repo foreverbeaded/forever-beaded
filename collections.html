@@ -1,6 +1,15 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <link rel="stylesheet" data-collection-entrances href="css/collection-entrances.css?v=20260909-fix2">
+  <script>
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.documentElement.classList.add("collection-enter-boot");
+      setTimeout(() => document.documentElement.classList.remove("collection-enter-boot"), 5000);
+    }
+  </script>
+  <script defer src="js/collection-entrances.js?v=20260909-fix2"></script>
+
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Explore every Forever Beaded collection.">
@@ -266,13 +275,15 @@
         <a class="hotspot" href="sandy-beaches.html"><img src="images/sandy-beaches-background.png" alt=""><span>Sandy Beaches</span></a>
         <a class="hotspot" href="faith-collection.html"><img src="images/faith-garden-clean.png" alt=""><span>Faith Collection</span></a>
         <a class="hotspot" href="sweet-treats.html"><img src="images/sweet-treats-background.jpg?v=text-free-20260731" alt=""><span>Sweet Treats</span></a>
-        <a class="hotspot" href="back-to-school.html"><img src="images/back-to-school/pencil.jpeg" alt=""><span>Back to School</span></a>
-        <a class="hotspot" href="fall-collection.html"><img src="images/fall-collection/autumn-forest-background.png" alt=""><span>Fall Collection</span></a>
+        <a class="hotspot" href="back-to-school.html"><img src="images/collection-scenes/back-to-school-scene.png" alt=""><span>Back to School</span></a>
+        <a class="hotspot" href="fall-collection.html"><img src="images/collection-scenes/fall-collection-scene.png" alt=""><span>Fall Collection</span></a>
         <a class="hotspot" href="tiny-garden-friends.html"><img src="images/tiny-garden-friends-background.jpg" alt=""><span>Tiny Garden Friends</span></a>
         <a class="hotspot" href="enchanted-beings.html"><img src="images/enchanted-beings-background.jpg" alt=""><span>Enchanted Beings</span></a>
+        <a class="hotspot" href="outer-space.html"><img src="images/collection-scenes/outer-space-scene.png" alt=""><span>Outer Space</span></a>
         <a class="hotspot" href="flags-of-the-world.html"><img src="images/flags-of-the-world-background.jpg" alt=""><span>Flags of the World</span></a>
         <a class="hotspot" href="sports.html"><img src="images/sports-collection-background.jpg" alt=""><span>Sports</span></a>
-        <a class="hotspot" href="monthly-exclusive.html?v=september-2026"><img src="images/pumpkin-spice-latte-september-exclusive.jpg" alt=""><span>Monthly Exclusive</span></a>
+        <a class="hotspot" href="accessories.html"><img src="images/collection-scenes/accessories-scene.png" alt=""><span>Accessories</span></a>
+        <a class="hotspot" href="monthly-exclusive.html?v=september-2026"><img src="etsy/images-branded/pumpkin-spice-latte-etsy-branded.jpg" alt=""><span>Monthly Exclusive</span></a>
         <a class="hotspot" href="create.html"><img src="images/a_cozy_warm_sunlit_artist_craft_studio_scene_view.png" alt=""><span>Create Your Own Treasure</span></a>
         <a class="hotspot" href="my-favourites.html"><img src="images/my-favourites-background.jpg" alt=""><span>My Favourites</span></a>
       </div>
@@ -307,7 +318,7 @@
     })();
   </script>
   <script src="js/site-butterflies.js?v=homepage-book-only-20260731"></script>
-  <script src="js/chapter-order-navigation.js?v=chapter-order-3"></script>
-  <script src="js/master-header.js?v=20260731"></script>
+  <script src="js/chapter-order-navigation.js?v=accessories-integrated-20260913"></script>
+  <script src="js/master-header.js?v=accessories-nav-20260913"></script>
 </body>
 </html>

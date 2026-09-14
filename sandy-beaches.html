@@ -1,6 +1,15 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <link rel="stylesheet" data-collection-entrances href="css/collection-entrances.css?v=20260909-fix2">
+  <script>
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.documentElement.classList.add("collection-enter-boot");
+      setTimeout(() => document.documentElement.classList.remove("collection-enter-boot"), 5000);
+    }
+  </script>
+  <script defer src="js/collection-entrances.js?v=20260909-fix2"></script>
+
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Explore handmade Sandy Beaches bead products from Forever Beaded.">
@@ -320,6 +329,7 @@
     .sandy-page > .product-grid > * { justify-self: start !important; }
   </style>
   <link rel="stylesheet" href="css/compact-product-cards.css?v=1">
+  <link rel="stylesheet" href="css/collection-fall.css?v=1">
 </head>
 <body class="hero-sandy-beaches">
   <header class="story-header">
@@ -356,8 +366,8 @@
       </div>
 
       <div class="product-grid">
-        <article class="product-card" data-favourite-key="palm-tree"><a class="product-card-link" href="create.html?design=palm-tree"><img src="images/palm-tree.jpg" alt="Handmade beaded Palm Tree"><span class="product-name">Palm Tree</span><span class="product-price">$20 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Palm Tree to favourites" aria-pressed="false"><span aria-hidden="true">♡</span></button></article>
-        <article class="product-card" data-favourite-key="crab"><a class="product-card-link" href="create.html?design=crab"><img src="images/crab.jpeg" alt="Handmade beaded Crab"><span class="product-name">Crab</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Crab to favourites" aria-pressed="false"><span aria-hidden="true">♡</span></button></article>
+        <article class="product-card" data-favourite-key="palm-tree"><a class="product-card-link" href="create.html?design=palm-tree"><img src="etsy/images-branded/palm-tree-approved-master.jpg" alt="Handmade beaded Palm Tree"><span class="product-name">Palm Tree</span><span class="product-price">$20 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Palm Tree to favourites" aria-pressed="false"><span aria-hidden="true">♡</span></button></article>
+        <article class="product-card" data-favourite-key="crab"><a class="product-card-link" href="create.html?design=crab"><img src="etsy/images-branded/crab-approved-master.jpg" alt="Handmade beaded Crab"><span class="product-name">Crab</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Crab to favourites" aria-pressed="false"><span aria-hidden="true">♡</span></button></article>
       </div>
       <p class="product-empty" id="productEmpty" hidden>No beach treasure found</p>
     </main>
@@ -434,7 +444,8 @@
     })();
   </script>
   <script src="js/site-butterflies.js?v=homepage-book-only-20260731"></script>
-  <script src="js/chapter-order-navigation.js?v=chapter-order-3"></script>
-  <script src="js/master-header.js?v=20260731"></script>
+  <script src="js/chapter-order-navigation.js?v=accessories-integrated-20260913"></script>
+  <script src="js/master-header.js?v=accessories-nav-20260913"></script>
+  <script src="js/collection-fall.js?v=1"></script>
 </body>
 </html>

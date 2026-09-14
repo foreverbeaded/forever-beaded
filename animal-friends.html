@@ -1,6 +1,15 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <link rel="stylesheet" data-collection-entrances href="css/collection-entrances.css?v=20260909-fix2">
+  <script>
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.documentElement.classList.add("collection-enter-boot");
+      setTimeout(() => document.documentElement.classList.remove("collection-enter-boot"), 5000);
+    }
+  </script>
+  <script defer src="js/collection-entrances.js?v=20260909-fix2"></script>
+
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Explore handmade Animal Friends bead products from Forever Beaded.">
@@ -323,12 +332,13 @@
           <input id="productSearch" type="search" autocomplete="off" aria-label="Search animal products" placeholder="Search animal treasures...">
         </form>
       </div>
-      <div class="shop-results-row"><p id="shopResultsCount">4 handmade pieces</p></div>
+      <div class="shop-results-row"><p id="shopResultsCount">5 handmade pieces</p></div>
       <div class="product-grid">
-        <article class="product-card" data-favourite-key="gecko"><a class="product-card-link" href="create.html?design=gecko"><img src="images/gecko.jpeg" alt="Gecko Keychain"><span class="product-name">Gecko Keychain</span><span class="product-price">$20 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Gecko Keychain to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
-        <article class="product-card" data-favourite-key="baby-gecko"><a class="product-card-link" href="create.html?design=baby-gecko"><img src="images/baby-gecko.jpeg" alt="Baby Gecko"><span class="product-name">Baby Gecko</span><span class="product-price">$20 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Baby Gecko to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
-        <article class="product-card" data-favourite-key="gecko-butterfly"><a class="product-card-link" href="create.html?design=gecko-butterfly"><img src="images/gecko-butterfly.jpeg" alt="Gecko and Butterfly"><span class="product-name">Gecko and Butterfly</span><span class="product-price">$40 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Gecko and Butterfly to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
-        <article class="product-card" data-favourite-key="giraffe"><a class="product-card-link" href="create.html?design=giraffe"><img src="images/giraffe.jpg" alt="Giraffe"><span class="product-name">Giraffe</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Giraffe to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
+        <article class="product-card" data-favourite-key="gecko"><a class="product-card-link" href="create.html?design=gecko"><img src="etsy/images-branded/gecko-owner-approved-master.jpg" alt="Gecko Keychain"><span class="product-name">Gecko Keychain</span><span class="product-price">$20 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Gecko Keychain to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
+        <article class="product-card" data-favourite-key="baby-gecko"><a class="product-card-link" href="create.html?design=baby-gecko"><img src="etsy/images-branded/baby-gecko-approved-master.jpg" alt="Baby Gecko"><span class="product-name">Baby Gecko</span><span class="product-price">$20 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Baby Gecko to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
+        <article class="product-card" data-favourite-key="monkey"><a class="product-card-link" href="create.html?design=custom-idea&amp;idea=Monkey#homeDesignBuilder"><img src="etsy/images-branded/monkey-master.jpg" alt="Forever Beaded Monkey keychain"><span class="product-name">Monkey</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Monkey to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
+        <article class="product-card" data-favourite-key="panda"><a class="product-card-link" href="create.html?design=custom-idea&amp;idea=Panda#homeDesignBuilder"><img src="etsy/images-branded/panda-master.png" alt="Forever Beaded Panda keychain"><span class="product-name">Panda</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Panda to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
+        <article class="product-card" data-favourite-key="giraffe"><a class="product-card-link" href="create.html?design=giraffe"><img src="etsy/images-branded/giraffe-etsy-branded.jpg" alt="Giraffe"><span class="product-name">Giraffe</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Giraffe to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
       </div>
     </main>
   </div>
@@ -342,7 +352,8 @@
     </section>
   <script src="js/product-catalogue.js?v=clean-worlds-1"></script>
 <script src="js/static-collection-cards.js?v=20260802-1"></script>
-  <script src="js/chapter-order-navigation.js?v=chapter-order-3"></script>
-  <script src="js/master-header.js?v=20260731"></script>
+  <script src="js/chapter-order-navigation.js?v=accessories-integrated-20260913"></script>
+  <script src="js/master-header.js?v=accessories-nav-20260913"></script>
+  <script src="js/collection-fall.js?v=2"></script>
 </body>
 </html>

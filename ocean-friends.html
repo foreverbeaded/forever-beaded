@@ -1,6 +1,31 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <script>
+    // Ocean Friends owns its entrances; do not run the shared entrance controller here.
+    document.documentElement.dataset.collectionEntrances = "ocean-page-local";
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.documentElement.classList.add("ocean-motion");
+    }
+  </script>
+  <style>
+    @media (prefers-reduced-motion: no-preference) {
+      html.ocean-motion .ocean-page .page-heading {
+        opacity: 0;
+        transition: opacity 1s ease-in-out 200ms;
+      }
+      html.ocean-motion .ocean-page .product-card {
+        opacity: 0;
+        transform: translateY(12px);
+        transition: opacity .8s ease-in-out var(--ocean-delay, 0ms), transform .8s ease-in-out var(--ocean-delay, 0ms), box-shadow .18s ease;
+      }
+      html.ocean-motion .ocean-page .page-heading.ocean-visible,
+      html.ocean-motion .ocean-page .product-card.ocean-visible { opacity: 1; }
+      html.ocean-motion .ocean-page .product-card.ocean-visible { transform: translateY(0); }
+      html.ocean-motion .ocean-page .product-card.ocean-visible:hover { transform: translateY(-5px); }
+    }
+  </style>
+
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Explore handmade Ocean Friends bead products from Forever Beaded.">
@@ -296,6 +321,7 @@
   <link rel="stylesheet" href="css/chapter-navigation.css?v=chapter-1">
   <link rel="stylesheet" href="css/master-header.css?v=20260731">
   <link rel="stylesheet" href="css/collection-layout.css?v=ocean-subtitle-box-removed-1">
+  <link rel="stylesheet" href="css/collection-fall.css?v=1">
 </head>
 <body class="hero-ocean-friends" data-initial-category="Ocean Animals">
   <header class="story-header">
@@ -330,14 +356,14 @@
       </div>
       <div class="shop-results-row"><p id="shopResultsCount">Loading handmade pieces...</p></div>
       <div class="product-grid" id="productGrid">
-        <article class="product-card" data-favourite-key="turtle"><a class="product-card-link" href="create.html?design=turtle"><img src="images/turtle.jpeg" alt="Turtle"><span class="product-name">Turtle</span><span class="product-price">$20 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Turtle to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
-        <article class="product-card" data-favourite-key="octopus"><a class="product-card-link" href="create.html?design=octopus"><img src="images/octopus.jpeg" alt="Octopus"><span class="product-name">Octopus</span><span class="product-price">$30 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Octopus to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
-        <article class="product-card" data-favourite-key="fish"><a class="product-card-link" href="create.html?design=fish"><img src="images/fish.jpeg" alt="Fish"><span class="product-name">Fish</span><span class="product-price">$20 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Fish to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
-        <article class="product-card" data-favourite-key="penguin"><a class="product-card-link" href="create.html?design=penguin"><img src="images/penquin.jpeg" alt="Penguin"><span class="product-name">Penguin</span><span class="product-price">$20 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Penguin to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
-        <article class="product-card" data-favourite-key="whale"><a class="product-card-link" href="create.html?design=whale"><img src="images/whale.jpeg" alt="Whale"><span class="product-name">Whale</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Whale to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
-        <article class="product-card" data-favourite-key="jellyfish"><a class="product-card-link" href="create.html?design=jellyfish"><img src="images/jellyfish.jpeg" alt="Jellyfish"><span class="product-name">Jellyfish</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Jellyfish to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
-        <article class="product-card" data-favourite-key="lobster"><a class="product-card-link" href="create.html?design=lobster"><img src="images/lobster.jpeg" alt="Lobster"><span class="product-name">Lobster</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Lobster to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
-        <article class="product-card" data-favourite-key="shark"><a class="product-card-link" href="create.html?design=shark"><img src="images/shark.jpeg" alt="Shark"><span class="product-name">Shark</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Shark to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
+        <article class="product-card" data-favourite-key="turtle"><a class="product-card-link" href="create.html?design=turtle"><img src="etsy/images-branded/turtle-approved-master.jpg" alt="Turtle"><span class="product-name">Turtle</span><span class="product-price">$20 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Turtle to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
+        <article class="product-card" data-favourite-key="octopus"><a class="product-card-link" href="create.html?design=octopus"><img src="etsy/images-branded/octopus-etsy-branded.jpg" alt="Octopus"><span class="product-name">Octopus</span><span class="product-price">$30 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Octopus to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
+        <article class="product-card" data-favourite-key="fish"><a class="product-card-link" href="create.html?design=fish"><img src="etsy/images-branded/fish-approved-master.jpg" alt="Fish"><span class="product-name">Fish</span><span class="product-price">$20 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Fish to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
+        <article class="product-card" data-favourite-key="penguin"><a class="product-card-link" href="create.html?design=penguin"><img src="etsy/images-branded/penguin-etsy-branded.jpg" alt="Penguin"><span class="product-name">Penguin</span><span class="product-price">$20 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Penguin to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
+        <article class="product-card" data-favourite-key="whale"><a class="product-card-link" href="create.html?design=whale"><img src="etsy/images-branded/whale-approved-master.jpg" alt="Whale"><span class="product-name">Whale</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Whale to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
+        <article class="product-card" data-favourite-key="jellyfish"><a class="product-card-link" href="create.html?design=jellyfish"><img src="etsy/images-branded/jellyfish-approved-master.jpg" alt="Jellyfish"><span class="product-name">Jellyfish</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Jellyfish to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
+        <article class="product-card" data-favourite-key="lobster"><a class="product-card-link" href="create.html?design=lobster"><img src="etsy/images-branded/lobster-owner-approved-master.jpg" alt="Lobster"><span class="product-name">Lobster</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Lobster to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
+        <article class="product-card" data-favourite-key="shark"><a class="product-card-link" href="create.html?design=shark"><img src="etsy/images-branded/shark-approved-master.jpg" alt="Shark"><span class="product-name">Shark</span><span class="product-price">$25 CAD</span></a><button class="favourite-btn" type="button" aria-label="Save Shark to favourites" aria-pressed="false"><span aria-hidden="true">&#9825;</span></button></article>
       </div>
     </main>
   </div>
@@ -351,7 +377,55 @@
     </section>
   <script src="js/product-catalogue.js?v=clean-worlds-1"></script>
 <script src="js/static-collection-cards.js?v=20260802-1"></script>
-  <script src="js/chapter-order-navigation.js?v=chapter-order-3"></script>
-  <script src="js/master-header.js?v=20260731"></script>
+  <script src="js/chapter-order-navigation.js?v=accessories-integrated-20260913"></script>
+  <script src="js/master-header.js?v=accessories-nav-20260913"></script>
+  <script>
+    (() => {
+      const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+      const heading = document.querySelector(".page-heading");
+      const cards = document.querySelectorAll(".product-grid .product-card");
+      const observer = "IntersectionObserver" in window ? new IntersectionObserver(entries => {
+        let order = 0;
+        entries.forEach(entry => {
+          if (document.hidden || !entry.isIntersecting || entry.intersectionRatio < .25 || entry.target.hidden) return;
+          entry.target.style.setProperty("--ocean-delay", 100 + Math.min(order++, 4) * 120 + "ms");
+          entry.target.classList.add("ocean-visible");
+          observer.unobserve(entry.target);
+        });
+      }, { threshold: .25, rootMargin: "0px 0px -50px 0px" }) : null;
+      let started = false;
+      function start() {
+        if (started || document.hidden) return;
+        started = true;
+        // Paint the CSS starting state before switching to the revealed state.
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          heading?.classList.add("ocean-visible");
+          cards.forEach(card => observer && !reduced.matches ? observer.observe(card) : card.classList.add("ocean-visible"));
+        }));
+      }
+      if (document.readyState === "complete") start();
+      else window.addEventListener("load", start, { once: true });
+      document.addEventListener("visibilitychange", () => {
+        start();
+        if (!document.hidden && started && observer) cards.forEach(card => {
+          if (!card.classList.contains("ocean-visible")) {
+            observer.unobserve(card);
+            observer.observe(card);
+          }
+        });
+      });
+      reduced.addEventListener("change", () => {
+        if (reduced.matches) {
+          document.documentElement.classList.remove("ocean-motion");
+          observer?.disconnect();
+        }
+      });
+      document.addEventListener("focusin", event => {
+        const card = event.target.closest(".product-card");
+        if (card) { card.classList.add("ocean-visible"); observer?.unobserve(card); }
+      });
+    })();
+  </script>
+  <script src="js/collection-fall.js?v=1"></script>
 </body>
 </html>

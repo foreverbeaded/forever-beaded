@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" data-collection-entrances href="css/collection-entrances.css?v=20260909-fix2">
+  <script>
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.documentElement.classList.add("collection-enter-boot");
+      setTimeout(() => document.documentElement.classList.remove("collection-enter-boot"), 5000);
+    }
+  </script>
+  <script defer src="js/collection-entrances.js?v=20260909-fix2"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Personalized bracelets and accessories handmade by Forever Beaded.">
+  <title>Accessories | Forever Beaded</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=clean-worlds-1">
+  <link rel="stylesheet" href="css/book.css?v=clean-worlds-1">
+  <link rel="stylesheet" href="css/world-pages.css?v=clean-worlds-1">
+  <link rel="stylesheet" href="css/site-butterflies.css?v=exclusive-landing-20260913">
+  <link rel="stylesheet" href="css/chapter-navigation.css?v=chapter-1">
+  <link rel="stylesheet" href="css/chapter-order-navigation.css?v=chapter-order-2">
+  <link rel="stylesheet" href="css/master-header.css?v=20260731">
+  <link rel="stylesheet" href="css/collection-layout.css?v=stationery-master-1">
+  <style>
+    body.world-accessories::before {
+      background-image: url("images/accessories/dreamy-jewelry-background.jpg");
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+    }
+    body.world-accessories::after {
+      background: linear-gradient(rgba(255, 248, 246, .08), rgba(73, 38, 68, .12));
+      opacity: 1;
+    }
+    .world-accessories .world-hero-copy {
+      background: rgba(44, 20, 50, .76);
+      border-color: rgba(252, 213, 235, .48);
+    }
+    .world-accessories .product-grid {
+      justify-content: start !important;
+      margin-top: clamp(88px, 12vh, 132px) !important;
+    }
+    .world-accessories .world-browser {
+      background: rgba(255, 250, 252, .16);
+      border-radius: 26px;
+      backdrop-filter: blur(7px);
+    }
+    @media (max-width: 900px) {
+      .world-accessories .product-grid { justify-content: center !important; margin-top: 58px !important; }
+    }
+    @media (max-width: 620px) {
+      .world-accessories .product-grid { margin-top: 36px !important; }
+    }
+  </style>
+</head>
+<body class="world-page world-accessories" data-initial-category="Accessories">
+  <header class="story-header">
+    <a class="story-brand" href="index.html" aria-label="Forever Beaded home"><span>Forever Beaded</span><small>by Gladlyn</small></a>
+    <button id="storyMenuButton" class="story-menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button>
+    <nav id="storyNav" class="story-nav" aria-label="Main navigation">
+      <a href="collections.html">Collections</a>
+      <a href="accessories.html" aria-current="page">Accessories</a>
+      <a href="treasures.html">Treasures</a>
+      <a href="index.html#chapterOne">Our Story</a>
+      <a href="reviews.html">Kind Words</a>
+      <a href="maker.html">Meet the Maker</a>
+      <a href="https://foreverbeadedbyglad.etsy.com" target="_blank" rel="noopener noreferrer">Shop on Etsy</a>
+      <a class="nav-order" href="create.html">Create Yours</a>
+    </nav>
+  </header>
+  <main>
+    <section class="world-hero"><div class="world-hero-copy"><p class="world-kicker">Forever Beaded Collection</p><h1>Accessories</h1><p>Personalized bracelets made bead by bead for friendships, bright wishes, and everyday joy.</p></div></section>
+    <section class="world-browser" id="shop" aria-label="Browse accessories">
+      <div class="world-search-row"><input autocomplete="off" id="productSearch" placeholder="Search accessories..." type="search"><button class="tiny-link-btn" id="clearShopFilters" type="button">Clear</button></div>
+      <div class="shop-results-row"><p id="shopResultsCount">Loading handmade pieces...</p></div>
+      <div class="product-grid" id="productGrid"></div>
+    </section>
+  </main>
+  <aside class="cart-panel story-cart" id="cartPanel" aria-hidden="true"><button class="close-btn" id="closeCart" type="button">Close</button><h2>Your Cart</h2><div id="cartItems"></div><h3>Total: <span id="cartTotal">$0 CAD</span></h3><p class="cart-payment-note">Payment is by Canadian e-transfer only. Details will be confirmed by email after your order is reviewed.</p><button id="clearCart" type="button">Clear Cart</button><button id="buyNowBtn" class="checkout-btn" type="button">Order by E-transfer</button></aside>
+  <div class="fb-modal story-modal" id="fbModal" aria-hidden="true"><div class="fb-modal-card"><h2 id="fbModalTitle">Forever Beaded</h2><p id="fbModalMessage"></p><button id="fbModalOk" class="primary-btn" type="button">OK</button></div></div>
+  <section class="chapter-navigation" aria-label="Next chapter"><a class="chapter-navigation__link" href="sports.html"><span>Next Collection</span><strong>Sports</strong></a><span class="chapter-navigation__ornament" aria-hidden="true">&#9825;</span></section>
+  <button id="backToTop" class="back-to-top" type="button" aria-label="Back to top">Up</button>
+  <script src="js/product-catalogue.js?v=accessories-images-20260913b"></script>
+  <script src="js/app.js?v=accessories-images-20260913b"></script>
+  <script src="js/world-pages.js?v=clean-worlds-1"></script>
+  <script src="js/site-butterflies.js?v=exclusive-landing-20260913"></script>
+  <script src="js/chapter-order-navigation.js?v=accessories-integrated-20260913"></script>
+  <script src="js/master-header.js?v=accessories-nav-20260913"></script>
+  <script src="js/collection-fall.js?v=2"></script>
+</body>
+</html>

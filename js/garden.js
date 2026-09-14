@@ -174,12 +174,12 @@
   // Primary showcase photography for the most frequently selected designs.
   // Other catalogue designs use their own existing imageUrl below.
   const designImages = Object.freeze({
-    butterfly: "images/butterfly-purple.jpg",
-    fish: "images/fish.jpeg",
-    gecko: "images/gecko.jpeg",
-    flower: "images/flower-braided.jpeg",
-    turtle: "images/turtle.jpeg",
-    unicorn: "images/unicorn.jpeg"
+    butterfly: "etsy/images-branded/butterfly-owner-approved-master.jpg",
+    fish: "etsy/images-branded/fish-approved-master.jpg",
+    gecko: "etsy/images-branded/gecko-owner-approved-master.jpg",
+    flower: "etsy/images-branded/flower-owner-approved-master.jpg",
+    turtle: "etsy/images-branded/turtle-approved-master.jpg",
+    unicorn: "etsy/images-branded/unicorn-owner-approved-master.jpg"
   });
   let showcaseImageRequest = 0;
   let customReferenceImageDataUrl = "";
@@ -385,12 +385,13 @@
   const designDropdownGroups = [
     { label: "Flower Garden", slugs: ["big-flower", "flower", "deluxe-flower"] },
     { label: "Butterfly Garden", slugs: ["natalies-butterfly", "butterfly", "butterfly-with-flowers", "butterfly-collection"] },
-    { label: "Animal Friends", slugs: ["gecko", "baby-gecko", "gecko-butterfly", "giraffe"] },
+    { label: "Animal Friends", slugs: ["gecko", "baby-gecko", "monkey", "panda", "giraffe"] },
     { label: "Birds of the Sky", slugs: ["macaw"] },
     { label: "Ocean Friends", slugs: ["turtle", "octopus", "fish", "penguin", "whale", "jellyfish", "lobster", "shark"] },
     { label: "Sandy Beaches", slugs: ["crab", "palm-tree"] },
     { label: "Tiny Garden Friends", slugs: ["mushroom", "ladybug-backpack", "dragonfly-keychain"] },
-    { label: "Enchanted Beings", slugs: ["unicorn", "ariel"] },
+    { label: "Enchanted Beings", slugs: ["unicorn", "magical-mane-unicorn", "ariel"] },
+    { label: "Outer Space", slugs: ["rocket"] },
     { label: "Flags of the World", slugs: ["canada-flag"] },
     { label: "Sports", slugs: ["soccer-ball"] },
     { label: "Back to School", slugs: ["pencil"] },
@@ -469,57 +470,26 @@
   const normalizePersonalizationTextInput = () => {
     const input = document.getElementById("homePersonalizationText");
     if (!input) return "";
-    const upper = input.value.toUpperCase();
-    if (input.value !== upper) {
-      const start = input.selectionStart;
-      const end = input.selectionEnd;
-      input.value = upper;
-      if (document.activeElement === input && start != null && end != null) {
-        input.setSelectionRange(start, end);
-      }
-    }
     return input.value.trim();
   };
 
   const getPersonalizationState = () => {
-    const enabled = document.getElementById("homePersonalizationEnabled")?.value === "yes";
-    const type = enabled ? (document.getElementById("homePersonalizationKind")?.value || "name") : "none";
     const text = normalizePersonalizationTextInput();
-    if (type === "name") {
-      return { type, text, phrase: text ? `personalized for ${text}` : "personalized for" };
-    }
-    if (type === "initials") {
-      return { type, text, phrase: text ? `personalized with ${text}` : "personalized with initials" };
-    }
-    return { type: "none", text: "", phrase: "no personalization" };
+    return text
+      ? { type: "name", text, phrase: `product name / personalization: ${text}` }
+      : { type: "none", text: "", phrase: "no personalization" };
   };
 
   const syncPersonalizationField = () => {
-    const enabledSelect = document.getElementById("homePersonalizationEnabled");
-    const kindSelect = document.getElementById("homePersonalizationKind");
-    const kindWrap = document.getElementById("homePersonalizationKindWrap");
     const textWrap = document.getElementById("homePersonalizationTextWrap");
     const input = document.getElementById("homePersonalizationText");
-    if (!enabledSelect || !kindSelect || !kindWrap || !textWrap || !input) return;
-
-    const enabled = enabledSelect.value === "yes";
-    const type = enabled ? (kindSelect.value || "name") : "none";
-    kindWrap.hidden = !enabled;
-    kindWrap.setAttribute("aria-hidden", enabled ? "false" : "true");
-    kindWrap.classList.toggle("is-visible", enabled);
-    textWrap.hidden = !enabled;
-    textWrap.setAttribute("aria-hidden", enabled ? "false" : "true");
-    textWrap.classList.toggle("is-visible", enabled);
-    kindSelect.disabled = !enabled;
-    input.required = enabled;
-    input.maxLength = type === "initials" ? 8 : 40;
-    textWrap.firstChild.textContent = type === "initials" ? "Initials to add" : "Name to add";
-    input.placeholder = type === "initials" ? "e.g. B.T." : "e.g. Becky";
-    if (!enabled) {
-      input.value = "";
-      kindSelect.value = "name";
-      input.setCustomValidity("");
-    }
+    if (!textWrap || !input) return;
+    textWrap.hidden = false;
+    textWrap.setAttribute("aria-hidden", "false");
+    textWrap.classList.add("is-visible");
+    input.required = false;
+    input.maxLength = 40;
+    input.setCustomValidity("");
   };
 
   const validatePersonalization = (report = true) => {
@@ -527,12 +497,7 @@
     const state = getPersonalizationState();
     if (!input || state.type === "none") return true;
 
-    let message = "";
-    if (!state.text) {
-      message = state.type === "initials" ? "Please enter the initials to add." : "Please enter the name to add.";
-    } else if (state.type === "initials" && state.text.length > 8) {
-      message = "Please keep initials to 8 characters or fewer.";
-    }
+    const message = "";
     input.setCustomValidity(message);
     if (message && report) {
       input.reportValidity();
@@ -552,6 +517,7 @@
     const hardware = document.getElementById("homeTreasureHardware")?.value || "Gold";
     const quantity = document.getElementById("homeTreasureQuantity")?.value || "1";
     const personalization = getPersonalizationState();
+    const requestedProductName = isCustomProduct(product) ? (document.getElementById("homeProductName")?.value.trim() || "") : "";
     const customDescription = document.getElementById("homeCustomDescription")?.value.trim() || "";
     const colours = parseColours(colourInput, product?.defaultColours);
     const readableColours = colourInput
@@ -569,12 +535,17 @@
     const previewDescription = document.getElementById("homeTreasurePreviewDescription");
     const previewPersonalization = document.getElementById("homeTreasurePreviewPersonalization");
     const customIdeaPreviewText = document.getElementById("homeCustomIdeaPreviewText");
+    const productPersonalizationPreview = document.getElementById("homeProductPersonalizationPreview");
     const editorialShowcase = document.querySelector(".world-create .editorial-showcase");
     const customConceptCard = document.getElementById("homeCustomConceptCard");
     const customConceptIdea = document.getElementById("homeCustomConceptIdea");
     const customConceptColours = document.getElementById("homeCustomConceptColours");
+    const customConceptProductName = document.getElementById("homeCustomConceptProductName");
     const customConceptHardware = document.getElementById("homeCustomConceptHardware");
+    const customConceptPersonalization = document.getElementById("homeCustomConceptPersonalization");
     const customConceptQuantity = document.getElementById("homeCustomConceptQuantity");
+    const customConceptExistingImage = document.getElementById("homeCustomConceptExistingImage");
+    const customConceptVisual = document.getElementById("homeCustomConceptVisual");
     const customSelected = isCustomProduct(product);
     updateProductImages(product);
     renderBeadPattern(preview, product, colours);
@@ -586,7 +557,202 @@
       customConceptIdea.textContent = customDescription || "Start typing your custom idea to see it here.";
     }
     if (customConceptHardware) customConceptHardware.textContent = hardware;
+    if (customConceptProductName) customConceptProductName.textContent = requestedProductName || "Not entered";
+    if (customConceptPersonalization) {
+      customConceptPersonalization.textContent = personalization.type !== "none" && personalization.text
+        ? personalization.text
+        : "None";
+    }
     if (customConceptQuantity) customConceptQuantity.textContent = String(quantity || 1);
+    const normalizeConceptName = value => String(value || "")
+      .toLowerCase()
+      .replace(/^the\s+/, "")
+      .replace(/&/g, " and ")
+      .replace(/\b(keychain|key chain|beaded|bead|product|design)\b/g, " ")
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+    const conceptAliases = {
+      "rocket ship": "rocket",
+      spaceship: "rocket",
+      spacecraft: "rocket",
+      football: "soccer-ball",
+      "soccer ball": "soccer-ball",
+      gecko: "gecko",
+      lizard: "gecko",
+      butterfly: "butterfly",
+      unicorn: "unicorn",
+      lobster: "lobster"
+    };
+    const normalizedRequestedName = normalizeConceptName(requestedProductName);
+    const aliasSlug = conceptAliases[normalizedRequestedName];
+    const requestedTokens = normalizedRequestedName.split(" ").filter(token => token.length > 2);
+    const eligibleConceptProducts = productCatalogue.filter(candidate => candidate.active !== false && candidate.slug !== "custom-idea");
+    const exactExistingProduct = requestedProductName
+      ? eligibleConceptProducts.find(candidate => (
+          candidate.slug === aliasSlug ||
+          normalizeConceptName(candidate.name) === normalizedRequestedName ||
+          normalizeConceptName(candidate.slug) === normalizedRequestedName ||
+          normalizedRequestedName === `my ${normalizeConceptName(candidate.name)}`
+        ))
+      : null;
+    const matchedExistingProduct = exactExistingProduct || (requestedTokens.length
+      ? eligibleConceptProducts
+          .map(candidate => {
+            const candidateText = `${normalizeConceptName(candidate.name)} ${normalizeConceptName(candidate.slug)}`;
+            const score = requestedTokens.filter(token => candidateText.split(" ").includes(token)).length;
+            return { candidate, score };
+          })
+          .filter(match => match.score === requestedTokens.length)
+          .sort((a, b) => normalizeConceptName(a.candidate.name).length - normalizeConceptName(b.candidate.name).length)[0]?.candidate
+      : null);
+    const matchedExistingImage = matchedExistingProduct?.referenceImageUrl || matchedExistingProduct?.imageUrl || customReferenceImageDataUrl || "";
+    if (customConceptExistingImage) {
+      customConceptExistingImage.hidden = !matchedExistingImage;
+      if (matchedExistingImage) {
+        customConceptExistingImage.src = matchedExistingImage;
+        customConceptExistingImage.alt = matchedExistingProduct
+          ? `${matchedExistingProduct.name} — existing Forever Beaded product`
+          : "Customer-provided reference for the custom concept";
+      } else {
+        customConceptExistingImage.removeAttribute("src");
+      }
+    }
+    if (customConceptVisual) customConceptVisual.hidden = Boolean(matchedExistingImage);
+    if (customConceptVisual && customSelected && !matchedExistingImage) {
+      const context = customConceptVisual.getContext("2d");
+      const size = customConceptVisual.width;
+      const gradient = context.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, "#fffaf2");
+      gradient.addColorStop(1, "#f4e5ef");
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, size, size);
+      context.textAlign = "center";
+      context.fillStyle = "#7e3d70";
+      context.font = "700 40px Georgia, serif";
+      context.fillText("Forever Beaded", size / 2, 92);
+      context.fillStyle = "#41283d";
+      context.font = "700 34px Inter, sans-serif";
+      context.fillText("CUSTOM DESIGN REQUEST", size / 2, 165);
+      context.font = "700 42px Georgia, serif";
+      context.fillText(requestedProductName || "Product name required", size / 2, 255, 590);
+      context.font = "500 25px Inter, sans-serif";
+      context.fillText(`Colours: ${readableColours}`, size / 2, 350, 600);
+      context.fillText(`Hardware: ${hardware}`, size / 2, 405, 600);
+      context.fillText(`Personalization: ${personalization.text || "None"}`, size / 2, 460, 600);
+      context.fillStyle = "#8a697f";
+      context.font = "500 19px Inter, sans-serif";
+      context.fillText("Concept Preview — final handmade product may vary slightly", size / 2, 620, 620);
+    }
+    if (false && customConceptVisual && customSelected && !matchedExistingImage) {
+      const context = customConceptVisual.getContext("2d");
+      const size = customConceptVisual.width;
+      // The requested object drives the concept independently from optional name text.
+      const colourList = colours.length ? colours : ["#8f6bb3", "#f4d7df", "#d9b56d"];
+      const gradient = context.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, "#fffaf2");
+      gradient.addColorStop(1, "#f4e5ef");
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, size, size);
+      const metal = String(hardware).toLowerCase() === "silver" ? "#b9bec5" : "#d3a43e";
+      context.strokeStyle = metal; context.lineWidth = 18;
+      context.beginPath(); context.arc(size / 2, 104, 64, 0, Math.PI * 2); context.stroke();
+      context.save(); context.translate(size / 2, 34); context.rotate(.18);
+      context.strokeStyle = metal; context.lineWidth = 16;
+      context.beginPath(); context.moveTo(0, 0); context.bezierCurveTo(42, -6, 48, 58, 5, 82); context.bezierCurveTo(-26, 98, -48, 58, -22, 28); context.closePath(); context.stroke();
+      context.restore();
+      const normalizedName = requestedProductName.toLowerCase();
+      const conceptKind = /teddy|bear/.test(normalizedName)
+        ? "teddy"
+        : /lion/.test(normalizedName)
+          ? "lion"
+        : /butterfly/.test(normalizedName)
+          ? "butterfly"
+          : /flower|rose|daisy|sunflower/.test(normalizedName)
+            ? "flower"
+            : "custom";
+      const rows = 11;
+      const columns = 11;
+      const beadRadius = 20;
+      const startX = size / 2 - ((columns - 1) * 40) / 2;
+      const startY = 190;
+      const includeConceptBead = (row, column) => {
+        const x = column - 5;
+        const y = row;
+        if (conceptKind === "teddy") {
+          const ears = y <= 2 && (Math.abs(x) >= 3 && Math.abs(x) <= 4);
+          const head = y <= 5 && ((x * x) / 18 + ((y - 3) * (y - 3)) / 10 <= 1);
+          const body = y >= 5 && y <= 9 && Math.abs(x) <= (y < 7 ? 2 : 3);
+          const arms = y >= 6 && y <= 8 && Math.abs(x) === 4;
+          const legs = y >= 9 && Math.abs(x) >= 1 && Math.abs(x) <= 3;
+          return ears || head || body || arms || legs;
+        }
+        if (conceptKind === "lion") {
+          const mane = y <= 6 && ((x * x) / 22 + ((y - 3) * (y - 3)) / 13 <= 1);
+          const face = y >= 1 && y <= 5 && Math.abs(x) <= 2;
+          const body = y >= 6 && y <= 9 && Math.abs(x) <= 2;
+          const legs = y >= 9 && Math.abs(x) >= 1 && Math.abs(x) <= 3;
+          const tail = y >= 6 && y <= 9 && x === 4;
+          return mane || face || body || legs || tail;
+        }
+        if (conceptKind === "butterfly") {
+          const body = Math.abs(x) <= 0 && y >= 1 && y <= 10;
+          const upperWings = y >= 2 && y <= 6 && Math.abs(x) >= 1 && Math.abs(x) <= (y < 5 ? 5 : 4);
+          const lowerWings = y >= 6 && y <= 9 && Math.abs(x) >= 1 && Math.abs(x) <= (y < 8 ? 4 : 3);
+          return body || upperWings || lowerWings;
+        }
+        if (conceptKind === "flower") {
+          const petals = y <= 5 && ((x * x) + ((y - 3) * (y - 3)) <= 11) && !(Math.abs(x) <= 1 && Math.abs(y - 3) <= 1);
+          const centre = Math.abs(x) <= 1 && Math.abs(y - 3) <= 1;
+          const stem = y >= 5 && y <= 10 && x === 0;
+          const leaves = (y === 7 || y === 8) && Math.abs(x) <= 2;
+          return petals || centre || stem || leaves;
+        }
+        // A neutral sketched concept is used only until a recognizable template or
+        // existing catalogue match is available; never render a random arrangement.
+        return false;
+      };
+      for (let row = 0; row < rows; row += 1) {
+        for (let column = 0; column < columns; column += 1) {
+          if (!includeConceptBead(row, column)) continue;
+          const x = startX + column * 40;
+          const y = startY + row * 38;
+          context.fillStyle = colourList[(row + column) % colourList.length];
+          context.beginPath(); context.arc(x, y, beadRadius, 0, Math.PI * 2); context.fill();
+          context.strokeStyle = "rgba(70,36,63,.22)"; context.lineWidth = 2; context.stroke();
+          context.fillStyle = "rgba(255,255,255,.42)";
+          context.beginPath(); context.arc(x - 7, y - 8, 6, 0, Math.PI * 2); context.fill();
+        }
+      }
+      const drawFace = (eyeY, eyeSpacing, noseY) => {
+        context.fillStyle = "#241b20";
+        context.beginPath(); context.arc(size / 2 - eyeSpacing, eyeY, 9, 0, Math.PI * 2); context.fill();
+        context.beginPath(); context.arc(size / 2 + eyeSpacing, eyeY, 9, 0, Math.PI * 2); context.fill();
+        context.beginPath(); context.arc(size / 2, noseY, 12, 0, Math.PI * 2); context.fill();
+        context.strokeStyle = "#241b20"; context.lineWidth = 5; context.lineCap = "round";
+        context.beginPath(); context.moveTo(size / 2, noseY + 10); context.lineTo(size / 2, noseY + 25);
+        context.moveTo(size / 2, noseY + 24); context.quadraticCurveTo(size / 2 - 15, noseY + 34, size / 2 - 25, noseY + 25);
+        context.moveTo(size / 2, noseY + 24); context.quadraticCurveTo(size / 2 + 15, noseY + 34, size / 2 + 25, noseY + 25); context.stroke();
+      };
+      if (conceptKind === "teddy") drawFace(285, 48, 332);
+      if (conceptKind === "lion") {
+        context.fillStyle = colourList[1 % colourList.length];
+        context.beginPath(); context.ellipse(size / 2, 315, 92, 82, 0, 0, Math.PI * 2); context.fill();
+        drawFace(292, 35, 330);
+      }
+      if (conceptKind === "custom") {
+        context.fillStyle = "#5d4058";
+        context.font = "600 22px Inter, sans-serif";
+        context.textAlign = "center";
+        context.fillText("Add a reference image for an exact new concept", size / 2, 350, 520);
+      }
+      if (personalization.type !== "none" && personalization.text) {
+        const label = personalization.text.slice(0, 14).toUpperCase();
+        context.fillStyle = "rgba(255,255,255,.90)"; context.fillRect(size / 2 - 170, 458, 340, 55);
+        context.fillStyle = "#41283d"; context.font = "700 25px Inter, sans-serif"; context.textAlign = "center"; context.fillText(label, size / 2, 494, 310);
+      }
+      context.fillStyle = "#7e3d70"; context.font = "700 34px Georgia, serif"; context.fillText("Forever Beaded", size / 2, 665);
+      context.fillStyle = "#8a697f"; context.font = "500 16px Inter, sans-serif"; context.fillText("CONCEPT PREVIEW", size / 2, 691);
+    }
     if (customConceptColours) {
       const colourLabels = String(colourInput || "")
         .split(",")
@@ -612,6 +778,9 @@
       const showCustomIdeaText = isCustomProduct(product) && Boolean(customDescription);
       customIdeaPreviewText.hidden = !showCustomIdeaText;
       customIdeaPreviewText.textContent = showCustomIdeaText ? `Custom Idea: ${customDescription}` : "";
+    }
+    if (productPersonalizationPreview) {
+      productPersonalizationPreview.textContent = `Product Name: ${requestedProductName || "None"} · Personalization / Name: ${personalization.text || "None"}`;
     }
 
     if (previewTitle) {
@@ -650,6 +819,9 @@
           "Idea:",
           customDescription || "Start typing your custom idea...",
           "",
+          "Product Name:",
+          requestedProductName || "None",
+          "",
           "Colours:",
           readableColours,
           "",
@@ -657,12 +829,22 @@
           hardware,
           "",
           "Quantity:",
-          String(quantity || 1)
+          String(quantity || 1),
+          "",
+          "Personalization / Name:",
+          personalization.text || "None"
         ].join("\n");
         previewDescription.hidden = false;
       } else {
-        previewDescription.textContent = "";
-        previewDescription.hidden = true;
+        previewDescription.textContent = [
+          `Selected design: ${design}`,
+          `Product Name: ${requestedProductName || "None"}`,
+          `Selected colours: ${readableColours}`,
+          `Hardware: ${hardware}`,
+          `Quantity: ${String(quantity || 1)}`,
+          `Personalization / Name: ${personalization.text || "None"}`
+        ].join("\n");
+        previewDescription.hidden = false;
       }
     }
   };
@@ -1127,7 +1309,8 @@
               : "No personalization";
             const lineTotal = formatCents(item.lineTotalCents || item.unitPriceCents || 0, data.currency);
             const unitPrice = quantity > 1 && item.unitPriceCents ? ` <span style="opacity:.82;">(${formatCents(item.unitPriceCents, data.currency)} each)</span>` : "";
-            return `<li style="margin:0 0 10px;"><strong style="color:#fff;">${design}</strong> — ${lineTotal}${unitPrice}<br><span style="font-size:.92rem;">Colours: ${colours}; Hardware: ${hardware}; Quantity: ${quantity}; ${personalization}</span></li>`;
+            const requestedProductName = escapeHtml(item.requestedProductName || "None");
+            return `<li style="margin:0 0 10px;"><strong style="color:#fff;">${design}</strong> — ${lineTotal}${unitPrice}<br><span style="font-size:.92rem;">Product Name: ${requestedProductName}; Colours: ${colours}; Hardware: ${hardware}; Quantity: ${quantity}; ${personalization}</span></li>`;
           }).join("")}
         </ol>
       </div>
@@ -1140,7 +1323,7 @@
         const personalization = item.personalizationType && item.personalizationType !== "none"
           ? `${item.personalizationType}: ${item.personalizationText || ""}`
           : "No personalization";
-        return `${index + 1}. ${design} — ${lineTotal}\n   Colours: ${item.colours || ""}\n   Hardware: ${item.hardware || ""}\n   Quantity: ${quantity}\n   Personalization: ${personalization}`;
+        return `${index + 1}. ${design} — ${lineTotal}\n   Product Name: ${item.requestedProductName || "None"}\n   Colours: ${item.colours || ""}\n   Hardware: ${item.hardware || ""}\n   Quantity: ${quantity}\n   Personalization: ${personalization}`;
       }).join("\n\n")
       : "Order item details are listed in the Forever Beaded order record.";
     const gmailSubject = `Forever Beaded Order ${orderNumber}`;
@@ -1219,6 +1402,7 @@
       const personalizationEnabled = document.getElementById("homePersonalizationEnabled");
       const personalizationKind = document.getElementById("homePersonalizationKind");
       const personalizationText = document.getElementById("homePersonalizationText");
+      const productName = document.getElementById("homeProductName");
       const design = document.getElementById("homeTreasureDesign");
       const colours = document.getElementById("homeTreasureColours");
       const hardware = document.getElementById("homeTreasureHardware");
@@ -1228,6 +1412,7 @@
       if (personalizationEnabled) personalizationEnabled.value = "no";
       if (personalizationKind) personalizationKind.value = "name";
       if (personalizationText) personalizationText.value = "";
+      if (productName) productName.value = "";
       if (design) design.value = fallbackProduct?.slug || productCatalogue[0]?.slug || "";
       if (colours) colours.value = "Purple, Cream, Gold";
       if (hardware) hardware.value = "Gold";
@@ -1480,6 +1665,8 @@
     const count = document.getElementById("homeCustomDescriptionCount");
     const referenceWrap = document.getElementById("homeCustomReferenceWrap");
     const referenceInput = document.getElementById("homeCustomReferenceImage");
+    const productNameWrap = document.getElementById("homeProductNameWrap");
+    const productNameInput = document.getElementById("homeProductName");
     if (!wrap || !textarea) return;
 
     const isCustom = isCustomProduct(product);
@@ -1491,6 +1678,16 @@
       referenceWrap.setAttribute("aria-hidden", String(!isCustom));
     }
     if (referenceInput) referenceInput.disabled = !isCustom;
+    if (productNameWrap) {
+      productNameWrap.hidden = !isCustom;
+      productNameWrap.setAttribute("aria-hidden", String(!isCustom));
+      productNameWrap.classList.toggle("is-visible", isCustom);
+    }
+    if (productNameInput) {
+      productNameInput.required = isCustom;
+      productNameInput.disabled = !isCustom;
+      if (!isCustom) productNameInput.setCustomValidity("");
+    }
 
     if (isCustom) {
       wrap.hidden = false;
@@ -1511,10 +1708,18 @@
   const validateCustomDescription = () => {
     const product = getSelectedProduct();
     const textarea = document.getElementById("homeCustomDescription");
+    const productNameInput = document.getElementById("homeProductName");
     if (!textarea || !isCustomProduct(product)) return true;
 
     const value = textarea.value.trim();
     let message = "";
+    if (!productNameInput?.value.trim()) {
+      productNameInput?.setCustomValidity("Please enter a product name for your custom design.");
+      productNameInput?.reportValidity();
+      setOrderStatus("Please enter a product name for your custom design.", true);
+      return false;
+    }
+    productNameInput.setCustomValidity("");
     if (!value) {
       message = "Please describe your custom design.";
     } else if (value.length > 500) {
@@ -1609,6 +1814,7 @@
       personalization: personalizationText,
       personalizationType: personalizationType === "initials" || personalizationType === "name" ? personalizationType : "none",
       personalizationText,
+      requestedProductName: String(item?.requestedProductName || options.requestedProductName || "").trim(),
       customDescription: String(item?.customDescription || (item?.isCustom ? item?.description : "") || "").trim(),
       quantity,
       unitPriceCents,
@@ -1639,7 +1845,8 @@
         colours: item.colours,
         hardware: item.hardware,
         personalizationType: item.personalizationType,
-        personalizationText: item.personalizationText
+        personalizationText: item.personalizationText,
+        requestedProductName: item.requestedProductName
       },
       customDescription: item.customDescription,
       availability: "made to order"
@@ -1660,6 +1867,7 @@
     personalization: item.personalizationText,
     personalizationType: item.personalizationType,
     personalizationText: item.personalizationText,
+    requestedProductName: item.requestedProductName,
     customDescription: item.customDescription,
     quantity: item.quantity
   }));
@@ -1687,6 +1895,7 @@
         ? `${titleCase(item.personalizationType)}: ${item.personalizationText}`
         : "No personalization";
       const options = [
+        `Product Name: ${item.requestedProductName || "None"}`,
         item.colours ? `Colours: ${item.colours}` : "",
         item.hardware ? `Hardware: ${item.hardware}` : "",
         personalization
@@ -1730,6 +1939,7 @@
     const personalizationEnabled = document.getElementById("homePersonalizationEnabled");
     const personalizationKind = document.getElementById("homePersonalizationKind");
     const personalizationText = document.getElementById("homePersonalizationText");
+    const productName = document.getElementById("homeProductName");
     const customDescription = document.getElementById("homeCustomDescription");
 
     if (design && product?.slug) design.value = product.slug;
@@ -1742,6 +1952,7 @@
     if (personalizationEnabled) personalizationEnabled.value = item.personalizationType !== "none" && item.personalizationText ? "yes" : "no";
     if (personalizationKind) personalizationKind.value = item.personalizationType === "initials" ? "initials" : "name";
     if (personalizationText) personalizationText.value = item.personalizationText || "";
+    if (productName) productName.value = item.requestedProductName || "";
     if (customDescription) customDescription.value = item.customDescription || "";
 
     syncCustomDescriptionField();
@@ -1820,6 +2031,7 @@
     const hardware = document.getElementById("homeTreasureHardware")?.value || "Gold";
     const quantity = Number(document.getElementById("homeTreasureQuantity")?.value || 1);
     const personalization = getPersonalizationState();
+    const requestedProductName = isCustomProduct(product) ? (document.getElementById("homeProductName")?.value.trim() || "") : "";
     const customDescription = isCustomProduct(product) ? (document.getElementById("homeCustomDescription")?.value.trim() || "") : "";
     const address = confirmedAddress || validateAndNormalizeAddress();
 
@@ -1832,6 +2044,7 @@
       personalization: personalization.text,
       personalizationType: personalization.type,
       personalizationText: personalization.text,
+      requestedProductName,
       customDescription,
       customReferenceImage: isCustomProduct(product) ? customReferenceImageDataUrl : "",
       customReferenceImageName: isCustomProduct(product) ? customReferenceImageName : "",

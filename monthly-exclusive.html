@@ -1,6 +1,15 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <link rel="stylesheet" data-collection-entrances href="css/collection-entrances.css?v=20260909-fix2">
+  <script>
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.documentElement.classList.add("collection-enter-boot");
+      setTimeout(() => document.documentElement.classList.remove("collection-enter-boot"), 5000);
+    }
+  </script>
+  <script defer src="js/collection-entrances.js?v=20260909-fix2"></script>
+
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="September Pumpkin Spice Latte Monthly Exclusive at Forever Beaded">
@@ -32,7 +41,7 @@
       <div class="page-heading"><p class="eyebrow">Forever Beaded Collection</p><h1>Monthly Exclusive</h1><p class="page-description">A special spotlight world reserved for this month's rarest handmade treasure.</p></div>
       <div class="world-search-row"><label class="sr-only" for="productSearch">Search Monthly Exclusive products</label><input id="productSearch" autocomplete="off" placeholder="Search this treasure world..." type="search"><button class="tiny-link-btn" id="clearShopFilters" type="button">Clear</button></div>
       <div class="product-grid" id="productGrid">
-        <article class="product-card"><a class="product-card-link" href="create.html?design=pumpkin-spice-latte#homeDesignBuilder"><span class="exclusive-label">September Exclusive</span><img src="images/pumpkin-spice-latte-september-exclusive.jpg" alt="Forever Beaded Pumpkin Spice Latte keychain"><span class="product-name">Pumpkin Spice Latte</span><span class="product-price">$45 CAD</span></a></article>
+        <article class="product-card"><a class="product-card-link" href="create.html?design=pumpkin-spice-latte#homeDesignBuilder"><span class="exclusive-label">September Exclusive</span><img src="etsy/images-branded/pumpkin-spice-latte-etsy-branded.jpg" alt="Forever Beaded Pumpkin Spice Latte keychain"><span class="product-name">Pumpkin Spice Latte</span><span class="product-price">$45 CAD</span></a></article>
       </div>
       <p class="product-empty" id="productEmpty" hidden>No monthly treasure found</p>
     </main>
@@ -42,6 +51,7 @@
     history.scrollRestoration="manual";window.addEventListener("load",()=>window.scrollTo(0,0),{once:true});(()=>{const input=document.getElementById("productSearch"),clear=document.getElementById("clearShopFilters"),card=document.querySelector(".product-card"),empty=document.getElementById("productEmpty");function filter(){const match=!input.value.trim()||card.textContent.toLowerCase().includes(input.value.trim().toLowerCase());card.hidden=!match;empty.hidden=match}input.addEventListener("input",filter);clear.addEventListener("click",()=>{input.value="";filter();input.focus()})})();
   </script>
   <script src="js/chapter-order-navigation.js?v=chapter-order-4"></script>
-  <script src="js/master-header.js?v=20260731"></script>
+  <script src="js/master-header.js?v=accessories-nav-20260913"></script>
+  <script src="js/collection-fall.js?v=2"></script>
 </body>
 </html>

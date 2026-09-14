@@ -630,8 +630,16 @@ body.ambient-nature-active .ambient-nature-layer {
   transform: scale(1.12);
 }
 
-.exclusive-discovery-butterfly {
-  position: fixed;
+.hero-butterfly-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 620;
+}
+
+.svg-monarch.exclusive-discovery-butterfly {
+  position: absolute;
   left: 0;
   top: 0;
   z-index: 620;

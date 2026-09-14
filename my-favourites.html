@@ -45,6 +45,15 @@
       body.world-favourites { background-attachment: scroll; }
     }
   </style>
+  <style>
+    body.world-favourites {
+      background-image: linear-gradient(rgba(255,248,247,.03), rgba(72,38,65,.09)), url("images/my-favourites-collection-scene-v3.png");
+      background-position: center top;
+      background-size: cover;
+    }
+    body.world-favourites::before { background: linear-gradient(rgba(255,248,247,.03), rgba(72,38,65,.09)), url("images/my-favourites-collection-scene-v3.png") center top / cover no-repeat; }
+    @media (max-width:760px) { body.world-favourites { background-attachment:scroll; background-position:center top; } }
+  </style>
 </head><body class="world-page world-favourites" data-initial-category="My Favourites"><header class="story-header">
     <a class="story-brand" href="index.html" aria-label="Forever Beaded home">
       <span>Forever Beaded</span>

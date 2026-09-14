@@ -13,6 +13,7 @@
     ["ocean-friends.html", "Ocean Friends"],
     ["sandy-beaches.html", "Sandy Beaches"],
     ["faith-collection.html", "Faith Collection"],
+    ["valentines-collection.html", "Valentine's Collection"],
     ["sweet-treats.html", "Sweet Treats"],
     ["back-to-school.html", "Back to School"],
     ["fall-collection.html", "Fall Collection"],

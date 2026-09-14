@@ -1528,13 +1528,7 @@ function renderReviews() {
   if (!reviewGrid) return;
   const publicReviews = approvedReviews.filter(review => review && review.approved === true);
   if (!publicReviews.length) {
-    reviewGrid.innerHTML = `
-      <article class="review-card empty-review">
-        <div class="review-stars" aria-label="No approved reviews yet">No approved reviews yet</div>
-        <p>Real customer reviews will appear here after they have been approved for public display.</p>
-        <strong>Forever Beaded</strong>
-      </article>
-    `;
+    reviewGrid.replaceChildren();
     return;
   }
 

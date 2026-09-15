@@ -133,6 +133,25 @@
   background: #f4d58d !important;
 }
 
+@media (min-width: 841px) and (max-width: 1400px) {
+  .story-header {
+    gap: 16px !important;
+    padding-inline: clamp(18px, 3vw, 42px) !important;
+  }
+
+  .story-header .story-nav {
+    gap: clamp(9px, 1.25vw, 17px) !important;
+  }
+
+  .story-header .story-nav a {
+    font-size: .9rem !important;
+  }
+
+  .story-header .story-nav .nav-order {
+    padding-inline: 12px !important;
+  }
+}
+
 @media (max-width: 840px) {
   .story-header .story-menu-button { display: block !important; }
 

@@ -177,3 +177,121 @@
     justify-content: center !important;
   }
 }
+
+/* Scenic collection artwork: composition-aware responsive treatment.
+   Landscape scenes use cover only where the viewport is similarly wide.
+   Portrait/tablet layouts fit the complete scene width once,
+   preserving the approved art without stretching, blurring, or destructive crop. */
+@media (min-width: 1181px) {
+  body.hero-animal-friends { background-position: 50% 42% !important; }
+  body.hero-birds-sky { background-position: 50% 22% !important; }
+  body.world-butterflies { background-position: 50% 18% !important; }
+  body.hero-flower-garden { background-position: 50% 22% !important; }
+  body.hero-ocean-friends { background-position: 50% 18% !important; }
+  body.hero-sandy-beaches { background-position: 50% 20% !important; }
+  body.world-flags, body.world-sports { background-position: 50% 38% !important; }
+  body.scenic-sweets { background-position: 50% 34% !important; }
+  body.scenic-exclusive { background-position: 50% 24% !important; }
+  body.scenic-collections { background-position: 50% 22% !important; }
+  body.world-create { background-position: 50% 38% !important; }
+  body.world-accessories::before,
+  body.collection-back-to-school::before,
+  body.scenic-fall,
+  body.world-space::before,
+  body.world-favourites::before { background-position: center top !important; }
+}
+
+@media (min-width: 769px) and (max-width: 1180px) {
+  body.hero-animal-friends,
+  body.hero-birds-sky,
+  body.world-butterflies,
+  body.hero-flower-garden,
+  body.hero-ocean-friends,
+  body.hero-sandy-beaches,
+  body.world-flags,
+  body.world-sports,
+  body.scenic-sweets,
+  body.scenic-exclusive,
+  body.scenic-fall,
+  body.scenic-collections,
+  body.world-create {
+    background-size: 100% auto !important;
+    background-position: center top !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
+  }
+  body.world-page::before,
+  body.world-accessories::before,
+  body.collection-back-to-school::before,
+  body.world-space::before,
+  body.world-favourites::before,
+  body.world-valentines::before {
+    background-size: 100% auto !important;
+    background-position: center top !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
+  }
+}
+
+@media (max-width: 768px) {
+  body.hero-animal-friends,
+  body.hero-birds-sky,
+  body.world-butterflies,
+  body.hero-flower-garden,
+  body.hero-ocean-friends,
+  body.hero-sandy-beaches,
+  body.world-flags,
+  body.world-sports,
+  body.scenic-sweets,
+  body.scenic-exclusive,
+  body.scenic-fall,
+  body.scenic-collections,
+  body.world-create {
+    background-size: 100% auto !important;
+    background-position: center top !important;
+    background-repeat: no-repeat !important;
+    background-attachment: scroll !important;
+  }
+  body.world-page::before,
+  body.world-accessories::before,
+  body.collection-back-to-school::before,
+  body.world-space::before,
+  body.world-favourites::before,
+  body.world-valentines::before {
+    background-size: 100% auto !important;
+    background-position: center top !important;
+    background-repeat: no-repeat !important;
+    background-attachment: scroll !important;
+  }
+  /* The Animal Friends focal path sits slightly right of centre. */
+  body.hero-animal-friends { background-position: 46% top !important; }
+  /* Keep the shoreline/horizon and classroom/space set pieces fully framed. */
+  body.hero-ocean-friends,
+  body.hero-sandy-beaches,
+  body.collection-back-to-school::before,
+  body.world-space::before { background-position: center top !important; }
+}
+
+@media (max-width: 480px) {
+  body.hero-animal-friends,
+  body.hero-birds-sky,
+  body.world-butterflies,
+  body.hero-flower-garden,
+  body.hero-ocean-friends,
+  body.hero-sandy-beaches,
+  body.world-flags,
+  body.world-sports,
+  body.scenic-sweets,
+  body.scenic-exclusive,
+  body.scenic-fall,
+  body.scenic-collections,
+  body.world-create,
+  body.world-page::before,
+  body.world-accessories::before,
+  body.collection-back-to-school::before,
+  body.world-space::before,
+  body.world-favourites::before,
+  body.world-valentines::before {
+    background-size: 100vw auto !important;
+  }
+}

@@ -2862,9 +2862,9 @@ body.intro-active .scroll-monarch-layer {
 }
 
 .meet-maker-story .maker-portrait img {
-  aspect-ratio: 1;
+  aspect-ratio: 4 / 5;
   object-fit: cover;
-  object-position: center;
+  object-position: center top;
   border-radius: 6px;
   box-shadow: 0 0 38px rgba(244, 213, 141, .12);
 }

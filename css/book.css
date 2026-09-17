@@ -70,6 +70,45 @@ body.storybook-home img {
 
 .opening-scene .opening-monarch {
   position: absolute;
+  width: clamp(104px, 10vw, 156px);
+}
+
+.opening-scene .opening-monarch .hero-awakening-shimmer {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  opacity: 0;
+  background: radial-gradient(circle, rgba(255,249,211,.95) 0 3%, rgba(255,211,250,.42) 18%, transparent 63%);
+  box-shadow: 0 0 18px rgba(255,235,171,.7), 0 0 34px rgba(210,154,255,.46);
+  pointer-events: none;
+}
+
+.opening-scene .opening-monarch[data-intro-phase="landing-settle"] .monarch-whole {
+  animation: heroMergeIntoBook .62s ease-out both;
+}
+
+.opening-scene .opening-monarch[data-intro-phase="wing-twitch"] .monarch-whole {
+  animation: heroWingTwitch .56s ease-in-out both;
+}
+
+.opening-scene .opening-monarch[data-intro-phase="awakening-shimmer"] .monarch-whole {
+  animation: heroPrintedPause .74s ease both;
+}
+
+.opening-scene .opening-monarch[data-intro-phase="awakening-shimmer"] .hero-awakening-shimmer {
+  animation: heroAwakeningShimmer .74s ease-out both;
+}
+
+.opening-scene .opening-monarch[data-intro-phase="wings-opening"] .monarch-whole {
+  animation: heroWingsOpen .76s cubic-bezier(.16,.74,.18,1) both;
+}
+
+.opening-scene .opening-monarch[data-intro-phase="awakened-lift"] .monarch-whole {
+  animation: heroLiftAlive .77s cubic-bezier(.18,.75,.2,1) both;
+}
+
+.opening-scene .opening-monarch[data-intro-phase="title-perched"] .monarch-whole {
+  animation: heroPerchedFlutter 2.4s ease-in-out infinite alternate;
 }
 
 .opening-scene.is-inside-book {
@@ -122,6 +161,309 @@ body.storybook-home img {
   opacity: 0;
   transform: scale(1.12) translateY(-2vh);
   transition: opacity 1.24s cubic-bezier(.2, .72, .16, 1), transform 1.24s cubic-bezier(.2, .72, .16, 1);
+}
+
+.intro-collections-world {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.intro-collections-world-scene {
+  position: absolute;
+  inset: 0;
+  background-color: #120817;
+  background-image: url("../images/final-reveal-scene-no-title.png");
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  opacity: 0;
+  clip-path: circle(0% at 50% 57%);
+  transform: scale(.18);
+  transform-origin: 50% 57%;
+  transition:
+    clip-path 2.25s cubic-bezier(.2, .76, .16, 1),
+    transform 2.25s cubic-bezier(.2, .76, .16, 1),
+    opacity .42s ease;
+}
+
+.intro-book-magic {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.intro-pony-bead {
+  --bead-colour: #ff7dbc;
+  position: absolute;
+  left: 52%;
+  top: 57%;
+  width: clamp(17px, 2.15vw, 30px);
+  aspect-ratio: 1.16 / 1;
+  border-radius: 34%;
+  border: clamp(5px, .58vw, 8px) solid var(--bead-colour);
+  background: rgba(255,255,255,.18);
+  box-shadow: inset 2px 2px 4px rgba(255,255,255,.68), inset -2px -2px 4px rgba(42,15,42,.3), 0 0 12px color-mix(in srgb, var(--bead-colour), transparent 35%);
+  opacity: 0;
+}
+
+.opening-scene.bead-magic-active .intro-pony-bead {
+  animation: introBeadScatter var(--bead-time, 3.2s) cubic-bezier(.18,.68,.24,1) var(--bead-delay, 0s) forwards;
+}
+
+.intro-magic-speck {
+  position: absolute;
+  left: 52%;
+  top: 55%;
+  width: var(--spark-size, 4px);
+  height: var(--spark-size, 4px);
+  border-radius: 50%;
+  background: #fff4bd;
+  box-shadow: 0 0 8px #fff0a2, 0 0 15px #e3aaff;
+  opacity: 0;
+}
+
+.opening-scene.bead-magic-active .intro-magic-speck {
+  animation: introMagicSpeck var(--spark-time, 2.7s) ease-out var(--spark-delay, 0s) forwards;
+}
+
+.opening-scene .opening-monarch-layer { z-index: 12; }
+
+.opening-scene.collections-world-revealing .intro-collections-world {
+  visibility: visible;
+}
+
+.opening-scene.collections-world-revealing .intro-collections-world-scene {
+  opacity: 1;
+  clip-path: circle(150% at 50% 57%);
+  transform: scale(1);
+}
+
+.intro-brand-type {
+  position: relative;
+  z-index: 1;
+  min-height: 1.1em;
+  margin: 0;
+  padding: 0 22px;
+  color: transparent;
+  background: linear-gradient(105deg, #9c5e13 0%, #f7d982 24%, #fff4bd 48%, #d89b35 76%, #ffdf88 100%);
+  background-size: 240% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  font-family: "Segoe Script", "Lucida Handwriting", "URW Chancery L", cursive;
+  font-size: clamp(3.15rem, 8.8vw, 7.4rem);
+  font-weight: 500;
+  line-height: .95;
+  letter-spacing: .025em;
+  text-align: center;
+  white-space: nowrap;
+  text-shadow: none;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .7s ease, transform .7s ease;
+}
+
+.intro-title-magic {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+}
+
+.magic-letter {
+  display: inline-block;
+  color: transparent;
+  background: linear-gradient(105deg, #a66216, #f5d37a 28%, #fff4bd 55%, #d7952d 79%, #ffe39a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 3px 5px rgba(44,18,28,.7)) drop-shadow(0 0 8px rgba(255,222,166,.55));
+  opacity: 0;
+  transform: translateY(9px) rotate(-2deg);
+  animation: magicLetterWrite .46s ease forwards;
+}
+
+.magic-letter-space { width: .26em; }
+
+.writing-spark {
+  position: absolute;
+  left: var(--spark-x);
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #fff8cf;
+  box-shadow: 0 0 7px #fff4ad, 0 0 14px #ffd57a, 0 0 22px rgba(255,238,174,.7);
+  animation: writingSparkTrail 1.1s ease-out forwards;
+}
+
+.intro-title-aura {
+  display: none;
+}
+
+.opening-scene.title-magic-complete .intro-brand-type {
+  animation: completedTitleShimmer 2.8s ease-in-out both;
+}
+
+.opening-scene.title-magic-complete .intro-title-aura {
+  animation: titleAuraBloom 2.8s ease-in-out both;
+}
+
+.intro-world-butterflies {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.world-magic-butterfly {
+  --hue: 0deg;
+  position: absolute;
+  left: var(--start-x);
+  top: var(--start-y);
+  width: clamp(34px, 4.5vw, 68px);
+  opacity: 0;
+  filter: hue-rotate(var(--hue)) saturate(1.55) brightness(1.18) drop-shadow(0 0 10px rgba(255,235,179,.65));
+}
+
+.opening-scene .world-magic-butterfly .monarch-whole {
+  filter: hue-rotate(var(--hue)) saturate(1.65) brightness(1.16) drop-shadow(0 0 10px rgba(255,235,179,.7)) !important;
+}
+
+.opening-scene .world-magic-butterfly {
+  position: absolute;
+  left: var(--start-x);
+  top: var(--start-y);
+  width: clamp(24px, 4vw, 48px) !important;
+}
+
+.opening-scene.world-butterflies-active .world-magic-butterfly {
+  animation: worldButterflyDrift var(--drift-time, 8s) ease-in-out var(--drift-delay, 0s) infinite;
+}
+
+.opening-scene.collections-title-typing .intro-brand-type {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 560px) {
+  .intro-collections-world-scene {
+    background-position: center center;
+  }
+
+  .intro-brand-type {
+    max-width: calc(100% - 28px);
+    padding: 0 10px;
+    font-size: clamp(2.2rem, 10.5vw, 3.55rem);
+  }
+}
+
+@keyframes introBeadScatter {
+  0% { opacity: 0; transform: translate(-50%,-50%) scale(.25) rotate(0deg); }
+  14% { opacity: 1; }
+  64% { opacity: 1; transform: translate(calc(-50% + var(--bead-x)), calc(-50% + var(--bead-y))) scale(1) rotate(var(--bead-rotate)); }
+  78% { transform: translate(calc(-50% + var(--bead-x)), calc(-50% + var(--bead-floor))) scale(1) rotate(calc(var(--bead-rotate) + 90deg)); }
+  88% { transform: translate(calc(-50% + var(--bead-roll)), calc(-50% + var(--bead-floor) - 12px)) scale(.98) rotate(calc(var(--bead-rotate) + 180deg)); }
+  100% { opacity: .82; transform: translate(calc(-50% + var(--bead-roll-end)), calc(-50% + var(--bead-floor))) scale(.94) rotate(calc(var(--bead-rotate) + 300deg)); }
+}
+
+@keyframes introPagesAppear {
+  0%, 12% { opacity: 0; filter: sepia(.28) saturate(.5) brightness(.46); transform: perspective(1300px) translateZ(-2px) scale(.994); }
+  38% { opacity: 1; }
+  100% { opacity: 1; filter: sepia(.06) saturate(1.04) brightness(1.02); transform: perspective(1300px) translateZ(0) scale(1); }
+}
+
+@keyframes introMagicSpeck {
+  0% { opacity: 0; transform: translate(-50%,-50%) scale(.2); }
+  18% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--spark-x)), calc(-50% + var(--spark-y))) scale(.15); }
+}
+
+@keyframes magicLetterWrite {
+  to { opacity: 1; transform: translateY(0) rotate(0); }
+}
+
+@keyframes writingSparkTrail {
+  0% { opacity: 1; transform: translate(-50%,-50%) scale(1.25); }
+  100% { opacity: 0; transform: translate(calc(-50% + 18px), calc(-50% - 34px)) scale(.15); }
+}
+
+@keyframes completedTitleShimmer {
+  0%, 100% { background-position: 0% 50%; filter: drop-shadow(0 0 9px rgba(255,220,151,.5)); }
+  50% { background-position: 100% 50%; filter: drop-shadow(0 0 19px rgba(255,218,151,.92)) drop-shadow(0 0 30px rgba(199,143,255,.58)); }
+}
+
+.opening-scene .svg-monarch .monarch-whole {
+  opacity: 1;
+  filter: saturate(1.08) brightness(1.08) drop-shadow(0 10px 12px rgba(24,10,21,.3));
+  animation: polishedMonarchFlutter .72s ease-in-out infinite alternate;
+}
+
+.opening-scene .svg-monarch .monarch-textured-wing {
+  display: none;
+}
+
+@keyframes polishedMonarchFlutter {
+  from { transform: perspective(360px) rotateX(-4deg) scaleX(.94) scaleY(1); }
+  to { transform: perspective(360px) rotateX(10deg) scaleX(1.025) scaleY(.98); }
+}
+
+@keyframes heroMergeIntoBook {
+  0% { transform: perspective(360px) rotateX(8deg) scale(1); filter: saturate(1.12) brightness(1.08) drop-shadow(0 10px 12px rgba(24,10,21,.3)); }
+  100% { transform: perspective(360px) rotateX(62deg) scale(.91); filter: saturate(.72) brightness(.82) sepia(.16) drop-shadow(0 2px 2px rgba(24,10,21,.18)); }
+}
+
+@keyframes heroWingTwitch {
+  0%, 100% { transform: perspective(360px) rotateX(62deg) rotateZ(0deg) scale(.91); filter: saturate(.74) brightness(.84) sepia(.14); }
+  32% { transform: perspective(360px) rotateX(54deg) rotateZ(-2deg) scale(.93); }
+  55% { transform: perspective(360px) rotateX(65deg) rotateZ(1.5deg) scale(.9); }
+  74% { transform: perspective(360px) rotateX(57deg) rotateZ(-1deg) scale(.92); }
+}
+
+@keyframes heroPrintedPause {
+  0%, 100% { transform: perspective(360px) rotateX(59deg) scale(.92); filter: saturate(.76) brightness(.88) sepia(.1); }
+}
+
+@keyframes heroAwakeningShimmer {
+  0% { opacity: 0; transform: scale(.45) rotate(-12deg); }
+  38% { opacity: .92; }
+  100% { opacity: 0; transform: scale(1.42) rotate(14deg); }
+}
+
+@keyframes heroWingsOpen {
+  0% { transform: perspective(360px) rotateX(62deg) scale(.91); filter: saturate(.82) brightness(.92) drop-shadow(0 2px 3px rgba(24,10,21,.22)); }
+  72% { transform: perspective(360px) rotateX(-8deg) scale(1.05); filter: saturate(1.18) brightness(1.12) drop-shadow(0 10px 14px rgba(24,10,21,.32)); }
+  100% { transform: perspective(360px) rotateX(4deg) scale(1); filter: saturate(1.12) brightness(1.08) drop-shadow(0 10px 12px rgba(24,10,21,.3)); }
+}
+
+@keyframes heroLiftAlive {
+  0% { transform: perspective(360px) rotateX(4deg) scale(1); }
+  45% { transform: perspective(360px) rotateX(21deg) scale(.95); }
+  100% { transform: perspective(360px) rotateX(-7deg) scale(1.07); }
+}
+
+@keyframes heroPerchedFlutter {
+  from { transform: perspective(360px) rotateX(43deg) scale(.94); }
+  to { transform: perspective(360px) rotateX(57deg) scale(.91); }
+}
+
+@keyframes titleAuraBloom {
+  0%, 100% { opacity: .16; transform: scale(.92); }
+  48% { opacity: .65; transform: scale(1.08); }
+}
+
+@keyframes worldButterflyDrift {
+  0% { opacity: 0; transform: translate(-20px,18px) rotate(-10deg) scale(.72); }
+  18% { opacity: .78; }
+  50% { opacity: .9; transform: translate(var(--drift-x), var(--drift-y)) rotate(9deg) scale(1); }
+  82% { opacity: .7; }
+  100% { opacity: 0; transform: translate(var(--drift-x2), var(--drift-y2)) rotate(-5deg) scale(.78); }
 }
 
 .intro-camera {
@@ -195,7 +537,65 @@ body.storybook-home img {
   transform: perspective(1300px) rotateY(0deg) rotateX(0deg) translateZ(0);
   filter: saturate(1.1) contrast(1.08) brightness(.96);
   will-change: transform, opacity, filter;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   pointer-events: none;
+}
+
+.intro-baked-butterfly-veils {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.intro-baked-butterfly-veils-base { z-index: 1; }
+
+.intro-baked-butterfly-veils i {
+  display: block;
+  position: absolute;
+  width: clamp(58px, 7.4vw, 112px);
+  aspect-ratio: 1;
+  border-radius: 48%;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.78);
+  background:
+    radial-gradient(ellipse at 35% 35%, rgba(218,131,202,.78) 0 8%, transparent 9%),
+    radial-gradient(ellipse at 64% 28%, rgba(111,45,126,.88) 0 12%, transparent 13%),
+    radial-gradient(ellipse at 48% 62%, rgba(75,25,88,.95) 0 19%, transparent 20%),
+    radial-gradient(circle, rgba(48,16,55,.88) 0 42%, transparent 68%);
+  filter: saturate(.86) brightness(.72) blur(.35px);
+  transition: opacity .42s ease, transform .62s cubic-bezier(.16,.75,.18,1);
+}
+
+.intro-baked-butterfly-veils i:nth-child(1) { left: 30%; top: 13%; width: clamp(82px, 11vw, 156px); }
+.intro-baked-butterfly-veils i:nth-child(2) { left: 80%; top: 14.5%; width: clamp(46px, 6vw, 90px); }
+.intro-baked-butterfly-veils i:nth-child(3) { left: 77%; top: 40.5%; }
+
+.opening-scene.hero-awakened-1 .intro-baked-butterfly-veils i:nth-child(1),
+.opening-scene.hero-awakened-2 .intro-baked-butterfly-veils i:nth-child(2),
+.opening-scene.hero-awakened-4 .intro-baked-butterfly-veils i:nth-child(3) {
+  opacity: .96;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.intro-page-interior {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  clip-path: polygon(20% 12%, 86% 10%, 90% 72%, 24% 77%);
+  background:
+    linear-gradient(105deg, rgba(62,30,49,.2), rgba(255,241,204,.06) 12%, rgba(255,247,220,.03) 48%, rgba(73,35,53,.18) 100%),
+    #120817 url("../images/final-reveal-scene-no-title.png") center / cover no-repeat;
+  box-shadow: inset 26px 4px 32px rgba(39,13,34,.46), inset -10px -14px 24px rgba(93,43,52,.3);
+  opacity: 0;
+  filter: sepia(.18) saturate(.72) brightness(.76);
+  transform: perspective(1300px) translateZ(-2px) scale(.994);
+  transform-origin: 19% 45%;
+  pointer-events: none;
+}
+
+.opening-scene.intro-opening .intro-page-interior {
+  animation: introPagesAppear 2.45s ease forwards;
 }
 
 .intro-page-compression {
@@ -1300,33 +1700,33 @@ body.storybook-home:not(.intro-active) > .skip-opening {
 
 @keyframes introCoverLift {
   0% {
-    opacity: .96;
+    opacity: 1;
     transform: perspective(1300px) rotateY(0deg) rotateX(0deg) translate3d(0, 0, 0) scale(1);
     filter: saturate(1.1) contrast(1.08) brightness(.96);
   }
   14% {
-    opacity: .98;
+    opacity: 1;
     transform: perspective(1300px) rotateY(-1.8deg) rotateX(.4deg) translate3d(-.25vw, -.08vh, 4px) scale(1.002);
     filter: saturate(1.1) contrast(1.08) brightness(.97);
   }
   26% {
-    opacity: .98;
+    opacity: 1;
     transform: perspective(1300px) rotateY(.8deg) rotateX(-.2deg) translate3d(.05vw, .05vh, 2px) scale(1);
     filter: saturate(1.1) contrast(1.08) brightness(.96);
   }
   48% {
-    opacity: .96;
+    opacity: 1;
     transform: perspective(1300px) rotateY(-18deg) rotateX(2deg) translate3d(-1.8vw, -.8vh, 18px) scale(1.015);
     filter: saturate(1.1) contrast(1.08) brightness(1);
   }
   80% {
-    opacity: .78;
-    transform: perspective(1300px) rotateY(-52deg) rotateX(5deg) translate3d(-8vw, -2.4vh, 58px) scale(1.04);
+    opacity: 1;
+    transform: perspective(1300px) rotateY(-68deg) rotateX(5deg) translate3d(-8vw, -2.4vh, 58px) scale(1.04);
     filter: saturate(1.08) contrast(1.03) brightness(1.08);
   }
   100% {
-    opacity: 0;
-    transform: perspective(1300px) rotateY(-72deg) rotateX(7deg) translate3d(-14vw, -3.6vh, 90px) scale(1.06);
+    opacity: 1;
+    transform: perspective(1300px) rotateY(-112deg) rotateX(7deg) translate3d(-14vw, -3.6vh, 90px) scale(1.06);
     filter: saturate(1.08) contrast(1.02) brightness(1.16);
   }
 }

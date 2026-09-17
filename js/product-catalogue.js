@@ -1013,6 +1013,38 @@
       sortOrder: 129.9
     },
     {
+      id: 125,
+      slug: "varsity-stripe-personalized-keychain",
+      name: "Varsity Stripe Personalized Keychain",
+      category: "Father's Day",
+      description: "A personalized black, grey, blue and white pony-bead keychain.",
+      basePriceCents: 2500,
+      basePrice: 2500,
+      imageUrl: "images/varsity-stripe-personalized-keychain.jpg",
+      referenceImageUrl: "images/varsity-stripe-personalized-keychain.jpg",
+      previewImageUrl: "images/varsity-stripe-personalized-keychain.jpg",
+      previewPattern: null,
+      defaultColours: ["black", "grey", "blue", "white"],
+      active: true,
+      sortOrder: 129.7
+    },
+    {
+      id: 126,
+      slug: "melting-ice-cream",
+      name: "Melting Ice Cream",
+      category: "Sweet Treats",
+      description: "A personalized melting ice-cream pony-bead keychain.",
+      basePriceCents: 2500,
+      basePrice: 2500,
+      imageUrl: "images/melting-ice-cream.jpg",
+      referenceImageUrl: "images/melting-ice-cream.jpg",
+      previewImageUrl: "images/melting-ice-cream.jpg",
+      previewPattern: null,
+      defaultColours: ["blue", "white", "brown", "tan"],
+      active: true,
+      sortOrder: 129.8
+    },
+    {
       id: 18,
       slug: "ice-cream-keychain",
       name: "Ice Cream Keychain",

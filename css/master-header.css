@@ -178,120 +178,131 @@
   }
 }
 
-/* Scenic collection artwork: composition-aware responsive treatment.
-   Landscape scenes use cover only where the viewport is similarly wide.
-   Portrait/tablet layouts fit the complete scene width once,
-   preserving the approved art without stretching, blurring, or destructive crop. */
-@media (min-width: 1181px) {
-  body.hero-animal-friends { background-position: 50% 42% !important; }
-  body.hero-birds-sky { background-position: 50% 22% !important; }
-  body.world-butterflies { background-position: 50% 18% !important; }
-  body.hero-flower-garden { background-position: 50% 22% !important; }
-  body.hero-ocean-friends { background-position: 50% 18% !important; }
-  body.hero-sandy-beaches { background-position: 50% 20% !important; }
-  body.world-flags, body.world-sports { background-position: 50% 38% !important; }
-  body.scenic-sweets { background-position: 50% 34% !important; }
-  body.scenic-exclusive { background-position: 50% 24% !important; }
-  body.scenic-collections { background-position: 50% 22% !important; }
-  body.world-create { background-position: 50% 38% !important; }
-  body.world-accessories::before,
-  body.collection-back-to-school::before,
-  body.scenic-fall,
-  body.world-space::before,
-  body.world-favourites::before { background-position: center top !important; }
+/* Continuous scenic collection backdrops.
+   Each page keeps its approved artwork; the fixed layer stays behind the entire
+   document so products, navigation and the footer never fall onto a flat fill. */
+body.hero-animal-friends { --scenic-art:url('../images/animal-friends-background-board-free.png'); --scenic-position:50% 48%; }
+body.hero-birds-sky { --scenic-art:url('../images/birds-of-the-sky-background.jpg'); --scenic-position:50% 34%; }
+body.world-butterflies { --scenic-art:url('../images/butterfly-garden-background.jpeg'); --scenic-position:50% 35%; }
+body.hero-flower-garden { --scenic-art:url('../images/flower-garden-background.jpg'); --scenic-position:50% 36%; }
+body.hero-ocean-friends { --scenic-art:url('../images/ocean-friends-background.jpg'); --scenic-position:50% 32%; }
+body.hero-sandy-beaches { --scenic-art:url('../images/sandy-beaches-background.png'); --scenic-position:50% 34%; }
+body.world-flags { --scenic-art:url('../images/flags-of-the-world-background.jpg'); --scenic-position:50% 42%; }
+body.world-enchanted { --scenic-art:url('../images/enchanted-beings-background.jpg'); --scenic-position:50% 40%; }
+body.world-bugs { --scenic-art:url('../images/tiny-garden-friends-background.jpg'); --scenic-position:50% 38%; }
+body.scenic-sweets { --scenic-art:url('../images/sweet-treats-background.jpg'); --scenic-position:50% 40%; }
+body.world-sports { --scenic-art:url('../images/sports-collection-background.jpg'); --scenic-position:50% 42%; }
+body.world-favourites { --scenic-art:url('../images/my-favourites-collection-scene-v3.png'); --scenic-position:50% 42%; }
+body.scenic-exclusive { --scenic-art:url('../images/monthly-exclusive-autumn-background.png'); --scenic-position:50% 38%; }
+body.world-faith { --scenic-art:url('../images/faith-garden-clean.png'); --scenic-position:50% 42%; }
+body.world-accessories { --scenic-art:url('../images/collection-scenes/accessories-scene.png'); --scenic-position:50% 42%; }
+body.collection-back-to-school { --scenic-art:url('../images/collection-scenes/back-to-school-scene.png'); --scenic-position:58% 40%; }
+body.scenic-fall { --scenic-art:url('../images/collection-scenes/fall-collection-scene.png'); --scenic-position:50% 42%; }
+body.world-space { --scenic-art:url('../images/collection-scenes/outer-space-scene.png'); --scenic-position:50% 42%; }
+body.world-valentines { --scenic-art:url('../images/valentines-collection-scene-text-free.png'); --scenic-position:50% 42%; }
+body.world-fathers-day { --scenic-art:url('../images/fathers-day-collection-background.jpg'); --scenic-position:50% 45%; }
+body.scenic-collections { --scenic-art:url('../images/collections-scenery-background.jpeg'); --scenic-position:50% 38%; }
+body.world-create { --scenic-art:url('../images/a_cozy_warm_sunlit_artist_craft_studio_scene_view.png'); --scenic-position:50% 42%; }
+
+body:is(
+  .hero-animal-friends,.hero-birds-sky,.world-butterflies,.hero-flower-garden,
+  .hero-ocean-friends,.hero-sandy-beaches,.world-flags,.world-enchanted,
+  .world-bugs,.scenic-sweets,.world-sports,.world-favourites,.scenic-exclusive,
+  .world-faith,.world-accessories,.collection-back-to-school,.scenic-fall,
+  .world-space,.world-valentines,.world-fathers-day,.scenic-collections,.world-create
+){
+  position:relative;
+  isolation:isolate;
+  background-image:none!important;
+  background-attachment:scroll!important;
 }
 
-@media (min-width: 769px) and (max-width: 1180px) {
-  body.hero-animal-friends,
-  body.hero-birds-sky,
-  body.world-butterflies,
-  body.hero-flower-garden,
-  body.hero-ocean-friends,
-  body.hero-sandy-beaches,
-  body.world-flags,
-  body.world-sports,
-  body.scenic-sweets,
-  body.scenic-exclusive,
-  body.scenic-fall,
-  body.scenic-collections,
-  body.world-create {
-    background-size: 100% auto !important;
-    background-position: center top !important;
-    background-repeat: no-repeat !important;
-    background-attachment: fixed !important;
-  }
-  body.world-page::before,
-  body.world-accessories::before,
-  body.collection-back-to-school::before,
-  body.world-space::before,
-  body.world-favourites::before,
-  body.world-valentines::before {
-    background-size: 100% auto !important;
-    background-position: center top !important;
-    background-repeat: no-repeat !important;
-    background-attachment: fixed !important;
+body:is(
+  .hero-animal-friends,.hero-birds-sky,.world-butterflies,.hero-flower-garden,
+  .hero-ocean-friends,.hero-sandy-beaches,.world-flags,.world-enchanted,
+  .world-bugs,.scenic-sweets,.world-sports,.world-favourites,.scenic-exclusive,
+  .world-faith,.world-accessories,.collection-back-to-school,.scenic-fall,
+  .world-space,.world-valentines,.world-fathers-day,.scenic-collections,.world-create
+)::before{
+  content:""!important;
+  position:fixed!important;
+  inset:0!important;
+  z-index:-1!important;
+  pointer-events:none!important;
+  background-image:var(--scenic-art)!important;
+  background-size:cover!important;
+  background-position:var(--scenic-position,50% 50%)!important;
+  background-repeat:no-repeat!important;
+  background-attachment:scroll!important;
+  filter:none!important;
+  opacity:1!important;
+  transform:none!important;
+}
+
+@media (max-width:768px){
+  body.hero-animal-friends{--scenic-position:48% 45%}
+  body.hero-birds-sky{--scenic-position:52% 38%}
+  body.world-butterflies{--scenic-position:48% 40%}
+  body.hero-flower-garden{--scenic-position:52% 40%}
+  body.hero-ocean-friends{--scenic-position:50% 36%}
+  body.hero-sandy-beaches{--scenic-position:52% 38%}
+  body.world-flags{--scenic-position:52% 42%}
+  body.world-enchanted{--scenic-position:54% 42%}
+  body.world-bugs{--scenic-position:48% 42%}
+  body.scenic-sweets{--scenic-position:50% 42%}
+  body.world-sports{--scenic-position:50% 42%}
+  body.world-favourites{--scenic-position:50% 42%}
+  body.scenic-exclusive{--scenic-position:50% 40%}
+  body.world-faith{--scenic-position:50% 42%}
+  body.world-accessories{--scenic-position:52% 42%}
+  body.collection-back-to-school{--scenic-position:70% 42%}
+  body.scenic-fall{--scenic-position:52% 42%}
+  body.world-space{--scenic-position:50% 42%}
+  body.world-valentines{--scenic-position:50% 42%}
+  body.world-fathers-day{--scenic-position:50% 44%}
+  body.scenic-collections{--scenic-position:50% 40%}
+  body.world-create{--scenic-position:52% 42%}
+}
+
+/* Shared responsive product grid: two comfortable cards on phones, then
+   progressively three and four columns as space becomes available. */
+body[class] .product-grid {
+  display:grid!important;
+  width:min(1180px,calc(100% - 24px))!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+  grid-template-columns:repeat(auto-fit,minmax(250px,280px))!important;
+  gap:clamp(14px,2vw,24px)!important;
+  align-items:stretch!important;
+  justify-content:center!important;
+}
+
+body[class] .product-grid > .product-card {
+  width:100%!important;
+  min-width:0!important;
+  max-width:280px!important;
+  justify-self:center!important;
+}
+
+body[class] .product-grid .product-card img {
+  object-fit:contain!important;
+  object-position:center!important;
+  filter:none!important;
+}
+
+@media (max-width:1024px) {
+  body[class] .product-grid {
+    grid-template-columns:repeat(auto-fit,minmax(220px,280px))!important;
   }
 }
 
-@media (max-width: 768px) {
-  body.hero-animal-friends,
-  body.hero-birds-sky,
-  body.world-butterflies,
-  body.hero-flower-garden,
-  body.hero-ocean-friends,
-  body.hero-sandy-beaches,
-  body.world-flags,
-  body.world-sports,
-  body.scenic-sweets,
-  body.scenic-exclusive,
-  body.scenic-fall,
-  body.scenic-collections,
-  body.world-create {
-    background-size: 100% auto !important;
-    background-position: center top !important;
-    background-repeat: no-repeat !important;
-    background-attachment: scroll !important;
+@media (max-width:560px) {
+  body[class] .product-grid {
+    grid-template-columns:repeat(auto-fit,minmax(140px,1fr))!important;
+    gap:12px!important;
   }
-  body.world-page::before,
-  body.world-accessories::before,
-  body.collection-back-to-school::before,
-  body.world-space::before,
-  body.world-favourites::before,
-  body.world-valentines::before {
-    background-size: 100% auto !important;
-    background-position: center top !important;
-    background-repeat: no-repeat !important;
-    background-attachment: scroll !important;
-  }
-  /* The Animal Friends focal path sits slightly right of centre. */
-  body.hero-animal-friends { background-position: 46% top !important; }
-  /* Keep the shoreline/horizon and classroom/space set pieces fully framed. */
-  body.hero-ocean-friends,
-  body.hero-sandy-beaches,
-  body.collection-back-to-school::before,
-  body.world-space::before { background-position: center top !important; }
-}
 
-@media (max-width: 480px) {
-  body.hero-animal-friends,
-  body.hero-birds-sky,
-  body.world-butterflies,
-  body.hero-flower-garden,
-  body.hero-ocean-friends,
-  body.hero-sandy-beaches,
-  body.world-flags,
-  body.world-sports,
-  body.scenic-sweets,
-  body.scenic-exclusive,
-  body.scenic-fall,
-  body.scenic-collections,
-  body.world-create,
-  body.world-page::before,
-  body.world-accessories::before,
-  body.collection-back-to-school::before,
-  body.world-space::before,
-  body.world-favourites::before,
-  body.world-valentines::before {
-    background-size: 100vw auto !important;
+  body[class] .product-grid > .product-card {
+    max-width:180px!important;
   }
 }

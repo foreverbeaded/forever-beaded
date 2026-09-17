@@ -122,10 +122,11 @@ const butterflyPlans = [
   }
 ];
 
-function monarchMarkup() {
+function monarchMarkup(image = "images/monarch-transparent.png") {
   return `
     <span class="monarch-shadow"></span>
-    <img class="monarch-whole" src="images/monarch-cover-realistic.png" alt="" draggable="false" decoding="async">
+    <img class="monarch-whole" src="${image}" alt="" draggable="false" decoding="async">
+    <span class="hero-awakening-shimmer"></span>
     <span class="left-wing monarch-textured-wing"></span>
     <span class="right-wing monarch-textured-wing"></span>
   `;
@@ -748,13 +749,21 @@ function setupOpeningMonarchs() {
   layer.setAttribute("aria-hidden", "true");
   opening.appendChild(layer);
 
+  const heroButterflyImages = [
+    "images/monarch-transparent.png",
+    "images/hero-butterfly-purple.png",
+    "images/hero-butterfly-pink.png",
+    "images/hero-butterfly-blue.png"
+  ];
+
   const butterflies = butterflyPlans
     .filter((plan) => plan.role !== "pageBurst")
-    .slice(0, 3)
+    .slice(0, 4)
     .map((plan, index) => {
       const node = document.createElement("span");
       node.className = `svg-monarch opening-monarch opening-monarch-${index + 1}`;
-      node.innerHTML = monarchMarkup();
+      node.dataset.heroColor = ["orange", "purple", "pink", "blue"][index];
+      node.innerHTML = monarchMarkup(heroButterflyImages[index]);
       layer.appendChild(node);
       return { node, plan, index };
     });
@@ -776,116 +785,181 @@ function setupOpeningMonarchs() {
   };
 
   const poseBeforeOpening = (butterfly, elapsed, viewport) => {
-    const delay = butterfly.index * 1.15;
+    const entranceLeadIn = 1.1;
+    const flightDuration = 5;
+    const arrivalGap = .65;
+    const delay = entranceLeadIn + (butterfly.index * (flightDuration + arrivalGap));
     const t = Math.max(0, elapsed - delay);
+    const gatherTime = entranceLeadIn + ((flightDuration + arrivalGap) * 3) + flightDuration;
+    const awakeningDuration = 3.45;
+    const allLandedHoldDuration = 2.25;
+    const edgeMoveDuration = 2.1;
+    const edgeMoveStart = gatherTime + awakeningDuration + allLandedHoldDuration;
+    const pullStart = edgeMoveStart + edgeMoveDuration;
+    const liveBook = document.querySelector(".intro-book-element")?.getBoundingClientRect();
+    const bookWidth = liveBook?.width || Math.min(1240, viewport.width * 1.22);
+    const bookHeight = liveBook?.height || (bookWidth / 1.5);
+    const bookLeft = liveBook?.left ?? ((viewport.width - bookWidth) / 2);
+    const bookTop = liveBook?.top ?? ((viewport.height - bookHeight) / 2);
+    const onBook = (x, y) => ({ x: bookLeft + (bookWidth * x), y: bookTop + (bookHeight * y) });
+    const flowerLandings = [
+      // Four separate flower-only anchors in the approved book artwork.
+      // None of these points shares or targets a printed butterfly position.
+      onBook(.265, .31),
+      onBook(.62, .18),
+      onBook(.44, .675),
+      onBook(.73, .54)
+    ];
     const paths = [
       {
-        start: { x: -120, y: viewport.height * .34 },
-        approachA: { x: viewport.width * .1, y: viewport.height * .19 },
-        approachB: { x: viewport.width * .2, y: viewport.height * .18 },
-        land: { x: viewport.width * .255, y: viewport.height * .25 },
-        book: { x: viewport.width * .34, y: viewport.height * .58 },
-        exitSide: -1
+        start: { x: viewport.width + 180, y: -140 },
+        approachA: { x: viewport.width * .92, y: viewport.height * .06 },
+        approachB: { x: viewport.width * .67, y: viewport.height * .29 },
+        book: flowerLandings[0]
       },
       {
-        start: { x: viewport.width + 120, y: viewport.height * .44 },
-        approachA: { x: viewport.width * .88, y: viewport.height * .26 },
-        approachB: { x: viewport.width * .79, y: viewport.height * .42 },
-        land: { x: viewport.width * .765, y: viewport.height * .51 },
-        book: { x: viewport.width * .64, y: viewport.height * .62 },
-        exitSide: 1
+        start: { x: -180, y: -140 },
+        approachA: { x: viewport.width * .08, y: viewport.height * .07 },
+        approachB: { x: viewport.width * .33, y: viewport.height * .30 },
+        book: flowerLandings[1]
       },
       {
-        start: { x: viewport.width * .58, y: viewport.height + 110 },
-        approachA: { x: viewport.width * .72, y: viewport.height * .76 },
-        approachB: { x: viewport.width * .54, y: viewport.height * .69 },
-        land: { x: viewport.width * .49, y: viewport.height * .67 },
-        book: { x: viewport.width * .52, y: viewport.height * .61 },
-        exitSide: 1
+        start: { x: -180, y: viewport.height + 140 },
+        approachA: { x: viewport.width * .07, y: viewport.height * .92 },
+        approachB: { x: viewport.width * .27, y: viewport.height * .76 },
+        book: flowerLandings[2]
+      },
+      {
+        start: { x: viewport.width + 180, y: viewport.height + 140 },
+        approachA: { x: viewport.width * .93, y: viewport.height * .91 },
+        approachB: { x: viewport.width * .73, y: viewport.height * .76 },
+        book: flowerLandings[3]
       }
     ];
     const path = paths[butterfly.index] || paths[0];
 
-    if (t < 3.9) {
-      const p = easeInOut(clamp(t / 3.9, 0, 1));
+    if (elapsed < delay) {
+      butterfly.node.dataset.introPhase = "waiting";
+      return { ...path.start, rotation: 0, scale: .58, opacity: 0 };
+    }
+
+    if (t < flightDuration) {
+      butterfly.node.dataset.introPhase = "flying";
+      const p = easeInOut(clamp(t / flightDuration, 0, 1));
       const pos = point(
         path.start,
         path.approachA,
         path.approachB,
-        path.land,
-        p
-      );
-      return { ...pos, rotation: Math.sin(p * Math.PI * 2.2 + butterfly.index) * 14, scale: .58 + Math.sin(p * Math.PI) * .18, opacity: p < .08 ? p / .08 : 1 };
-    }
-
-    if (t < 6.25) {
-      const p = (t - 3.9) / 2.35;
-      const angle = (p * Math.PI * 1.25) + butterfly.index;
-      return {
-        x: path.land.x + Math.cos(angle) * (butterfly.index === 2 ? 34 : 28),
-        y: path.land.y + Math.sin(angle * 1.08) * (butterfly.index === 2 ? 18 : 22),
-        rotation: Math.sin(angle) * 10,
-        scale: .64,
-        opacity: 1,
-        resting: p > .38 && p < .86
-      };
-    }
-
-    if (t < 10.05) {
-      const p = easeInOut((t - 6.25) / 3.8);
-      const pos = point(
-        path.land,
-        { x: path.land.x + (path.exitSide * 72), y: path.land.y - 90 },
-        { x: path.book.x + (path.exitSide * 54), y: path.book.y - 54 },
         path.book,
         p
       );
-      const warm = p > .58;
-      return { ...pos, rotation: Math.sin(p * Math.PI * 2 + butterfly.index) * 12, scale: .64 - (p * .04), opacity: 1, warmLit: warm };
+      return { ...pos, rotation: Math.sin(p * Math.PI * 2.2 + butterfly.index) * 14, scale: .58 + Math.sin(p * Math.PI) * .18, opacity: p < .025 ? p / .025 : 1, warmLit: p > .72 };
     }
 
-    const rest = t - 10.05;
+    if (elapsed < edgeMoveStart) {
+      const rest = t - flightDuration;
+      const allFourHolding = elapsed >= gatherTime + awakeningDuration;
+      const phase = allFourHolding ? "all-landed-hold"
+        : rest < .62 ? "landing-settle"
+        : rest < 1.18 ? "wing-twitch"
+          : rest < 1.92 ? "awakening-shimmer"
+            : rest < 2.68 ? "wings-opening"
+              : "awakened-lift";
+      butterfly.node.dataset.introPhase = phase;
+      const lift = phase === "awakened-lift" ? easeInOut(clamp((rest - 2.68) / .77, 0, 1)) : 0;
+      return {
+        x: path.book.x + Math.sin(rest * 1.1 + butterfly.index) * 3,
+        y: path.book.y + Math.abs(Math.sin(rest * 1.7 + butterfly.index)) * 2 - (lift * 18),
+        rotation: Math.sin(rest * 1.2 + butterfly.index) * 4,
+        scale: .68 + (lift * .08),
+        opacity: 1,
+        resting: true,
+        warmLit: true
+      };
+    }
+
+    // The tugging points belong to the transformed book, not the viewport.
+    // Keep them just inside the visible right edge so every butterfly is
+    // physically pulling against the cover on narrow screens as well.
+    const visibleBookRight = Math.min(bookLeft + bookWidth, viewport.width);
+    const visibleBookEdge = Math.min(onBook(.82, .5).x, visibleBookRight - 54);
+    const edgeTargets = [
+      { x: visibleBookEdge - 14, y: onBook(.5, .34).y },
+      { x: visibleBookEdge - 2, y: onBook(.5, .43).y },
+      { x: visibleBookEdge - 15, y: onBook(.5, .52).y },
+      { x: visibleBookEdge - 3, y: onBook(.5, .61).y }
+    ];
+    const edgeTarget = edgeTargets[butterfly.index] || edgeTargets[0];
+
+    if (elapsed < pullStart) {
+      butterfly.node.dataset.introPhase = "moving-to-edge";
+      const p = easeInOut(clamp((elapsed - edgeMoveStart) / edgeMoveDuration, 0, 1));
+      const pos = point(
+        path.book,
+        { x: path.book.x + (viewport.width * .08), y: path.book.y - (viewport.height * .08) },
+        { x: edgeTarget.x - (viewport.width * .05), y: edgeTarget.y + (viewport.height * .05) },
+        edgeTarget,
+        p
+      );
+      return { ...pos, rotation: Math.sin(p * Math.PI * 3 + butterfly.index) * 12, scale: .62, opacity: 1, warmLit: true };
+    }
+
+    butterfly.node.dataset.introPhase = "pulling";
+    const pullTime = elapsed - pullStart;
+    const side = butterfly.index % 2 === 0 ? -1 : 1;
+    const tug = Math.abs(Math.sin(pullTime * 5.2 + butterfly.index * .35));
     return {
-      x: path.book.x + Math.sin(rest * 1.1 + butterfly.index) * 3,
-      y: path.book.y + Math.abs(Math.sin(rest * 2.2 + butterfly.index)) * 4,
-      rotation: Math.sin(rest * 1.2 + butterfly.index) * 4,
-      scale: .6,
+      x: edgeTarget.x + side * (3 + tug * 14),
+      y: edgeTarget.y - (tug * 13) + Math.sin(pullTime * 2 + butterfly.index) * 3,
+      rotation: side * (4 + tug * 9),
+      scale: .61 + tug * .035,
       opacity: 1,
-      resting: true,
+      resting: false,
       warmLit: true
     };
   };
 
   const poseAfterOpening = (butterfly, openingElapsed, viewport) => {
-    const delay = butterfly.index * .18;
-    const p = clamp((openingElapsed - delay) / 7.2, 0, 1);
-    const before = poseBeforeOpening(butterfly, 12.8, viewport);
-    const side = butterfly.index === 0 ? -1 : 1;
-    const exit = {
-      x: side > 0 ? viewport.width + 150 : -150,
-      y: viewport.height * (.25 + ((butterfly.index % 5) * .09))
-    };
-
-    if (p < .42) {
-      const bob = Math.abs(Math.sin(openingElapsed * 4.4 + butterfly.index)) * 8;
-      const coax = Math.sin(openingElapsed * 2.1 + butterfly.index) * 5;
-      return { ...before, x: before.x + coax, y: before.y - bob, opacity: 1, resting: true, warmLit: true };
+    const titleFinished = opening.classList.contains("title-magic-complete");
+    const glyphs = document.querySelectorAll("#introBrandType .magic-letter");
+    const capital = glyphs[butterfly.index === 0 ? 0 : 8]?.getBoundingClientRect();
+    const worldTargets = [
+      { x: viewport.width * .38, y: viewport.height * .50 },
+      { x: viewport.width * .62, y: viewport.height * .50 },
+      { x: viewport.width * .43, y: viewport.height * .32 },
+      { x: viewport.width * .72, y: viewport.height * .60 }
+    ];
+    const titleTarget = capital
+      // Settle directly onto the upper painted stroke of the capital glyph.
+      // The butterfly's centre overlaps the letter so the landing cannot read
+      // as merely hovering nearby.
+      ? { x: capital.left + (capital.width * .5), y: capital.top + 2 }
+      : worldTargets[butterfly.index];
+    const landingStart = 7.65;
+    const landingProgress = clamp((openingElapsed - landingStart) / 1.75, 0, 1);
+    const isTitleHero = titleFinished && butterfly.index < 2;
+    let target = worldTargets[butterfly.index] || worldTargets[0];
+    if (isTitleHero) {
+      const p = easeInOut(landingProgress);
+      const start = worldTargets[butterfly.index];
+      target = point(
+        start,
+        { x: start.x + (butterfly.index ? -viewport.width * .08 : viewport.width * .04), y: start.y - viewport.height * .2 },
+        { x: titleTarget.x + (butterfly.index ? viewport.width * .07 : -viewport.width * .06), y: titleTarget.y - viewport.height * .12 },
+        titleTarget,
+        p
+      );
     }
-
-    const t = easeInOut((p - .42) / .58);
-    const pos = point(
-      { x: before.x, y: before.y },
-      { x: before.x + side * 72, y: before.y - 120 },
-      { x: viewport.width * (.46 + side * .22), y: viewport.height * .16 },
-      exit,
-      t
-    );
+    const bob = Math.abs(Math.sin(openingElapsed * 3.8 + butterfly.index)) * 8;
+    butterfly.node.dataset.introPhase = isTitleHero && landingProgress >= 1 ? "title-perched" : (isTitleHero ? "title-landing" : "opening-world");
     return {
-      ...pos,
-      rotation: side * 10 + Math.sin(t * Math.PI * 3.2 + butterfly.index) * 18,
-      scale: .64 + Math.sin(t * Math.PI) * .16,
-      opacity: t > .92 ? (1 - t) / .08 : 1,
-      warmLit: t < .62
+      x: target.x + (isTitleHero ? 0 : Math.sin(openingElapsed * 1.8 + butterfly.index) * 8),
+      y: target.y - (isTitleHero ? 0 : bob),
+      rotation: isTitleHero ? (butterfly.index ? 7 : -7) : Math.sin(openingElapsed * 2.1 + butterfly.index) * 9,
+      scale: isTitleHero ? .44 : .62,
+      opacity: 1,
+      resting: isTitleHero && landingProgress >= 1,
+      warmLit: true
     };
   };
 
@@ -899,6 +973,8 @@ function setupOpeningMonarchs() {
         ? poseAfterOpening(butterfly, openingElapsed, viewport)
         : poseBeforeOpening(butterfly, elapsed, viewport);
       setPose(butterfly.node, pose.x, pose.y, pose.rotation, pose.scale, pose.opacity, pose.resting, pose.warmLit);
+      const awakenedPhases = ["awakened-lift", "all-landed-hold", "moving-to-edge", "pulling", "opening-world", "title-landing", "title-perched"];
+      opening.classList.toggle(`hero-awakened-${butterfly.index + 1}`, awakenedPhases.includes(butterfly.node.dataset.introPhase));
     });
 
     if (!state.completed) {
@@ -1023,6 +1099,84 @@ function completeOpening() {
       document.body.classList.add("ambient-nature-active");
     }, 2300);
   }, 420);
+}
+
+function typeIntroBrand() {
+  if (state.completed) return;
+  const title = document.getElementById("introBrandType");
+  if (!title) return;
+
+  const words = "Forever Beaded";
+  let letter = 0;
+  title.replaceChildren();
+  state.opening?.classList.add("collections-title-typing");
+
+  const typeNextLetter = () => {
+    if (state.completed || letter >= words.length) return;
+    const character = words[letter];
+    const glyph = document.createElement("span");
+    glyph.className = character === " " ? "magic-letter magic-letter-space" : "magic-letter";
+    glyph.textContent = character === " " ? "\u00a0" : character;
+    title.appendChild(glyph);
+
+    if (character !== " ") {
+      const spark = document.createElement("i");
+      spark.className = "writing-spark";
+      spark.style.setProperty("--spark-x", `${((letter + .7) / words.length) * 100}%`);
+      title.parentElement?.appendChild(spark);
+      window.setTimeout(() => spark.remove(), 1200);
+    }
+
+    letter += 1;
+    if (letter < words.length) {
+      window.setTimeout(typeNextLetter, 145);
+    } else {
+      window.setTimeout(() => state.opening?.classList.add("title-magic-complete"), 420);
+    }
+  };
+
+  typeNextLetter();
+}
+
+function createBookMagic() {
+  const layer = document.getElementById("introBookMagic");
+  if (!layer || layer.childElementCount) return;
+
+  for (let index = 0; index < 34; index += 1) {
+    const spark = document.createElement("i");
+    const angle = (Math.PI * 2 * index) / 34;
+    const distance = 80 + ((index * 31) % 250);
+    spark.className = "intro-magic-speck";
+    spark.style.setProperty("--spark-x", `${Math.cos(angle) * distance}px`);
+    spark.style.setProperty("--spark-y", `${(Math.sin(angle) * distance) - 80}px`);
+    spark.style.setProperty("--spark-delay", `${(index % 9) * .06}s`);
+    spark.style.setProperty("--spark-time", `${2.1 + ((index % 5) * .2)}s`);
+    spark.style.setProperty("--spark-size", `${2 + (index % 4)}px`);
+    layer.appendChild(spark);
+  }
+}
+
+function revealWorldButterflies() {
+  const layer = document.getElementById("introWorldButterflies");
+  if (!layer || layer.childElementCount) return;
+  const plans = [
+    ["47%", "59%", "95deg", "-150px", "-150px", "-280px", "-230px", "0s", "8.4s"],
+    ["53%", "60%", "185deg", "150px", "-165px", "275px", "-225px", ".18s", "9.2s"],
+    ["49%", "56%", "245deg", "-210px", "-250px", "-330px", "-330px", ".36s", "10s"],
+    ["51%", "57%", "135deg", "210px", "-235px", "320px", "-315px", ".54s", "8.8s"],
+    ["50%", "61%", "310deg", "70px", "-210px", "-90px", "-340px", ".72s", "9.6s"]
+  ];
+
+  plans.forEach((plan) => {
+    const butterfly = document.createElement("span");
+    butterfly.className = "svg-monarch world-magic-butterfly";
+    butterfly.innerHTML = monarchMarkup();
+    ["--start-x", "--start-y", "--hue", "--drift-x", "--drift-y", "--drift-x2", "--drift-y2", "--drift-delay", "--drift-time"]
+      .forEach((name, index) => butterfly.style.setProperty(name, plan[index]));
+    layer.appendChild(butterfly);
+  });
+
+  state.opening?.classList.add("world-butterflies-active");
 }
 
 function setupExclusiveDiscoveryObserver() {
@@ -1225,10 +1379,14 @@ function startCinematicIntro() {
   document.body.classList.add("cinematic-intro-ready");
   state.opening?.classList.add("cinematic-book-visible");
   state.butterflyScene = setupOpeningMonarchs();
+  createBookMagic();
 
-  const openingDelay = 1070;
-  const revealDelay = 3380;
-  const finishDelay = 4800;
+  const openingDelay = 33400;
+  const beadMagicDelay = 33850;
+  const worldRevealDelay = 35950;
+  const titleDelay = 38500;
+  const worldButterflyDelay = 36400;
+  const finishDelay = 54000;
 
   window.setTimeout(() => {
     if (state.completed) return;
@@ -1238,8 +1396,16 @@ function startCinematicIntro() {
 
   window.setTimeout(() => {
     if (state.completed) return;
-    state.opening?.classList.add("is-entering-pages");
-  }, revealDelay);
+    state.opening?.classList.add("bead-magic-active");
+  }, beadMagicDelay);
+
+  window.setTimeout(() => {
+    if (state.completed) return;
+    state.opening?.classList.add("collections-world-revealing");
+  }, worldRevealDelay);
+
+  window.setTimeout(typeIntroBrand, titleDelay);
+  window.setTimeout(revealWorldButterflies, worldButterflyDelay);
 
   window.setTimeout(completeOpening, finishDelay);
 

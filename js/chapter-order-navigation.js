@@ -1,4 +1,11 @@
 (() => {
+  if (!document.querySelector('link[href*="chapter-order-navigation.css"]')) {
+    const navigationStyles = document.createElement("link");
+    navigationStyles.rel = "stylesheet";
+    navigationStyles.href = "css/chapter-order-navigation.css?v=collapsible-preview-1";
+    document.head.append(navigationStyles);
+  }
+
   // Collection entrances are shared without changing the navigation itself.
   if (!document.querySelector('script[src*="collection-entrances.js"]')) {
     const entranceScript = document.createElement("script");
@@ -14,6 +21,7 @@
     ["sandy-beaches.html", "Sandy Beaches"],
     ["faith-collection.html", "Faith Collection"],
     ["valentines-collection.html", "Valentine's Collection"],
+    ["fathers-day-collection.html", "Father's Day Collection"],
     ["sweet-treats.html", "Sweet Treats"],
     ["back-to-school.html", "Back to School"],
     ["fall-collection.html", "Fall Collection"],
@@ -36,6 +44,37 @@
   const utilityIndex = utilityPages.findIndex(([file]) => file === currentFile);
   if (collectionIndex < 0 && utilityIndex < 0) return;
 
+  const collapsibleBreakpoint = window.matchMedia("(max-width: 1024px)");
+  const makeNavigationCollapsible = (navigation) => {
+    if (!navigation || navigation.dataset.collapsibleReady === "true") return;
+
+    navigation.dataset.collapsibleReady = "true";
+    if (!navigation.id) navigation.id = "collectionChapterTabs";
+
+    const toggle = document.createElement("button");
+    toggle.className = "chapter-order-toggle";
+    toggle.type = "button";
+    toggle.setAttribute("aria-controls", navigation.id);
+    toggle.innerHTML = '<span>Browse Collections</span><span class="chapter-order-toggle__caret" aria-hidden="true">&#9662;</span>';
+    navigation.insertAdjacentElement("beforebegin", toggle);
+
+    const setExpanded = (expanded) => {
+      navigation.classList.toggle("is-expanded", expanded);
+      navigation.classList.toggle("is-collapsed", !expanded);
+      navigation.setAttribute("aria-hidden", String(!expanded));
+      toggle.setAttribute("aria-expanded", String(expanded));
+      toggle.classList.toggle("is-expanded", expanded);
+      if ("inert" in navigation) navigation.inert = !expanded;
+    };
+
+    const applyViewportDefault = () => setExpanded(!collapsibleBreakpoint.matches);
+    toggle.addEventListener("click", () => {
+      setExpanded(toggle.getAttribute("aria-expanded") !== "true");
+    });
+    collapsibleBreakpoint.addEventListener("change", applyViewportDefault);
+    applyViewportDefault();
+  };
+
   /* Back to School begins the shared master order; only the active page rotates forward. */
   const backToSchoolIndex = collectionChapters.findIndex(([file]) => file === "back-to-school.html");
   const masterOrder = collectionChapters
@@ -52,6 +91,7 @@
       link.textContent = label;
       existingNavigation.append(link);
     });
+    makeNavigationCollapsible(existingNavigation);
     return;
   }
   const activeChapter = masterOrder.find(([file]) => file === currentFile);
@@ -96,4 +136,6 @@
   } else if (main) {
     main.prepend(navigation);
   }
+
+  makeNavigationCollapsible(navigation);
 })();

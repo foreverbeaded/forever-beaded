@@ -900,3 +900,42 @@ body > .storybook-footer { display: none !important; }
   .product-card,
   .world-page .product-card { justify-self: start !important; border-width: 3px !important; }
 }
+
+/* Final responsive product-grid contract. Keep the surrounding page geometry
+   untouched while allowing the catalogue alone to use the available width. */
+body[class] .product-grid {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) !important;
+  justify-content: center !important;
+  justify-items: center !important;
+  gap: clamp(14px, 1.8vw, 22px) !important;
+  width: 100% !important;
+  margin-inline: auto !important;
+}
+
+body[class] .product-grid > .product-card {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 280px !important;
+  justify-self: center !important;
+}
+
+@media (max-width: 1024px) {
+  body[class] .product-grid {
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 620px) {
+  body[class] .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px 10px !important;
+  }
+
+  body[class] .product-grid > .product-card,
+  body[class] .product-grid > .product-card:has(.product-card-link) {
+    width: 100% !important;
+    max-width: none !important;
+    aspect-ratio: 1 / 1.08 !important;
+    justify-self: stretch !important;
+  }
+}

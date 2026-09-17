@@ -851,6 +851,14 @@ body > .storybook-footer { display: none !important; }
   pointer-events: none !important;
 }
 
+@media (max-width: 620px) {
+  .product-card img,
+  .world-page .product-card img,
+  .world-page .product-card .product-image {
+    padding: 6px 6px 70px !important;
+  }
+}
+
 .product-card .product-price,
 .product-card-link > .product-price {
   position: absolute !important;

@@ -115,9 +115,11 @@ body .chapter-order-toggle:focus-visible {
 
 .page-heading > .chapter-order-nav {
   width: min(980px, 100%);
-  margin-top: 24px;
+  margin-top: 12px;
   margin-bottom: 0;
 }
+
+.page-heading > .chapter-order-toggle { margin-top: 12px !important; }
 
 .world-create main > .chapter-order-nav {
   margin-top: 1.25rem;

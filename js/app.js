@@ -3,7 +3,7 @@
 if (document.body?.classList.contains("world-page") && !document.querySelector('link[href*="compact-product-cards.css"]')) {
   const compactCardsStylesheet = document.createElement("link");
   compactCardsStylesheet.rel = "stylesheet";
-  compactCardsStylesheet.href = "css/compact-product-cards.css?v=4";
+  compactCardsStylesheet.href = "css/compact-product-cards.css?v=5";
   document.head.append(compactCardsStylesheet);
 }
 

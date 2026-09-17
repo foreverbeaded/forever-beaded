@@ -135,9 +135,22 @@
 
 @media (max-width: 620px) {
   .product-grid,
-  .world-page .product-grid { grid-template-columns: minmax(0, 320px) !important; }
+  .world-page .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
   .product-card,
-  .world-page .product-card { justify-self: start !important; border-width: 3px !important; }
+  .world-page .product-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-self: stretch !important;
+    border-width: 3px !important;
+    aspect-ratio: 1 / 1.08 !important;
+  }
+
+  .product-card img,
+  .product-card-link > img { padding: 6px 6px 70px !important; }
 
   .product-card .product-name,
   .product-card-link > .product-name {

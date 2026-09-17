@@ -23,7 +23,7 @@
   <link rel="stylesheet" href="css/chapter-navigation.css?v=chapter-1">
   <link rel="stylesheet" href="css/chapter-order-navigation.css?v=chapter-order-2">
   <link rel="stylesheet" href="css/master-header.css?v=scenic-bg-20260915">
-  <link rel="stylesheet" href="css/compact-product-cards.css?v=3">
+  <link rel="stylesheet" href="css/compact-product-cards.css?v=5">
   <style>
     :root{color-scheme:light}*{box-sizing:border-box}html,body{margin:0;width:100%;min-height:100%}body{overflow-x:hidden;font-family:Georgia,"Times New Roman",serif;background:#ead9bb url("images/back-to-school-classroom-background.png") center/cover fixed no-repeat}.page-scroll{width:100%;min-height:100vh;padding:118px clamp(12px,2vw,32px) 72px}.collection-page{width:min(1120px,100%);margin:0 auto}.page-heading{width:min(980px,100%);margin:0 auto 48px;text-align:center;color:#4f2d3d;text-shadow:0 2px 8px rgba(255,248,250,.9)}.page-heading h1{margin:0 0 22px;font-size:clamp(48px,7vw,96px);font-weight:500;line-height:.95;letter-spacing:-.035em}.page-subtitle{max-width:700px;margin:1rem auto 22px;font-size:1.05rem;line-height:1.7}.search-wrap{width:min(620px,100%);margin:0 auto}.search-wrap input{width:100%;min-height:56px;border:1px solid rgba(102,69,82,.34);border-radius:999px;background:rgba(255,249,250,.94);padding:0 26px;color:#4f2d3d;font:500 clamp(15px,1.4vw,18px)/1.2 Arial,sans-serif;box-shadow:0 12px 32px rgba(77,41,57,.18);outline:none}.product-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,329px));justify-content:center;gap:clamp(18px,2vw,28px);margin:0 auto}.product-card img{object-fit:contain!important;object-position:center!important}.product-empty{width:max-content;max-width:100%;margin:30px auto 0;padding:12px 20px;border-radius:10px;background:rgba(255,246,248,.94);color:#4f2d3d;font:700 15px/1.2 Arial,sans-serif}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(max-width:900px){body{background-attachment:scroll;background-position:center top}.page-scroll{padding-top:102px}}@media(max-width:620px){.page-scroll{padding:92px 12px 48px}.page-heading{margin-bottom:30px}.page-heading h1{font-size:clamp(44px,15vw,64px)}.product-grid{grid-template-columns:1fr}.product-card{justify-self:center!important}}
   </style>
@@ -34,6 +34,14 @@
     @media (max-width:900px) { body.collection-back-to-school::before { background-position:70% top; } }
     @media (max-width:620px) and (orientation:portrait) { body.collection-back-to-school::before { background-position:78% top; } }
     @media (max-width:900px) and (orientation:landscape) { body.collection-back-to-school::before { background-position:center top; } }
+  </style>
+  <style>
+    @media(max-width:620px){
+      .page-heading h1{font-size:clamp(40px,13vw,58px)}
+      .product-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+      .product-card{width:100%!important;min-width:0!important;justify-self:stretch!important}
+      .product-card img{padding:6px 6px 70px!important}
+    }
   </style>
 </head>
 <body class="collection-back-to-school">

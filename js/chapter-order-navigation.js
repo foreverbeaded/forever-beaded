@@ -21,6 +21,7 @@
     ["sandy-beaches.html", "Sandy Beaches"],
     ["faith-collection.html", "Faith Collection"],
     ["valentines-collection.html", "Valentine's Collection"],
+    ["mothers-day-collection.html", "Mother's Day Collection"],
     ["fathers-day-collection.html", "Father's Day Collection"],
     ["sweet-treats.html", "Sweet Treats"],
     ["back-to-school.html", "Back to School"],

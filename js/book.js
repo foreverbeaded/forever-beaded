@@ -1119,7 +1119,8 @@ function typeIntroBrand() {
     glyph.textContent = character === " " ? "\u00a0" : character;
     title.appendChild(glyph);
 
-    if (character !== " ") {
+    /* The capital F stays completely clean; its perched butterfly is separate. */
+    if (character !== " " && letter !== 0) {
       const spark = document.createElement("i");
       spark.className = "writing-spark";
       spark.style.setProperty("--spark-x", `${((letter + .7) / words.length) * 100}%`);

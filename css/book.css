@@ -253,10 +253,7 @@ body.storybook-home img {
   margin: 0;
   padding: 0 22px;
   color: transparent;
-  background: linear-gradient(105deg, #9c5e13 0%, #f7d982 24%, #fff4bd 48%, #d89b35 76%, #ffdf88 100%);
-  background-size: 240% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
+  background: none;
   font-family: "Segoe Script", "Lucida Handwriting", "URW Chancery L", cursive;
   font-size: clamp(3.15rem, 8.8vw, 7.4rem);
   font-weight: 500;

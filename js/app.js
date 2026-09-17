@@ -3,7 +3,7 @@
 if (document.body?.classList.contains("world-page") && !document.querySelector('link[href*="compact-product-cards.css"]')) {
   const compactCardsStylesheet = document.createElement("link");
   compactCardsStylesheet.rel = "stylesheet";
-  compactCardsStylesheet.href = "css/compact-product-cards.css?v=3";
+  compactCardsStylesheet.href = "css/compact-product-cards.css?v=4";
   document.head.append(compactCardsStylesheet);
 }
 
@@ -17,8 +17,8 @@ const products = [
   { id: 6, slug: "big-flower", name: "Big Flower", price: 25, category: "Flower", image: "etsy/images-branded/big-flower-approved-master.jpg", description: "A large handmade flower designed to make a statement." },
   { id: 7, slug: "deluxe-flower", name: "Intricated Flower", price: 25, category: "Flower", image: "etsy/images-branded/deluxe-flower-owner-approved-master.jpg", description: "An intricate handmade flower for detail lovers." },
   { id: 8, slug: "butterfly-with-flowers", name: "Butterfly and Flower", price: 30, category: "Butterfly & Flower", image: "etsy/images-branded/phoenix-butterfly-owner-approved-master.jpg", description: "A detailed combination of butterfly and flower designs." },
-  { id: 9, slug: "gecko", name: "Gecko Keychain", price: 20, category: "Animals", image: "etsy/images-branded/gecko-owner-approved-master.jpg", description: "A playful handmade gecko keychain." },
-  { id: 10, slug: "baby-gecko", name: "Baby Gecko", price: 20, category: "Animals", image: "etsy/images-branded/baby-gecko-approved-master.jpg", description: "A tiny handmade baby gecko keychain." },
+  { id: 9, slug: "gecko", name: "Gecko", price: 20, category: "Tiny Garden Friends", image: "images/gecko.jpeg", description: "A turquoise and purple handmade gecko keychain." },
+  { id: 10, slug: "baby-gecko", name: "Baby Gecko", price: 20, category: "Tiny Garden Friends", image: "images/baby-gecko.jpeg", description: "A small dark-blue handmade baby gecko keychain." },
   { id: 42, slug: "monkey", name: "Monkey", price: 25, category: "Animals", image: "etsy/images-branded/monkey-master.jpg", createUrl: "create.html?design=custom-idea&idea=Monkey#homeDesignBuilder", description: "A personalized handmade beaded monkey keychain." },
   { id: 45, slug: "panda", name: "Panda", price: 25, category: "Animals", image: "etsy/images-branded/panda-master.png", createUrl: "create.html?design=custom-idea&idea=Panda#homeDesignBuilder", description: "A handmade beaded panda keychain with a bright bamboo detail." },
   { id: 12, slug: "canada-flag", name: "Canada Flag", price: 20, category: "Flags", image: "etsy/images-branded/canada-flag-approved-master.jpg", description: "A handmade Canada flag design." },
@@ -32,6 +32,13 @@ const products = [
   { id: 53, slug: "pearl-glow-bracelet", name: "Pearl Glow Bracelet", price: 15, category: "Accessories", image: "images/accessories/pearl-glow-bracelet.jpg", description: "A personalized name bracelet with luminous pearl-style beads." },
   { id: 54, slug: "varsity-stripe-personalized-keychain", name: "Varsity Stripe Personalized Keychain", price: 25, category: "Father's Day", image: "images/varsity-stripe-personalized-keychain.jpg", description: "A personalized black, grey, blue and white pony-bead keychain." },
   { id: 55, slug: "melting-ice-cream", name: "Melting Ice Cream", price: 25, category: "Sweet Treats", image: "images/melting-ice-cream.jpg", description: "A personalized melting ice-cream pony-bead keychain." },
+  { id: 56, slug: "puppy", name: "Puppy", price: 25, category: "Animals", image: "images/puppy-no-name.jpg", description: "A handmade puppy keychain with optional name personalization." },
+  { id: 57, slug: "volleyball", name: "Volleyball", price: 20, category: "Sports", image: "images/volleyball-personalized-kevin.jpg", description: "A personalized handmade volleyball keychain." },
+  { id: 58, slug: "car", name: "Car", price: 25, category: "Father's Day", image: "images/car-personalized-ron.jpg", description: "A personalized handmade blue car keychain." },
+  { id: 59, slug: "rainbow-name-keychain", name: "Rainbow Name Keychain", price: 25, category: "Mother's Day", collections: ["Mother's Day"], image: "images/mothers-day-rainbow-name-keychain.jpg", description: "A long rainbow pony-bead keychain personalized with a custom name." },
+  { id: 60, slug: "butterfly-name-keychain", name: "Butterfly Name Keychain", price: 25, category: "Mother's Day", collections: ["Mother's Day", "Butterfly"], image: "images/mothers-day-butterfly-name-keychain.jpg", description: "A colourful pony-bead butterfly keychain personalized with a custom name." },
+  { id: 61, slug: "pastel-flower-bar-keychain", name: "Pastel Flower Bar Keychain", price: 20, category: "Mother's Day", collections: ["Mother's Day", "Flower"], image: "images/mothers-day-pastel-flower-bar-keychain.jpg", description: "A pink and green pastel pony-bead flower-bar keychain." },
+  { id: 62, slug: "blue-flower-keychain", name: "Blue Flower Keychain", price: 25, category: "Mother's Day", collections: ["Mother's Day", "Flower"], image: "images/mothers-day-blue-flower-keychain.jpg", description: "A large blue, turquoise and green pony-bead flower keychain." },
   { id: 14, slug: "turtle", name: "Turtle", price: 20, category: "Ocean Animals", image: "etsy/images-branded/turtle-approved-master.jpg", description: "A cheerful handmade turtle keychain." },
   { id: 15, slug: "octopus", name: "Octopus", price: 30, category: "Ocean Animals", image: "etsy/images-branded/octopus-etsy-branded.jpg", description: "A detailed handmade octopus keychain." },
   { id: 16, slug: "fish", productId: "fish", name: "Fish", price: 20, category: "Ocean Animals", image: "etsy/images-branded/fish-approved-master.jpg", description: "A bright handmade beaded fish design." },
@@ -296,10 +303,15 @@ function getProductCategories() {
 }
 
 function productMatchesShopFilters(product) {
+  if (activeShopCategory === "Mother's Day" && product.slug === "natalies-butterfly") return false;
+  const productCollections = new Set([product.category, ...(Array.isArray(product.collections) ? product.collections : [])]);
+  if (product.category === "Flower" || product.category === "Butterfly" || product.category === "Butterfly & Flower") {
+    productCollections.add("Mother's Day");
+  }
   const categoryMatch = activeShopCategory === "All" ||
     (activeShopCategory === "My Favourites" ? isFavouriteProduct(product) :
-    product.category === activeShopCategory);
-  const searchText = `${product.name} ${product.category} ${product.description}`.toLowerCase();
+    productCollections.has(activeShopCategory));
+  const searchText = `${product.name} ${[...productCollections].join(" ")} ${product.description}`.toLowerCase();
   const searchMatch = !activeShopSearch || searchText.includes(activeShopSearch.toLowerCase());
   return categoryMatch && searchMatch;
 }
@@ -517,9 +529,16 @@ function renderProducts() {
 
   renderShopFilters();
 
+  const visibleProductSlugs = new Set();
   const visibleProducts = products
     .map((product, index) => ({ product, index }))
     .filter(({ product }) => productMatchesShopFilters(product))
+    .filter(({ product }) => {
+      const uniqueKey = String(product.slug || product.id);
+      if (visibleProductSlugs.has(uniqueKey)) return false;
+      visibleProductSlugs.add(uniqueKey);
+      return true;
+    })
     .filter(({ product }) => {
       const missingFields = productValidationDetails(product);
       if (missingFields.length) {

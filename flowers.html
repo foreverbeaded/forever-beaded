@@ -375,11 +375,22 @@
       </a>
       <span class="chapter-navigation__ornament" aria-hidden="true">&#9825;</span>
     </section>
+  <script src="js/product-catalogue.js?v=mothers-day-shared-20260916"></script>
   <script>
     history.scrollRestoration = 'manual';
     window.addEventListener('load', () => window.scrollTo(0, 0), { once: true });
 
     (() => {
+      const sharedFlowerSlugs = new Set(['pastel-flower-bar-keychain', 'blue-flower-keychain']);
+      (window.FOREVER_BEADED_PRODUCTS || [])
+        .filter(product => sharedFlowerSlugs.has(product.slug))
+        .forEach(product => {
+          const card = document.createElement('article');
+          card.className = 'product-card';
+          card.dataset.favouriteKey = product.slug;
+          card.innerHTML = `<a class="product-card-link" href="create.html?design=${encodeURIComponent(product.slug)}"><img src="${product.imageUrl}" alt="${product.name}"><span class="product-name">${product.name}</span><span class="product-price">$${(product.basePriceCents / 100).toFixed(0)} CAD</span></a><button class="favourite-btn" type="button" aria-label="Save ${product.name} to favourites" aria-pressed="false"><span aria-hidden="true">♡</span></button>`;
+          document.querySelector('.flower-page .product-grid').append(card);
+        });
       const form = document.getElementById('flowerSearchForm');
       const input = document.getElementById('flowerSearch');
       const cards = Array.from(document.querySelectorAll('.product-grid .product-card'));
@@ -439,7 +450,7 @@
     })();
   </script>
   <script src="js/site-butterflies.js?v=homepage-book-only-20260731"></script>
-  <script src="js/chapter-order-navigation.js?v=accessories-integrated-20260913"></script>
+  <script src="js/chapter-order-navigation.js?v=mothers-day-shared-20260916"></script>
   <script src="js/master-header.js?v=accessories-nav-20260913"></script>
   <script src="js/collection-fall.js?v=1"></script>
 </body>

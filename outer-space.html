@@ -27,19 +27,21 @@
   <link rel="stylesheet" href="css/collection-layout.css?v=product-grid-20260916">
   <link rel="stylesheet" href="css/collection-fall.css?v=2">
   <style>
-    .world-space {
-      --world-bg: url('../images/outer-space-background.png') center/cover no-repeat fixed;
-      --world-overlay: linear-gradient(180deg, rgba(9,8,35,.12), rgba(9,8,35,.34));
+    body.world-space {
+      background:#08051f url('images/outer-space-background-approved.jpg') 50% 45%/cover fixed no-repeat!important;
+      isolation:auto!important;
     }
-    .world-space .world-browser { background: rgba(15,15,55,.30)!important; border-color: rgba(217,216,255,.34)!important; box-shadow: 0 20px 58px rgba(5,4,28,.32)!important; backdrop-filter: blur(5px)!important; }
+    body.world-space::before,
+    body.world-space::after,
+    body.world-space .world-hero::before { display:none!important; content:none!important; background:none!important; opacity:0!important; filter:none!important; }
+    .world-space .world-hero-copy { background:transparent!important; border:0!important; box-shadow:none!important; backdrop-filter:none!important; -webkit-backdrop-filter:none!important; }
+    .world-space .world-browser { background:transparent!important; border-color:transparent!important; box-shadow:none!important; backdrop-filter:none!important; -webkit-backdrop-filter:none!important; }
     .world-space .world-hero-copy, .world-space .shop-results-row { color: #fff; text-shadow: 0 2px 16px rgba(0,0,30,.72); }
     .world-space .product-grid { width:min(660px,100%); grid-template-columns:repeat(2,minmax(0,295px)); justify-content:start; gap:2.4rem; margin-right:auto; }
     .world-space .product-card { background:rgba(255,255,255,.86)!important; border-color:rgba(235,232,255,.72)!important; }
     @media(max-width:850px){.world-space .product-grid{width:100%;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.4rem}}
-    @media(max-width:560px){.world-space .product-grid{width:min(360px,100%);grid-template-columns:1fr;margin-inline:auto}}
-  </style>
-  <style>
-    body.world-space::before { background: linear-gradient(rgba(8,6,35,.10), rgba(16,8,50,.20)), url("images/collection-scenes/outer-space-scene.png") center top / cover no-repeat; }
+    @media(max-width:900px){body.world-space{background-attachment:scroll!important;background-position:50% 45%!important}}
+    @media(max-width:560px){.world-space .product-grid{width:100%;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-inline:auto}}
   </style>
 </head>
 <body class="world-page world-space" data-initial-category="Outer Space">
@@ -49,6 +51,6 @@
   <div class="fb-modal story-modal" id="fbModal" aria-hidden="true"><div class="fb-modal-card"><h2 id="fbModalTitle">Forever Beaded</h2><p id="fbModalMessage"></p><button id="fbModalOk" class="primary-btn" type="button">OK</button></div></div>
   <section class="chapter-navigation" aria-label="Next chapter"><a class="chapter-navigation__link" href="flags-of-the-world.html"><span>Next Chapter</span><strong>Flags of the World</strong></a><span class="chapter-navigation__ornament" aria-hidden="true">&#9825;</span></section>
   <button id="backToTop" class="back-to-top" type="button" aria-label="Back to top">Up</button>
-  <script src="js/product-catalogue.js?v=clean-worlds-1"></script><script src="js/app.js?v=homepage-book-only-20260731"></script><script src="js/world-pages.js?v=clean-worlds-1"></script><script src="js/site-butterflies.js?v=homepage-book-only-20260731"></script><script src="js/chapter-order-navigation.js?v=chapter-order-4"></script><script src="js/master-header.js?v=accessories-nav-20260913"></script><script src="js/collection-fall.js?v=2"></script>
+  <script src="js/product-catalogue.js?v=clean-worlds-1"></script><script src="js/app.js?v=homepage-book-only-20260731"></script><script src="js/world-pages.js?v=clean-worlds-1"></script><script src="js/site-butterflies.js?v=homepage-book-only-20260731"></script><script src="js/chapter-order-navigation.js?v=mothers-day-shared-20260916"></script><script src="js/master-header.js?v=accessories-nav-20260913"></script><script src="js/collection-fall.js?v=2"></script>
 </body>
 </html>

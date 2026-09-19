@@ -382,6 +382,7 @@ async function normalizeItem(db, rawItem) {
   const personalizationText = personalizationType === "none"
     ? ""
     : normalizeText(rawItem.personalizationText || rawItem.personalization || rawItem.name, personalizationType === "initials" ? 8 : 40, "Personalization", { required: true }).toUpperCase();
+  const requestedProductName = normalizeText(rawItem.requestedProductName, 80, "Product name");
 
   return {
     productId: String(product.id),
@@ -391,6 +392,7 @@ async function normalizeItem(db, rawItem) {
     personalizationType,
     personalization: personalizationText,
     personalizationText,
+    requestedProductName,
     customDescription,
     hardware: normalizeText(rawItem.hardware || rawItem.keychainType, 80, "Hardware"),
     quantity,
@@ -446,6 +448,7 @@ function serializeOrderItem(item) {
     quantity: item.quantity,
     personalizationType: item.personalizationType,
     personalizationText: item.personalizationText,
+    requestedProductName: item.requestedProductName,
     customDescription: item.customDescription,
     unitPriceCents: item.unitPriceCents,
     lineTotalCents: item.lineTotalCents
@@ -614,6 +617,7 @@ async function migrateSchema(db) {
     order_id INTEGER NOT NULL,
     product_id TEXT NOT NULL,
     product_name TEXT NOT NULL,
+    requested_product_name TEXT,
     design TEXT,
     colours TEXT,
     personalization_type TEXT NOT NULL DEFAULT 'none',
@@ -637,6 +641,9 @@ async function migrateSchema(db) {
   }
   if (itemColumns.length && !itemColumns.some((column) => column.name === "personalization_type")) {
     await dbRun(db, "ALTER TABLE order_items ADD COLUMN personalization_type TEXT NOT NULL DEFAULT 'none'");
+  }
+  if (itemColumns.length && !itemColumns.some((column) => column.name === "requested_product_name")) {
+    await dbRun(db, "ALTER TABLE order_items ADD COLUMN requested_product_name TEXT");
   }
 
   await dbRun(db, `CREATE TABLE IF NOT EXISTS order_events (
@@ -673,10 +680,10 @@ async function createOrder(db, order) {
 
     for (const item of order.items) {
       await dbRun(db, `INSERT INTO order_items (
-        order_id, product_id, product_name, design, colours, personalization_type, personalization, custom_description, hardware,
+        order_id, product_id, product_name, requested_product_name, design, colours, personalization_type, personalization, custom_description, hardware,
         quantity, unit_price_cents, line_total_cents
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
-        result.lastID, item.productId, item.productName, item.design, item.colours,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+        result.lastID, item.productId, item.productName, item.requestedProductName, item.design, item.colours,
         item.personalizationType, item.personalizationText, item.customDescription, item.hardware, item.quantity, item.unitPriceCents, item.lineTotalCents
       ]);
     }
@@ -704,7 +711,7 @@ async function getOrderWithItems(db, orderNumber) {
   if (!orderRow) throw new PublicError(404, "Order was not found.");
 
   const itemRows = await new Promise((resolve, reject) => {
-    db.all(`SELECT product_id, product_name, design, colours, personalization_type, personalization,
+    db.all(`SELECT product_id, product_name, requested_product_name, design, colours, personalization_type, personalization,
       custom_description, hardware, quantity, unit_price_cents, line_total_cents
       FROM order_items
       WHERE order_id = ?
@@ -738,6 +745,7 @@ async function getOrderWithItems(db, orderNumber) {
     items: itemRows.map((item) => ({
       productId: item.product_id,
       productName: item.product_name,
+      requestedProductName: item.requested_product_name || "",
       design: item.design,
       colours: item.colours,
       personalizationType: item.personalization_type,
@@ -765,10 +773,10 @@ async function appendItemToOrder(db, orderNumber, rawItem) {
     }
 
     await dbRun(db, `INSERT INTO order_items (
-      order_id, product_id, product_name, design, colours, personalization_type, personalization, custom_description, hardware,
+      order_id, product_id, product_name, requested_product_name, design, colours, personalization_type, personalization, custom_description, hardware,
       quantity, unit_price_cents, line_total_cents
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
-      orderRow.id, item.productId, item.productName, item.design, item.colours,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+      orderRow.id, item.productId, item.productName, item.requestedProductName, item.design, item.colours,
       item.personalizationType, item.personalizationText, item.customDescription, item.hardware, item.quantity, item.unitPriceCents, item.lineTotalCents
     ]);
 
@@ -869,6 +877,7 @@ async function writeOrdersWorkbook(db, workbookPath = process.env.EXCEL_WORKBOOK
 function buildOrderNotification(order, saved, etransferEmail) {
   const itemLines = order.items.map((item) => [
     `Product/design: ${item.productName}`,
+    `Requested product name: ${item.requestedProductName || ""}`,
     `Design: ${item.design || ""}`,
     `Colours: ${item.colours || ""}`,
     `Hardware: ${item.hardware || ""}`,

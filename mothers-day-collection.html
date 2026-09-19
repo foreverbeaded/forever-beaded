@@ -17,8 +17,12 @@
   <link rel="stylesheet" href="css/master-header.css?v=scenic-bg-20260915">
   <link rel="stylesheet" href="css/collection-layout.css?v=product-grid-20260916">
   <style>
+    html { min-height:100%; background:#f8e7df; }
     body.world-mothers-day {
       margin: 0;
+      position: relative;
+      min-height: 100vh;
+      overflow-x: hidden;
       background-color: #f8e7df !important;
       background-image: url("images/mothers-day-background-approved-exact.jpg?v=20260917") !important;
       background-size: cover !important;
@@ -57,7 +61,7 @@
     }
     @media (max-width: 560px) {
       body.world-mothers-day {
-        background-size: auto 100vh !important;
+        background-size: cover !important;
         background-position: 16% top !important;
         background-attachment: fixed !important;
       }

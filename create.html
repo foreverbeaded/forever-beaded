@@ -732,6 +732,60 @@
       .world-create .home-preview-art-wrap { grid-template-columns: 1fr; }
       .world-create .hardware-preview-card { justify-self: center; }
     }
+    .world-create .colour-customizer {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-areas: "main accent" "parts parts";
+      gap: 16px;
+      margin: 8px 0;
+      padding: clamp(16px, 2.4vw, 24px);
+      border: 1px solid rgba(218,174,92,.42);
+      border-radius: 20px;
+      background: rgba(31,16,37,.68);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+    .world-create .colour-customizer legend {
+      padding: 0 10px;
+      color: #fff5df;
+      font: 700 1.2rem/1.2 Georgia, serif;
+    }
+    .world-create .colour-control-group { min-width: 0; }
+    .world-create .colour-control-group:nth-child(2) { grid-area:main; }
+    .world-create .colour-control-group:nth-child(3) { grid-area:parts; }
+    .world-create .colour-control-group:nth-child(4) { grid-area:accent; }
+    .world-create .colour-control-heading { display:block; color:#efca7a; font:800 .78rem/1.2 Inter,sans-serif; letter-spacing:.12em; text-transform:uppercase; }
+    .world-create .colour-control-group p { margin:6px 0 12px; color:#f8ead0; font-size:.82rem; line-height:1.45; }
+    .world-create .colour-swatch-list { display:flex; flex-wrap:wrap; gap:8px; }
+    .world-create .colour-swatch-option { position:relative; display:inline-grid; place-items:center; width:38px; height:38px; margin:0; }
+    .world-create .colour-swatch-option input { position:absolute; width:1px; height:1px; opacity:0; }
+    .world-create .colour-swatch-dot { width:31px; height:31px; border:2px solid rgba(255,255,255,.82); border-radius:50%; background:var(--swatch); box-shadow:0 3px 10px rgba(0,0,0,.28); cursor:pointer; transition:transform .15s ease,box-shadow .15s ease; }
+    .world-create .colour-swatch-option input:checked + .colour-swatch-dot { transform:scale(1.12); box-shadow:0 0 0 3px #d9ac50,0 4px 12px rgba(0,0,0,.35); }
+    .world-create .colour-swatch-option input:focus-visible + .colour-swatch-dot { outline:3px solid #fff5df; outline-offset:3px; }
+    .world-create .part-colour-controls { display:grid; gap:9px; }
+    .world-create .part-colour-row { display:grid; grid-template-columns:minmax(82px,1fr) minmax(108px,1.25fr); align-items:center; gap:8px; color:#fff5df; font:700 .78rem/1.2 Inter,sans-serif; }
+    .world-create .part-colour-row select { width:100%; min-width:0; min-height:38px; border:1px solid rgba(218,174,92,.38); border-radius:10px; background-color:#fffaf1; color:#3d2433; padding:0 8px 0 38px; background-image:linear-gradient(var(--selected-colour),var(--selected-colour)); background-repeat:no-repeat; background-position:8px center; background-size:22px 22px; box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--selected-colour) 42%,transparent); }
+    .world-create .selected-colour-output { display:inline-flex; align-items:center; gap:8px; min-height:34px; margin-top:10px; padding:6px 11px; border:1px solid rgba(255,255,255,.2); border-radius:999px; background:rgba(255,255,255,.09); color:#fff7e8; font:700 .78rem/1 Inter,sans-serif; }
+    .world-create .selected-colour-output::before { content:""; width:20px; height:20px; border:2px solid rgba(255,255,255,.82); border-radius:50%; background:var(--selected-colour); box-shadow:0 2px 7px rgba(0,0,0,.3); }
+    .world-create .colour-summary-field { position:absolute!important; width:1px!important; height:1px!important; margin:-1px!important; overflow:hidden!important; clip:rect(0 0 0 0)!important; white-space:nowrap!important; }
+    .world-create .finished-custom-preview { position:relative!important; display:grid!important; place-items:center!important; width:min(100%,520px)!important; height:auto!important; min-height:clamp(300px,43vw,520px)!important; overflow:hidden!important; border-radius:18px!important; background:linear-gradient(145deg,#fffaf3,#f5e7ef)!important; isolation:isolate; }
+    .world-create .finished-custom-preview svg { position:absolute; z-index:1; inset:16px 16px 44px; width:calc(100% - 32px); height:calc(100% - 60px); overflow:visible; filter:drop-shadow(0 15px 18px rgba(42,20,39,.22)); }
+    .world-create .finished-custom-preview .preview-cord { fill:none; stroke:#f7f2eb; stroke-width:10; stroke-linecap:round; stroke-linejoin:round; }
+    .world-create .finished-custom-preview .preview-pony-bead { filter:drop-shadow(0 3px 2px rgba(35,18,31,.3)); }
+    .world-create .finished-custom-preview .preview-bead-shape { stroke:rgba(55,27,47,.3); stroke-width:2.2; }
+    .world-create .finished-custom-preview .preview-bead-shine { fill:rgba(255,255,255,.52); filter:blur(.35px); pointer-events:none; }
+    .world-create .finished-custom-preview .preview-bead-rim { fill:rgba(255,255,255,.2); stroke:rgba(48,25,41,.28); stroke-width:1.4; }
+    .world-create .finished-custom-preview .preview-bead-hole { fill:rgba(28,17,26,.56); stroke:rgba(255,255,255,.38); stroke-width:1.1; }
+    .world-create .finished-custom-preview .preview-highlight { fill:none; stroke:rgba(255,255,255,.48); stroke-width:4; stroke-linecap:round; pointer-events:none; }
+    .world-create .showcase-custom-preview { width:100%!important; min-height:clamp(390px,52vw,610px)!important; margin:0!important; }
+    .world-create .custom-idea-notice { display:grid!important; place-items:center!important; padding:clamp(22px,4vw,46px)!important; }
+    .world-create .custom-idea-notice-inner { position:relative; z-index:2; max-width:440px; padding:clamp(24px,4vw,42px); border:1px solid rgba(115,72,103,.2); border-radius:24px; background:rgba(255,255,255,.8); box-shadow:0 18px 45px rgba(56,26,48,.14); color:#43283d; text-align:center; }
+    .world-create .custom-idea-notice-icon { display:block; margin-bottom:10px; color:#bd8b2f; font-size:2rem; }
+    .world-create .custom-idea-notice strong { display:block; font:700 clamp(1.45rem,3vw,2.3rem)/1.1 Georgia,serif; text-transform:capitalize; }
+    .world-create .custom-idea-notice p { margin:14px 0; line-height:1.55; }
+    .world-create .custom-idea-notice small { font-weight:800; }
+    .world-create .custom-preview-caption { position:absolute; z-index:5; inset:auto 14px 12px; margin:0; padding:7px 12px; border-radius:999px; background:rgba(35,18,38,.84); color:#fff7e8; font:700 12px/1.2 Inter,sans-serif; text-align:center; }
+    @media (max-width: 620px) { .world-create .colour-customizer { grid-template-columns:1fr; grid-template-areas:"main" "parts" "accent"; } .world-create .part-colour-row { grid-template-columns:minmax(94px,.9fr) minmax(132px,1.35fr); } .world-create .finished-custom-preview { min-height:320px!important; } }
   </style>
   <link rel="stylesheet" href="css/site-butterflies.css?v=gentle-1">
   <link rel="stylesheet" href="css/chapter-navigation.css?v=chapter-1">
@@ -770,7 +824,8 @@
       <div class="chapter-two-layout">
         <aside class="editorial-showcase" aria-label="Forever Beaded butterfly and flower inspiration">
           <figure class="editorial-photo editorial-photo-main">
-            <img id="homeShowcaseProductImage" src="etsy/images-branded/butterfly-owner-approved-master.jpg" alt="Butterfly handmade beaded keychain" loading="eager" decoding="async">
+            <img id="homeShowcaseProductImage" src="etsy/images-branded/butterfly-owner-approved-master.jpg" alt="Butterfly handmade beaded keychain" loading="eager" decoding="async" hidden>
+            <div id="homeShowcaseDynamicPreview" class="home-preview-beads finished-custom-preview showcase-custom-preview" aria-label="Large live picture of the customized treasure"></div>
             <p id="homeShowcaseImageFallback" class="showcase-image-fallback" role="status" hidden>Product image coming soon.</p>
             <article id="homeCustomConceptCard" class="custom-concept-card" aria-label="Your custom treasure concept preview" hidden>
               <p class="custom-concept-kicker">Concept preview</p>
@@ -833,6 +888,27 @@
               <input id="homePersonalizationText" name="personalizationText" type="text" placeholder="e.g. Natalie" autocomplete="off" maxlength="40">
             </label>
             <label>Design <select id="homeTreasureDesign" name="design"><option value="">Loading designs...</option></select></label>
+            <fieldset id="homeColourCustomizer" class="colour-customizer" aria-labelledby="homeColourCustomizerTitle">
+              <legend id="homeColourCustomizerTitle">Custom colour preview</legend>
+              <div class="colour-control-group">
+                <span class="colour-control-heading">Main Colour</span>
+                <p>Choose the main or base colour of the design.</p>
+                <div id="homeMainColourSwatches" class="colour-swatch-list" role="radiogroup" aria-label="Main colour"></div>
+                <output id="homeMainColourSelected" class="selected-colour-output" aria-live="polite"></output>
+              </div>
+              <div class="colour-control-group">
+                <span class="colour-control-heading">Other Colours</span>
+                <p>Choose colours for the parts available on this design.</p>
+                <div id="homePartColourControls" class="part-colour-controls"></div>
+              </div>
+              <div class="colour-control-group">
+                <span class="colour-control-heading">Accent Colour</span>
+                <p>Choose a colour for smaller details and accents.</p>
+                <div id="homeAccentColourSwatches" class="colour-swatch-list" role="radiogroup" aria-label="Accent colour"></div>
+                <output id="homeAccentColourSelected" class="selected-colour-output" aria-live="polite"></output>
+              </div>
+            </fieldset>
+            <input id="homeColourPlacement" name="colourPlacement" type="hidden" value="">
             <label id="homeCustomDescriptionWrap" class="custom-description-field" for="homeCustomDescription" hidden aria-hidden="true">Custom Idea / Description
               <textarea id="homeCustomDescription" name="customDescription" maxlength="500" placeholder="What would you like made? For example: Teddy bear in brown, black and tan." aria-describedby="homeCustomDescriptionHelp homeCustomDescriptionCount"></textarea>
               <span id="homeCustomDescriptionHelp" class="field-help">Required when Custom Idea is selected.</span>
@@ -841,20 +917,20 @@
             <label id="homeCustomReferenceWrap" class="custom-description-field" for="homeCustomReferenceImage" hidden aria-hidden="true">Upload an inspiration image <span class="field-help">(optional)</span>
               <input id="homeCustomReferenceImage" name="customReferenceImage" type="file" accept="image/*">
             </label>
-            <label>Colours <input id="homeTreasureColours" name="colours" type="text" value="Purple, Cream, Gold" autocomplete="off"></label>
+            <label class="colour-summary-field">Colour summary <input id="homeTreasureColours" name="colours" type="text" value="Purple, Cream, Gold" autocomplete="off" readonly></label>
             <label>Hardware <select id="homeTreasureHardware" name="hardware"><option value="Gold">Gold</option><option value="Silver">Silver</option></select></label>
             <label>Quantity <input id="homeTreasureQuantity" name="quantity" type="number" min="1" max="20" value="1" inputmode="numeric"></label>
             <label class="order-honeypot" aria-hidden="true" tabindex="-1">Website <input id="homeOrderWebsite" name="website" type="text" autocomplete="off" tabindex="-1"></label>
           </div>
           <div class="treasure-preview" aria-live="polite">
-            <div><span class="preview-label">Live bead preview</span><p id="homeTreasurePreviewSelected" class="preview-selected-design">Selected Design: Loading…</p><h4 id="homeTreasurePreviewTitle">Loading selected design…</h4><p id="homeTreasurePreviewMeta">Gold hardware, quantity 1, no personalization.</p><p id="homeTreasurePreviewDescription" class="preview-description"></p></div>
+            <div><span class="preview-label">Live finished-treasure preview</span><p id="homeTreasurePreviewSelected" class="preview-selected-design">Selected Design: Loading…</p><h4 id="homeTreasurePreviewTitle">Loading selected design…</h4><p id="homeTreasurePreviewMeta">Gold hardware, quantity 1, no personalization.</p><p id="homeTreasurePreviewDescription" class="preview-description">Approximate colour visualization; the final handmade treasure may vary slightly.</p></div>
             <div class="home-preview-art-wrap">
               <aside class="hardware-preview-card" aria-label="Hardware preview">
                 <span class="preview-label">Hardware preview</span>
                 <div id="homeHardwarePreviewSample" class="hardware-preview-sample has-gold-hardware" aria-hidden="true"></div>
                 <p id="homeHardwarePreviewText">Gold ring and clasp</p>
               </aside>
-              <div id="homeTreasurePreview" class="home-preview-beads" aria-label="Live bead colour preview"></div>
+              <div id="homeTreasurePreview" class="home-preview-beads finished-custom-preview" aria-label="Live picture of the customized treasure"></div>
               <p id="homeTreasurePreviewPersonalization" class="preview-personalization" hidden></p>
             </div>
           </div>
@@ -873,7 +949,7 @@
       <span class="chapter-navigation__ornament" aria-hidden="true">&#9825;</span>
     </section>
   <script src="js/product-catalogue.js?v=treasure-catalogue-20260717"></script>
-  <script src="js/garden.js?v=selected-design-flow-1"></script>
+  <script src="js/garden.js?v=colour-customizer-preview-7"></script>
   <script src="js/world-pages.js?v=clean-worlds-1"></script>
   <script src="js/site-butterflies.js?v=homepage-book-only-20260731"></script>
   <script src="js/chapter-order-navigation.js?v=mothers-day-shared-20260916"></script>

@@ -507,12 +507,202 @@
     return !message;
   };
 
+  const customizerColourOptions = [
+    "White", "Cream", "Yellow", "Gold", "Orange", "Red", "Pink", "Coral",
+    "Purple", "Lavender", "Blue", "Navy", "Turquoise", "Teal", "Green",
+    "Lime", "Brown", "Grey", "Black", "Silver"
+  ];
+
+  const colourPartsForProduct = (product) => {
+    const value = `${product?.slug || ""} ${product?.name || ""} ${product?.category || ""}`.toLowerCase();
+    if (/unicorn/.test(value)) return ["Ears", "Eyes", "Mane", "Tail", "Horn", "Body details"];
+    if (/butterfl|dragonfl|bee/.test(value)) return ["Wings", "Wing details", "Body", "Antennae"];
+    if (/flower|rose|daisy|sunflower|bouquet|tulip/.test(value)) return ["Petals", "Centre", "Stem", "Leaves"];
+    if (/bird|owl|penguin|chick/.test(value)) return ["Wings", "Beak", "Eyes", "Tail", "Body details"];
+    if (/fish|whale|dolphin|shark|lobster|octopus|turtle|ocean/.test(value)) return ["Fins", "Eyes", "Tail", "Body details"];
+    if (/dog|puppy|cat|panda|monkey|giraffe|lion|bear|gecko|animal/.test(value)) return ["Eyes", "Ears", "Mouth", "Tail", "Body details"];
+    if (/car|truck|vehicle/.test(value)) return ["Wheels", "Windows", "Body details"];
+    if (/rocket|space/.test(value)) return ["Window", "Fins", "Flame", "Body details"];
+    if (/ice.?cream|cupcake|cake|treat|latte/.test(value)) return ["Top", "Drizzle", "Base", "Small details"];
+    if (/heart/.test(value)) return ["Border", "Centre", "Small details"];
+    return ["Body details", "Small details"];
+  };
+
+  const colourOptionMarkup = (selected) => customizerColourOptions
+    .map(colour => `<option value="${colour}"${colour === selected ? " selected" : ""}>${colour}</option>`)
+    .join("");
+
+  const swatchMarkup = (name, selected) => customizerColourOptions.map(colour => {
+    const value = normalizeColour(colour);
+    return `<label class="colour-swatch-option" title="${colour}"><input type="radio" name="${name}" value="${colour}"${colour === selected ? " checked" : ""}><span class="colour-swatch-dot" style="--swatch:${value}"></span><span class="sr-only">${colour}</span></label>`;
+  }).join("");
+
+  const syncDesignColourControls = (product) => {
+    const customizer = document.getElementById("homeColourCustomizer");
+    const main = document.getElementById("homeMainColourSwatches");
+    const accent = document.getElementById("homeAccentColourSwatches");
+    const parts = document.getElementById("homePartColourControls");
+    if (!customizer || !main || !accent || !parts) return;
+
+    const slug = product?.slug || "custom-idea";
+    if (customizer.dataset.design !== slug) {
+      const defaults = (product?.defaultColours || ["Purple", "Cream", "Gold"]).map(titleCase);
+      const mainDefault = customizerColourOptions.includes(defaults[0]) ? defaults[0] : "Purple";
+      const accentDefault = customizerColourOptions.includes(defaults[2]) ? defaults[2] : "Gold";
+      main.innerHTML = swatchMarkup("mainColour", mainDefault);
+      accent.innerHTML = swatchMarkup("accentColour", accentDefault);
+      parts.innerHTML = colourPartsForProduct(product).map((part, index) => {
+        const selected = customizerColourOptions.includes(defaults[(index + 1) % defaults.length])
+          ? defaults[(index + 1) % defaults.length]
+          : "Cream";
+        return `<label class="part-colour-row"><span>${part}</span><select name="partColour" data-part="${part}">${colourOptionMarkup(selected)}</select></label>`;
+      }).join("");
+      customizer.dataset.design = slug;
+    }
+
+    const mainColour = main.querySelector('input:checked')?.value || "Purple";
+    const accentColour = accent.querySelector('input:checked')?.value || "Gold";
+    const partSelections = [...parts.querySelectorAll("select[data-part]")].map(select => ({
+      part: select.dataset.part,
+      colour: select.value
+    }));
+    parts.querySelectorAll("select[data-part]").forEach(select => {
+      select.style.setProperty("--selected-colour", normalizeColour(select.value));
+      select.setAttribute("aria-label", `${select.dataset.part}: ${select.value}`);
+    });
+    const mainSelected = document.getElementById("homeMainColourSelected");
+    if (mainSelected) {
+      mainSelected.value = `Selected: ${mainColour}`;
+      mainSelected.textContent = `Selected: ${mainColour}`;
+      mainSelected.style.setProperty("--selected-colour", normalizeColour(mainColour));
+    }
+    const accentSelected = document.getElementById("homeAccentColourSelected");
+    if (accentSelected) {
+      accentSelected.value = `Selected: ${accentColour}`;
+      accentSelected.textContent = `Selected: ${accentColour}`;
+      accentSelected.style.setProperty("--selected-colour", normalizeColour(accentColour));
+    }
+    const summary = [mainColour, ...partSelections.map(selection => selection.colour), accentColour]
+      .filter((colour, index, list) => list.indexOf(colour) === index);
+    const colourInput = document.getElementById("homeTreasureColours");
+    if (colourInput) colourInput.value = summary.join(", ");
+    const placementInput = document.getElementById("homeColourPlacement");
+    if (placementInput) {
+      placementInput.value = [
+        `Main: ${mainColour}`,
+        ...partSelections.map(selection => `${selection.part}: ${selection.colour}`),
+        `Accent: ${accentColour}`
+      ].join("; ");
+    }
+    return { mainColour, accentColour, partSelections };
+  };
+
+  const renderFinishedTreasurePicture = (preview, product, selections) => {
+    preview.className = "home-preview-beads finished-custom-preview";
+    preview.removeAttribute("data-placeholder");
+    const mainHex = normalizeColour(selections?.mainColour || "Purple");
+    const accentHex = normalizeColour(selections?.accentColour || "Gold");
+    const chosenPart = (name, fallback = selections?.mainColour || "Purple") => {
+      const match = selections?.partSelections?.find(selection => selection.part.toLowerCase() === name.toLowerCase());
+      return normalizeColour(match?.colour || fallback);
+    };
+    const value = `${product?.slug || ""} ${product?.name || ""}`.toLowerCase();
+    const bead = (cx, cy, rx, ry, fill, extra = "") => `<g class="preview-pony-bead" ${extra}><ellipse class="preview-bead-shape" cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fill}"/><ellipse class="preview-bead-shine" cx="${cx-rx*.24}" cy="${cy-ry*.3}" rx="${rx*.35}" ry="${ry*.24}"/><ellipse class="preview-bead-rim" cx="${cx}" cy="${cy}" rx="${Math.max(4.2,rx*.25)}" ry="${Math.max(3.6,ry*.23)}"/><ellipse class="preview-bead-hole" cx="${cx}" cy="${cy}" rx="${Math.max(2.7,rx*.14)}" ry="${Math.max(2.3,ry*.13)}"/></g>`;
+    const beadSet = (points, fill, part, size = [18, 15]) => `<g data-preview-part="${part}">${points.map(([x,y,rx=size[0],ry=size[1]]) => bead(x,y,rx,ry,fill)).join("")}</g>`;
+    let artwork = "";
+
+    if (/butterfl/.test(value)) {
+      const wings = chosenPart("Wings");
+      const details = chosenPart("Wing details", selections?.accentColour);
+      const body = chosenPart("Body");
+      const antennae = chosenPart("Antennae", "Black");
+      const mainBeads = [[244,142],[210,128],[174,132],[139,151],[110,179],[91,213],[101,249],[132,269],[176,272],[222,252],[348,142],[382,128],[418,132],[453,151],[482,179],[501,213],[491,249],[460,269],[416,272],[370,252],[244,285],[218,310],[207,343],[226,373],[258,385],[348,285],[374,310],[385,343],[366,373],[334,385]];
+      const wingBeads = [[220,164],[184,158],[150,172],[122,198],[126,231],[160,247],[197,235],[229,211],[372,164],[408,158],[442,172],[470,198],[466,231],[432,247],[395,235],[363,211],[257,303],[241,331],[250,359],[342,303],[351,331],[342,359]];
+      const detailBeads = [[184,194],[148,210],[213,319],[408,194],[444,210],[379,319]];
+      const bodyBeads = [[296,154,22,19],[296,195,23,20],[296,238,23,20],[296,281,22,19],[296,321,20,18],[296,358,18,16]];
+      const antennaBeads = [[274,116,12,10],[252,98,11,9],[230,90,10,8],[318,116,12,10],[340,98,11,9],[362,90,10,8]];
+      const accentBeads = [[296,112,14,12],[92,232,11,9],[500,232,11,9],[238,396,11,9],[354,396,11,9]];
+      artwork = `
+        <path class="preview-cord" d="M252 78 C252 48 275 32 299 32 C324 32 345 51 342 76"/>
+        <circle cx="296" cy="52" r="28" fill="none" stroke="#c9a653" stroke-width="12"/>
+        <path class="preview-cord" d="M296 82 L296 392 M87 224 Q176 277 269 224 M323 224 Q416 277 505 224"/>
+        ${beadSet(mainBeads,mainHex,"Main Colour")}
+        ${beadSet(wingBeads,wings,"Wings")}
+        ${beadSet(detailBeads,details,"Wing details",[15,13])}
+        ${beadSet(bodyBeads,body,"Body")}
+        ${beadSet(antennaBeads,antennae,"Antennae")}
+        ${beadSet(accentBeads,accentHex,"Accent Colour",[12,10])}`;
+    } else if (/unicorn/.test(value)) {
+      const ears = chosenPart("Ears");
+      const eyes = chosenPart("Eyes", "Black");
+      const mane = chosenPart("Mane");
+      const tail = chosenPart("Tail");
+      const horn = chosenPart("Horn", selections?.accentColour);
+      const details = chosenPart("Body details", selections?.accentColour);
+      artwork = `
+        <path class="preview-cord" d="M290 74 C290 42 314 28 338 32"/><circle cx="324" cy="48" r="28" fill="none" stroke="#c9a653" stroke-width="12"/>
+        <path class="preview-bead-shape" data-preview-part="Main Colour" fill="${mainHex}" d="M184 200 Q179 124 250 118 Q333 105 384 157 Q431 204 402 277 Q382 328 326 334 L322 399 L254 399 L246 337 Q177 315 166 257 Z"/>
+        <path class="preview-bead-shape" data-preview-part="Ears" fill="${ears}" d="M211 144 L176 76 Q169 58 188 64 L250 122 Z"/><path class="preview-bead-shape" data-preview-part="Ears" fill="${ears}" d="M331 126 L373 72 Q385 58 392 79 L374 161 Z"/>
+        <path class="preview-bead-shape" data-preview-part="Horn" fill="${horn}" d="M287 120 L310 34 L332 126 Z"/>
+        <path class="preview-bead-shape" data-preview-part="Mane" fill="${mane}" d="M371 139 Q455 160 414 213 Q468 238 416 272 Q448 318 383 323 Q414 365 355 371 L324 326 Q370 272 354 211 Z"/>
+        <path class="preview-bead-shape" data-preview-part="Tail" fill="${tail}" d="M176 273 Q91 246 76 307 Q64 352 124 363 Q86 404 150 419 Q204 425 226 350 Z"/>
+        <g data-preview-part="Eyes" fill="${eyes}">${bead(240,210,12,15,eyes)}${bead(337,203,12,15,eyes)}</g>
+        <g data-preview-part="Body details" fill="${details}">${bead(288,277,18,14,details)}${bead(261,365,15,13,details)}${bead(321,365,15,13,details)}</g>
+        <path class="preview-highlight" d="M206 181 Q279 133 348 171"/>`;
+    } else if (/flower|rose|daisy|sunflower|bouquet|tulip/.test(value)) {
+      const petals = chosenPart("Petals");
+      const centre = chosenPart("Centre", selections?.accentColour);
+      const stem = chosenPart("Stem", "Green");
+      const leaves = chosenPart("Leaves", "Green");
+      artwork = `
+        <path class="preview-cord" d="M296 86 C296 52 319 36 344 36"/><circle cx="327" cy="54" r="29" fill="none" stroke="#c9a653" stroke-width="12"/>
+        <g data-preview-part="Stem" fill="none" stroke="${stem}" stroke-width="34" stroke-linecap="round"><path d="M296 274 L296 426"/></g>
+        <g data-preview-part="Leaves" fill="${leaves}"><ellipse class="preview-bead-shape" cx="244" cy="348" rx="57" ry="31" transform="rotate(26 244 348)"/><ellipse class="preview-bead-shape" cx="348" cy="373" rx="57" ry="31" transform="rotate(-26 348 373)"/></g>
+        <g data-preview-part="Main Colour" fill="${mainHex}"><circle class="preview-bead-shape" cx="296" cy="206" r="119"/></g>
+        <g data-preview-part="Petals" fill="${petals}">${bead(296,112,45,63,petals)}${bead(378,158,45,63,petals,'transform="rotate(52 378 158)"')}${bead(375,252,45,63,petals,'transform="rotate(126 375 252)"')}${bead(217,252,45,63,petals,'transform="rotate(-126 217 252)"')}${bead(214,158,45,63,petals,'transform="rotate(-52 214 158)"')}</g>
+        <g data-preview-part="Centre" fill="${centre}">${bead(296,206,57,52,centre)}</g>
+        <g data-preview-part="Accent Colour" fill="${accentHex}">${bead(276,196,10,9,accentHex)}${bead(316,196,10,9,accentHex)}${bead(296,224,10,9,accentHex)}</g>`;
+    } else {
+      const parts = selections?.partSelections || [];
+      artwork = `<path class="preview-cord" d="M296 82 C296 48 320 34 346 34"/><circle cx="328" cy="52" r="28" fill="none" stroke="#c9a653" stroke-width="12"/><rect class="preview-bead-shape" data-preview-part="Main Colour" x="166" y="116" width="260" height="290" rx="112" fill="${mainHex}"/>`;
+      parts.forEach((selection, index) => {
+        const columns = [224, 296, 368];
+        const rows = [178, 244, 310, 366];
+        artwork += bead(columns[index % 3], rows[Math.floor(index / 3) % 4], 25, 22, normalizeColour(selection.colour), `data-preview-part="${selection.part}"`);
+      });
+      artwork += `<path class="preview-highlight" d="M206 165 Q296 119 386 165"/>${bead(296,376,22,19,accentHex,'data-preview-part="Accent Colour"')}`;
+    }
+
+    const personalization = document.getElementById("homePersonalizationText")?.value.trim() || "";
+    const label = personalization ? `<text x="296" y="455" text-anchor="middle" fill="#3d2433" font-family="Inter,Arial,sans-serif" font-size="22" font-weight="800">${personalization.slice(0,18).replace(/[<>&]/g, "")}</text>` : "";
+    const accessibleSelections = [
+      `Main ${selections?.mainColour || "Purple"}`,
+      ...(selections?.partSelections || []).map(({ part, colour }) => `${part} ${colour}`),
+      `Accent ${selections?.accentColour || "Gold"}`,
+    ].join("; ");
+
+    preview.innerHTML = `<svg viewBox="0 0 592 480" role="img" aria-label="Dynamically recoloured ${product?.name || "treasure"} preview. ${accessibleSelections}" data-design="${product?.slug || "custom"}">${artwork}${label}</svg><p class="custom-preview-caption">Approximate finished ${product?.name || "treasure"} · ${selections?.mainColour || "Purple"} main · ${selections?.accentColour || "Gold"} accent</p>`;
+  };
+
+  const renderCustomIdeaNotice = (preview, selections) => {
+    if (!preview) return;
+    const requestedName = document.getElementById("homeProductName")?.value.trim() || "your custom idea";
+    const colours = [selections?.mainColour, ...(selections?.partSelections || []).map(item => item.colour), selections?.accentColour]
+      .filter(Boolean)
+      .filter((colour, index, list) => list.indexOf(colour) === index)
+      .join(", ");
+    preview.className = "home-preview-beads finished-custom-preview custom-idea-notice";
+    preview.removeAttribute("data-placeholder");
+    preview.innerHTML = `<div class="custom-idea-notice-inner" role="status"><span class="custom-idea-notice-icon" aria-hidden="true">♡</span><strong>Your Custom Design ♡</strong><p>Your idea is one of a kind. After you submit your request, Gladlyn will review your design, colours and details before creating your handmade treasure.</p><small>${requestedName.replace(/[<>&]/g, "")} · Requested colours: ${colours || "Not selected"}</small></div>`;
+  };
+
   const renderHomeTreasurePreview = () => {
     const preview = document.getElementById("homeTreasurePreview");
     if (!preview) return;
 
     const product = getSelectedProduct();
     const design = product?.name || "Butterfly";
+    const colourSelections = syncDesignColourControls(product);
     const colourInput = document.getElementById("homeTreasureColours")?.value || "Purple, Cream, Gold";
     const hardware = document.getElementById("homeTreasureHardware")?.value || "Gold";
     const quantity = document.getElementById("homeTreasureQuantity")?.value || "1";
@@ -548,7 +738,17 @@
     const customConceptVisual = document.getElementById("homeCustomConceptVisual");
     const customSelected = isCustomProduct(product);
     updateProductImages(product);
-    renderBeadPattern(preview, product, colours);
+    const showcasePreview = document.getElementById("homeShowcaseDynamicPreview");
+    const showcaseImage = document.getElementById("homeShowcaseProductImage");
+    if (customSelected) {
+      renderCustomIdeaNotice(preview, colourSelections);
+      renderCustomIdeaNotice(showcasePreview, colourSelections);
+    } else {
+      renderFinishedTreasurePicture(preview, product, colourSelections);
+      renderFinishedTreasurePicture(showcasePreview, product, colourSelections);
+    }
+    if (showcasePreview) showcasePreview.hidden = false;
+    if (showcaseImage) showcaseImage.hidden = true;
     syncHardwarePreviewSample();
 
     if (editorialShowcase) editorialShowcase.classList.toggle("is-custom-idea", customSelected);
@@ -780,7 +980,7 @@
       customIdeaPreviewText.textContent = showCustomIdeaText ? `Custom Idea: ${customDescription}` : "";
     }
     if (productPersonalizationPreview) {
-      productPersonalizationPreview.textContent = `Product Name: ${requestedProductName || "None"} · Personalization / Name: ${personalization.text || "None"}`;
+      productPersonalizationPreview.textContent = `Product Name: ${isCustomProduct(product) ? (requestedProductName || "None") : design} · Personalization / Name: ${personalization.text || "None"}`;
     }
 
     if (previewTitle) {
@@ -838,7 +1038,7 @@
       } else {
         previewDescription.textContent = [
           `Selected design: ${design}`,
-          `Product Name: ${requestedProductName || "None"}`,
+          `Product Name: ${design}`,
           `Selected colours: ${readableColours}`,
           `Hardware: ${hardware}`,
           `Quantity: ${String(quantity || 1)}`,
@@ -2028,6 +2228,7 @@
     const product = getSelectedProduct();
     const design = product?.name || "Custom idea";
     const colours = document.getElementById("homeTreasureColours")?.value.trim() || "Custom colours";
+    const colourPlacement = document.getElementById("homeColourPlacement")?.value.trim() || "";
     const hardware = document.getElementById("homeTreasureHardware")?.value || "Gold";
     const quantity = Number(document.getElementById("homeTreasureQuantity")?.value || 1);
     const personalization = getPersonalizationState();
@@ -2040,6 +2241,7 @@
       productId: product?.slug || "custom-idea",
       design,
       colours,
+      colourPlacement,
       hardware,
       personalization: personalization.text,
       personalizationType: personalization.type,

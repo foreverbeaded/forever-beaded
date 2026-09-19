@@ -4,6 +4,7 @@ const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
 const { createApp, dbGet, dbRun } = require("../server");
+const { SEED_PRODUCTS } = require("../catalogue");
 
 function tempDbPath() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "forever-beaded-test-"));
@@ -206,8 +207,11 @@ test("includes customer confirmation email line only when provider accepts email
 
 test("seeds active products and exposes safe catalogue metadata", async () => {
   await withServer({}, async ({ app, baseUrl }) => {
+    const activeProductCount = new Set(
+      SEED_PRODUCTS.filter((product) => product.active === 1).map((product) => product.id)
+    ).size;
     const seeded = await dbGet(app.locals.db, "SELECT COUNT(*) AS count FROM products WHERE active = 1");
-    assert.equal(seeded.count, 36);
+    assert.equal(seeded.count, activeProductCount);
 
     const response = await fetch(`${baseUrl}/api/products`, {
       headers: { Origin: "https://foreverbeaded.github.io" }
@@ -215,18 +219,17 @@ test("seeds active products and exposes safe catalogue metadata", async () => {
     const body = await response.json();
     assert.equal(response.status, 200);
     assert.equal(body.success, true);
-    assert.equal(body.products.length, 36);
-    assert.ok(body.products.some((product) => product.slug === "natalies-butterfly" && product.name === "Natalie’s Butterfly" && product.basePriceCents === 2500 && product.referenceImageUrl === "images/natalies-butterfly-mushroom.jpeg"));
-    assert.ok(body.products.some((product) => product.slug === "fish" && product.name === "Fish" && product.basePriceCents === 2000 && product.referenceImageUrl === "images/fish.jpeg"));
-    assert.ok(body.products.some((product) => product.slug === "crab" && product.name === "Crab" && product.basePriceCents === 2500 && product.referenceImageUrl === "images/crab.jpeg"));
-    assert.ok(body.products.some((product) => product.slug === "penguin" && product.name === "Penguin" && product.basePriceCents === 2000 && product.referenceImageUrl === "images/penquin.jpeg"));
-    assert.ok(body.products.some((product) => product.slug === "whale" && product.name === "Whale" && product.basePriceCents === 2500 && product.referenceImageUrl === "images/whale.jpeg"));
-    assert.ok(body.products.some((product) => product.slug === "jellyfish" && product.name === "Jellyfish" && product.basePriceCents === 2500 && product.referenceImageUrl === "images/jellyfish.jpeg"));
-    assert.ok(body.products.some((product) => product.slug === "lobster" && product.name === "Lobster" && product.basePriceCents === 2500 && product.referenceImageUrl === "images/lobster.jpeg"));
-    assert.ok(body.products.some((product) => product.slug === "shark" && product.name === "Shark" && product.basePriceCents === 2500 && product.referenceImageUrl === "images/shark.jpeg"));
-    assert.ok(body.products.some((product) => product.id === 10 && product.slug === "custom-idea" && product.referenceImageUrl === "images/both-flowers-side-by-side.jpeg" && product.previewImageUrl === "images/both-flowers-side-by-side.jpeg"));
-    assert.ok(body.products.some((product) => product.slug === "gecko" && product.referenceImageUrl === "images/gecko.jpeg" && product.previewImageUrl === "images/gecko.jpeg"));
-    assert.ok(body.products.some((product) => product.slug === "big-flower" && product.name === "Big Flower" && product.category === "Flower" && product.basePriceCents === 2500 && product.imageUrl === "images/big-flower.jpeg" && product.referenceImageUrl === "images/big-flower.jpeg" && product.previewImageUrl === "images/big-flower.jpeg"));
+    assert.equal(body.products.length, activeProductCount);
+    for (const slug of ["natalies-butterfly", "fish", "crab", "penguin", "whale", "jellyfish", "lobster", "shark", "custom-idea", "gecko", "big-flower"]) {
+      const expected = SEED_PRODUCTS.find((product) => product.slug === slug);
+      const actual = body.products.find((product) => product.slug === slug);
+      assert.ok(actual, `${slug} is missing from the catalogue API`);
+      assert.equal(actual.name, expected.name);
+      assert.equal(actual.category, expected.category);
+      assert.equal(actual.basePriceCents, expected.basePriceCents);
+      assert.equal(actual.referenceImageUrl, expected.referenceImageUrl);
+      assert.equal(actual.previewImageUrl, expected.previewImageUrl);
+    }
     assert.ok(body.products.find((product) => product.slug === "gecko").previewPattern.length > 0);
     assert.deepEqual(body.products.find((product) => product.slug === "custom-idea").previewPattern, null);
     const idColumn = await dbGet(app.locals.db, "SELECT type FROM pragma_table_info('products') WHERE name = 'id'");
@@ -241,29 +244,29 @@ test("seeds active products and exposes safe catalogue metadata", async () => {
 test("seeded product image paths point to existing jpeg assets", () => {
   const products = require("../../js/product-catalogue");
   const expectedMappings = {
-    "natalies-butterfly": "images/natalies-butterfly-mushroom.jpeg",
+    "natalies-butterfly": "etsy/images-branded/natalies-butterfly-owner-approved-master.jpg",
     gecko: "images/gecko.jpeg",
-    macaw: "images/macaw.jpeg",
-    fish: "images/fish.jpeg",
-    crab: "images/crab.jpeg",
-    pencil: "images/pencil.jpeg",
-    octopus: "images/octopus.jpeg",
-    "soccer-ball": "images/soccer-ball.jpeg",
-    flower: "images/flower-braided.jpeg",
-    "big-flower": "images/big-flower.jpeg"
+    macaw: "etsy/images-branded/macaw-owner-approved-master.jpg",
+    fish: "etsy/images-branded/fish-approved-master.jpg",
+    crab: "etsy/images-branded/crab-approved-master.jpg",
+    pencil: "etsy/images-branded/colouring-pencil-owner-approved-master.jpg",
+    octopus: "etsy/images-branded/octopus-etsy-branded.jpg",
+    "soccer-ball": "images/sports/soccer-ball.jpg",
+    flower: "etsy/images-branded/flower-owner-approved-master.jpg",
+    "big-flower": "etsy/images-branded/big-flower-approved-master.jpg"
   };
 
   for (const product of products) {
     if (product.imageUrl) {
-      assert.match(product.imageUrl, /^images\/.+\.jpe?g$/);
+      assert.match(product.imageUrl, /^(?:images|etsy\/images-branded)\/.+\.(?:jpe?g|png|webp)$/);
       assert.ok(fs.existsSync(path.join(__dirname, "..", "..", product.imageUrl)), `${product.name} image is missing at ${product.imageUrl}`);
     }
     if (product.referenceImageUrl) {
-      assert.match(product.referenceImageUrl, /^images\/.+\.jpe?g$/);
+      assert.match(product.referenceImageUrl, /^(?:images|etsy\/images-branded)\/.+\.(?:jpe?g|png|webp)$/);
       assert.ok(fs.existsSync(path.join(__dirname, "..", "..", product.referenceImageUrl)), `${product.name} reference image is missing at ${product.referenceImageUrl}`);
     }
     if (product.previewImageUrl) {
-      assert.match(product.previewImageUrl, /^images\/.+\.jpe?g$/);
+      assert.match(product.previewImageUrl, /^(?:images|etsy\/images-branded)\/.+\.(?:jpe?g|png|webp)$/);
       assert.ok(fs.existsSync(path.join(__dirname, "..", "..", product.previewImageUrl)), `${product.name} preview image is missing at ${product.previewImageUrl}`);
     }
     assert.ok(Array.isArray(product.defaultColours), `${product.name} is missing default colours`);
@@ -408,6 +411,7 @@ test("stores personalization type and text with orders", async () => {
         quantity: 1,
         colours: "Purple, Cream, Gold",
         hardware: "Gold",
+        requestedProductName: "Butterfly Keepsake",
         personalizationType: "name",
         personalizationText: "becky"
       }]
@@ -416,14 +420,15 @@ test("stores personalization type and text with orders", async () => {
     assert.equal(response.status, 200);
     assert.equal(body.items[0].personalizationType, "name");
     assert.equal(body.items[0].personalizationText, "BECKY");
+    assert.equal(body.items[0].requestedProductName, "Butterfly Keepsake");
     assert.match(body.message, /^Thank you! Your Forever Beaded order has been received\./);
     assert.doesNotMatch(body.message, /Personalization:/);
 
-    const row = await dbGet(app.locals.db, `SELECT orders.customer_name, personalization_type, personalization
+    const row = await dbGet(app.locals.db, `SELECT orders.customer_name, requested_product_name, personalization_type, personalization
       FROM order_items
       JOIN orders ON orders.id = order_items.order_id
       WHERE orders.order_number = ?`, [body.orderNumber]);
-    assert.deepEqual(row, { customer_name: "Becky Customer", personalization_type: "name", personalization: "BECKY" });
+    assert.deepEqual(row, { customer_name: "Becky Customer", requested_product_name: "Butterfly Keepsake", personalization_type: "name", personalization: "BECKY" });
   });
 });
 

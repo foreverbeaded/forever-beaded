@@ -13,6 +13,8 @@ const { SEED_PRODUCTS, getSeedProduct } = require("./catalogue");
 const PAYMENT_STATUSES = new Set(["AWAITING_PAYMENT", "RECEIVED", "VERIFIED", "REFUNDED", "CANCELLED"]);
 const ORDER_STATUSES = new Set(["NEW", "IN_PROGRESS", "READY", "SHIPPED", "COMPLETED", "CANCELLED"]);
 const DEFAULT_ALLOWED_ORIGINS = [
+  "https://foreverbeaded.ca",
+  "https://www.foreverbeaded.ca",
   "https://foreverbeaded.github.io",
   "https://foreverbeaded.github.io/forever-beaded",
   "http://127.0.0.1:4173",
@@ -63,6 +65,10 @@ function getEtransferEmail() {
 
 function getDataPath(fileName) {
   return path.join(__dirname, "data", fileName);
+}
+
+function isProductionRuntime() {
+  return process.env.NODE_ENV === "production" || Boolean(process.env.RENDER);
 }
 
 class PublicError extends Error {
@@ -1039,6 +1045,11 @@ async function createApp(options = {}) {
   const orderLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: options.orderRateLimit || 40, standardHeaders: true, legacyHeaders: false });
 
   app.disable("x-powered-by");
+  if (options.trustProxy != null) {
+    app.set("trust proxy", options.trustProxy);
+  } else if (isProductionRuntime()) {
+    app.set("trust proxy", 1);
+  }
   app.locals.db = db;
   app.use(helmet());
   app.use(cors({
@@ -1201,7 +1212,8 @@ if (require.main === module) {
   createApp()
     .then((app) => {
       const port = Number(process.env.PORT || 3000);
-      app.listen(port, "127.0.0.1", () => console.log(`Forever Beaded API running on http://127.0.0.1:${port}`));
+      const host = isProductionRuntime() ? "0.0.0.0" : "127.0.0.1";
+      app.listen(port, host, () => console.log(`Forever Beaded API running on http://${host}:${port}`));
     })
     .catch((error) => {
       console.error("Could not start Forever Beaded API:", error.message);

@@ -1208,7 +1208,6 @@ const getForeverBeadedApiBaseUrl = () => {
   const configured = window.FOREVER_BEADED_API_BASE_URL || "http://127.0.0.1:3000";
   return configured.replace(/^http:\/\/localhost:3000\/?$/i, "http://127.0.0.1:3000");
 };
-const FOREVER_BEADED_API_BASE_URL = getForeverBeadedApiBaseUrl();
 
 function centsDisplay(cents, currency = "CAD") {
   return new Intl.NumberFormat("en-CA", {
@@ -1293,7 +1292,8 @@ async function saveOrderToDatabase(orderItems, customerDetails) {
     browserTotal: calculateCartTotal()
   };
 
-  const response = await fetch(`${FOREVER_BEADED_API_BASE_URL.replace(/\/$/, "")}/api/orders`, {
+  const apiBaseUrl = getForeverBeadedApiBaseUrl();
+  const response = await fetch(`${apiBaseUrl.replace(/\/$/, "")}/api/orders`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)

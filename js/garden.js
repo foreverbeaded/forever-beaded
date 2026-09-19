@@ -1054,8 +1054,6 @@
     const configured = window.FOREVER_BEADED_API_BASE_URL || "http://127.0.0.1:3000";
     return configured.replace(/^http:\/\/localhost:3000\/?$/i, "http://127.0.0.1:3000");
   };
-  const API_BASE_URL = getOrderApiBaseUrl();
-  const isLocalApi = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(API_BASE_URL);
 
   const formatCents = (cents, currency = "CAD") => {
     const amount = Number(cents || 0) / 100;
@@ -2295,6 +2293,8 @@
     }
     setOrderStatus("Submitting your order securely...");
 
+    const apiBaseUrl = getOrderApiBaseUrl();
+    const isLocalApi = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(apiBaseUrl);
     let orderSucceeded = false;
     try {
       const submittedOrder = buildHomeTreasureOrder(confirmedAddress);
@@ -2303,8 +2303,8 @@
         ? activeTreasureOrder.orderNumber
         : "";
       const orderApiUrl = extendingOrderNumber
-        ? `${API_BASE_URL.replace(/\/$/, "")}/api/orders/${encodeURIComponent(extendingOrderNumber)}/items`
-        : `${API_BASE_URL.replace(/\/$/, "")}/api/orders`;
+        ? `${apiBaseUrl.replace(/\/$/, "")}/api/orders/${encodeURIComponent(extendingOrderNumber)}/items`
+        : `${apiBaseUrl.replace(/\/$/, "")}/api/orders`;
       const orderPayload = extendingOrderNumber
         ? {
           item: submittedOrder.items[0],
@@ -2365,7 +2365,7 @@
     } catch (error) {
       console.error("[checkout] Order submission failed", error);
       const message = error instanceof TypeError && /fetch/i.test(error.message)
-        ? `Could not reach the order API at ${API_BASE_URL.replace(/\/$/, "")}/api/orders. Make sure the Forever Beaded backend is running.`
+        ? `Could not reach the order API at ${apiBaseUrl.replace(/\/$/, "")}/api/orders. Make sure the Forever Beaded backend is running.`
         : (error?.message || "Unknown order submission error.");
       setOrderStatus(isLocalApi
         ? `Order submission failed: ${message}`

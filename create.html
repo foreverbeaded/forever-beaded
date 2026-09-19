@@ -786,6 +786,47 @@
     .world-create .custom-idea-notice small { font-weight:800; }
     .world-create .custom-preview-caption { position:absolute; z-index:5; inset:auto 14px 12px; margin:0; padding:7px 12px; border-radius:999px; background:rgba(35,18,38,.84); color:#fff7e8; font:700 12px/1.2 Inter,sans-serif; text-align:center; }
     @media (max-width: 620px) { .world-create .colour-customizer { grid-template-columns:1fr; grid-template-areas:"main" "parts" "accent"; } .world-create .part-colour-row { grid-template-columns:minmax(94px,.9fr) minmax(132px,1.35fr); } .world-create .finished-custom-preview { min-height:320px!important; } }
+
+    /* One readable presentation contract for every catalogue-driven preview. */
+    .world-create .treasure-preview .preview-copy {
+      min-width: 0;
+      max-width: 62ch;
+    }
+    .world-create .treasure-preview .preview-copy h4 {
+      margin-block: 9px 7px;
+      font-size: clamp(1.55rem, 2.2vw, 2.15rem);
+      line-height: 1.05;
+      overflow-wrap: anywhere;
+    }
+    .world-create .treasure-preview .preview-copy p {
+      max-width: 58ch;
+      font-size: .94rem;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+    }
+    .world-create .home-preview-beads {
+      --home-preview-bead-size: 8px;
+      --home-preview-gap: 2px;
+      width: min(100%, 380px);
+      max-width: 380px;
+      height: 220px;
+      max-height: 220px;
+      padding: 14px;
+      overflow: hidden;
+    }
+    @media (max-width: 560px) {
+      .world-create .treasure-preview .preview-copy h4 { font-size: 1.55rem; }
+      .world-create .treasure-preview .preview-copy p { font-size: .9rem; }
+      .world-create .home-preview-beads {
+        --home-preview-bead-size: 6.5px;
+        --home-preview-gap: 1.5px;
+        width: min(100%, 300px);
+        max-width: 300px;
+        height: 180px;
+        max-height: 180px;
+        padding: 10px;
+      }
+    }
   </style>
   <link rel="stylesheet" href="css/site-butterflies.css?v=gentle-1">
   <link rel="stylesheet" href="css/chapter-navigation.css?v=chapter-1">
@@ -923,14 +964,14 @@
             <label class="order-honeypot" aria-hidden="true" tabindex="-1">Website <input id="homeOrderWebsite" name="website" type="text" autocomplete="off" tabindex="-1"></label>
           </div>
           <div class="treasure-preview" aria-live="polite">
-            <div><span class="preview-label">Live finished-treasure preview</span><p id="homeTreasurePreviewSelected" class="preview-selected-design">Selected Design: Loading…</p><h4 id="homeTreasurePreviewTitle">Loading selected design…</h4><p id="homeTreasurePreviewMeta">Gold hardware, quantity 1, no personalization.</p><p id="homeTreasurePreviewDescription" class="preview-description">Approximate colour visualization; the final handmade treasure may vary slightly.</p></div>
+            <div class="preview-copy"><span class="preview-label">Approximate Finished Preview</span><p id="homeTreasurePreviewSelected" class="preview-selected-design">Selected Design: Loading…</p><h4 id="homeTreasurePreviewTitle">Loading selected design…</h4><p id="homeTreasurePreviewMeta">Gold hardware, quantity 1, no personalization.</p><p id="homeTreasurePreviewDescription" class="preview-description">Approximate colour visualization; the final handmade treasure may vary slightly.</p></div>
             <div class="home-preview-art-wrap">
               <aside class="hardware-preview-card" aria-label="Hardware preview">
                 <span class="preview-label">Hardware preview</span>
                 <div id="homeHardwarePreviewSample" class="hardware-preview-sample has-gold-hardware" aria-hidden="true"></div>
                 <p id="homeHardwarePreviewText">Gold ring and clasp</p>
               </aside>
-              <div id="homeTreasurePreview" class="home-preview-beads finished-custom-preview" aria-label="Live picture of the customized treasure"></div>
+              <div id="homeTreasurePreview" class="home-preview-beads" aria-label="Approximate finished bead colour preview"></div>
               <p id="homeTreasurePreviewPersonalization" class="preview-personalization" hidden></p>
             </div>
           </div>

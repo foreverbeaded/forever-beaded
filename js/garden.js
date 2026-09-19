@@ -171,16 +171,6 @@
     || productCatalogue[0]
     || null;
 
-  // Primary showcase photography for the most frequently selected designs.
-  // Other catalogue designs use their own existing imageUrl below.
-  const designImages = Object.freeze({
-    butterfly: "etsy/images-branded/butterfly-owner-approved-master.jpg",
-    fish: "etsy/images-branded/fish-approved-master.jpg",
-    gecko: "etsy/images-branded/gecko-owner-approved-master.jpg",
-    flower: "etsy/images-branded/flower-owner-approved-master.jpg",
-    turtle: "etsy/images-branded/turtle-approved-master.jpg",
-    unicorn: "etsy/images-branded/unicorn-owner-approved-master.jpg"
-  });
   let showcaseImageRequest = 0;
   let customReferenceImageDataUrl = "";
   let customReferenceImageName = "";
@@ -194,7 +184,7 @@
     const customDesignSelected = product?.slug === "custom-idea";
     const requestedUrl = customDesignSelected
       ? customReferenceImageDataUrl
-      : (designImages[product?.slug] || product?.imageUrl || product?.referenceImageUrl || "");
+      : (product?.referenceImageUrl || product?.imageUrl || "");
     const requestedAlt = `${productName} handmade beaded keychain`;
 
     const showFallbackMessage = (message = `${productName} image coming soon.`) => {
@@ -247,8 +237,13 @@
 
   const getSelectedProduct = () => {
     const designDropdown = document.getElementById("homeTreasureDesign");
-    const selectedProduct = productCatalogue.find(product => product.slug === designDropdown?.value) || fallbackProduct;
-    return selectedProduct;
+    const selectedSlug = String(designDropdown?.value || "").trim();
+    const selectedProduct = productCatalogue.find(product => product.slug === selectedSlug);
+    if (selectedSlug && !selectedProduct) {
+      console.warn(`[Forever Beaded] Selected product is missing from the catalogue: ${selectedSlug}`);
+      return null;
+    }
+    return selectedProduct || fallbackProduct;
   };
 
   const isCustomProduct = (product) => product?.slug === "custom-idea";
@@ -447,11 +442,17 @@
   const applyRequestedDesignSelection = () => {
     const requested = requestedDesignSlug();
     const select = document.getElementById("homeTreasureDesign");
-    if (!requested || !select || select.value === requested) return false;
+    if (!requested || !select) return false;
+    const selectionChanged = select.value !== requested;
     select.value = requested;
+    const requestedProduct = productCatalogue.find(product => product.slug === requested);
+    const colours = document.getElementById("homeTreasureColours");
+    if (colours && requestedProduct?.defaultColours?.length) {
+      colours.value = requestedProduct.defaultColours.map(titleCase).join(", ");
+    }
     select.dispatchEvent(new Event("change", { bubbles: true }));
     applyRequestedIdea();
-    return true;
+    return selectionChanged;
   };
 
   const scrollToRequestedDesign = () => {
@@ -744,7 +745,7 @@
       renderCustomIdeaNotice(preview, colourSelections);
       renderCustomIdeaNotice(showcasePreview, colourSelections);
     } else {
-      renderFinishedTreasurePicture(preview, product, colourSelections);
+      renderBeadPattern(preview, product, colours);
       renderFinishedTreasurePicture(showcasePreview, product, colourSelections);
     }
     if (showcasePreview) showcasePreview.hidden = false;
@@ -1950,6 +1951,7 @@
     7: "deluxe-flower",
     8: "butterfly-with-flowers",
     9: "gecko",
+    10: "baby-gecko",
     13: "soccer-ball",
     14: "turtle",
     15: "octopus",
@@ -1960,7 +1962,9 @@
     22: "whale",
     23: "jellyfish",
     24: "lobster",
-    25: "shark"
+    25: "shark",
+    27: "ladybug-backpack",
+    28: "dragonfly-keychain"
   };
 
   const productBySlug = (slug) => productCatalogue.find(product => product.slug === slug) || null;
@@ -2452,7 +2456,7 @@
     syncPersonalizationField();
     renderHomeTreasurePreview();
     const storedRequestItems = loadStoredRequestItems();
-    if (storedRequestItems.length) {
+    if (storedRequestItems.length && !requestedDesignSlug()) {
       applyRequestItemToBuilder(0);
     }
     if (cartCheckoutRequested() && storedRequestItems.length) {

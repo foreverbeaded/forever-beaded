@@ -17,10 +17,10 @@ const products = [
   { id: 6, slug: "big-flower", name: "Big Flower", price: 25, category: "Flower", image: "etsy/images-branded/big-flower-approved-master.jpg", description: "A large handmade flower designed to make a statement." },
   { id: 7, slug: "deluxe-flower", name: "Intricated Flower", price: 25, category: "Flower", image: "etsy/images-branded/deluxe-flower-owner-approved-master.jpg", description: "An intricate handmade flower for detail lovers." },
   { id: 8, slug: "butterfly-with-flowers", name: "Butterfly and Flower", price: 30, category: "Butterfly & Flower", image: "etsy/images-branded/phoenix-butterfly-owner-approved-master.jpg", description: "A detailed combination of butterfly and flower designs." },
-  { id: 9, slug: "gecko", name: "Gecko", price: 20, category: "Tiny Garden Friends", image: "images/gecko.jpeg", description: "A turquoise and purple handmade gecko keychain." },
-  { id: 10, slug: "baby-gecko", name: "Baby Gecko", price: 20, category: "Tiny Garden Friends", image: "images/baby-gecko.jpeg", description: "A small dark-blue handmade baby gecko keychain." },
-  { id: 42, slug: "monkey", name: "Monkey", price: 25, category: "Animals", image: "etsy/images-branded/monkey-master.jpg", createUrl: "create.html?design=custom-idea&idea=Monkey#homeDesignBuilder", description: "A personalized handmade beaded monkey keychain." },
-  { id: 45, slug: "panda", name: "Panda", price: 25, category: "Animals", image: "etsy/images-branded/panda-master.png", createUrl: "create.html?design=custom-idea&idea=Panda#homeDesignBuilder", description: "A handmade beaded panda keychain with a bright bamboo detail." },
+  { id: 9, slug: "gecko", name: "Gecko Keychain", price: 20, category: "Tiny Garden Friends", image: "etsy/images-branded/gecko-tiny-garden-branded.png", description: "A turquoise and purple handmade gecko keychain." },
+  { id: 10, slug: "baby-gecko", name: "Baby Gecko Keychain", price: 20, category: "Tiny Garden Friends", image: "etsy/images-branded/baby-gecko-tiny-garden-branded.png", description: "A small dark-blue handmade baby gecko keychain." },
+  { id: 42, slug: "monkey", name: "Monkey", price: 25, category: "Animals", image: "etsy/images-branded/monkey-master.jpg", description: "A personalized handmade beaded monkey keychain." },
+  { id: 45, slug: "panda", name: "Panda", price: 25, category: "Animals", image: "etsy/images-branded/panda-master.png", description: "A handmade beaded panda keychain with a bright bamboo detail." },
   { id: 12, slug: "canada-flag", name: "Canada Flag", price: 20, category: "Flags", image: "etsy/images-branded/canada-flag-approved-master.jpg", description: "A handmade Canada flag design." },
   { id: 13, slug: "soccer-ball", name: "Soccer Ball", price: 20, category: "Sports", image: "images/sports/soccer-ball.jpg", description: "A handmade soccer ball design for sports fans." },
   { id: 47, slug: "basketball", name: "Basketball", price: 20, category: "Sports", image: "images/sports/basketball.jpg", description: "A personalized flat pony-bead basketball keychain." },
@@ -56,8 +56,8 @@ const products = [
   { id: 27, slug: "ladybug-backpack", name: "Ladybug", price: 25, category: "Tiny Garden Friends", image: "etsy/images-branded/ladybug-approved-master.jpg", description: "A personalized handmade ladybug backpack keychain." },
   { id: 28, slug: "dragonfly-keychain", name: "Dragonfly Keychain", price: 25, category: "Tiny Garden Friends", image: "etsy/images-branded/dragonfly-keychain-approved-master.jpg", description: "A colourful handmade dragonfly keychain with optional personalization." },
   { id: 29, slug: "unicorn", name: "Unicorn", price: 25, category: "Enchanted Beings", image: "etsy/images-branded/unicorn-owner-approved-master.jpg", description: "A magical handmade beaded unicorn, made to order in your favourite colours." },
-  { id: 43, slug: "magical-mane-unicorn", name: "Magical Mane Unicorn", price: 30, category: "Enchanted Beings", image: "etsy/images-branded/magical-mane-unicorn-master.png", createUrl: "create.html?design=custom-idea&idea=Magical%20Mane%20Unicorn#homeDesignBuilder", description: "A personalized handmade beaded unicorn with a colourful magical mane." },
-  { id: 44, slug: "rocket", name: "Rocket", price: 25, category: "Outer Space", image: "etsy/images-branded/rocket-master.jpg", createUrl: "create.html?design=custom-idea&idea=Rocket#homeDesignBuilder", description: "A personalized handmade beaded rocket keychain." },
+  { id: 43, slug: "magical-mane-unicorn", name: "Magical Mane Unicorn", price: 30, category: "Enchanted Beings", image: "etsy/images-branded/magical-mane-unicorn-master.png", description: "A personalized handmade beaded unicorn with a colourful magical mane." },
+  { id: 44, slug: "rocket", name: "Rocket", price: 25, category: "Outer Space", image: "etsy/images-branded/rocket-master.jpg", description: "A personalized handmade beaded rocket keychain." },
   { id: 30, slug: "giraffe", productId: "giraffe", name: "Giraffe", price: 25, category: "Animals", image: "etsy/images-branded/giraffe-etsy-branded.jpg", description: "A personalized handmade beaded giraffe keychain." },
   { id: 31, slug: "ariel", productId: "ariel", name: "Ariel Keychain", price: 25, category: "Enchanted Beings", image: "etsy/images-branded/ariel-keychain-master.png", description: "A handmade beaded mermaid keychain inspired by an undersea fairytale." },
   { id: 32, slug: "palm-tree", productId: "palm-tree", name: "Palm Tree", price: 20, category: "Sandy Beaches", image: "etsy/images-branded/palm-tree-approved-master.jpg", description: "A handmade beaded palm tree inspired by warm sandy shores." },
@@ -465,7 +465,7 @@ const NEXT_COLLECTION_CHAPTERS = {
   "Back to School": { label: "Faith", category: "Faith" },
   Faith: { label: "Sports", category: "Sports" },
   Sports: { label: "Monthly Exclusive", href: "monthly-exclusive.html?v=september-2026" },
-  "Monthly Exclusives": { label: "Create Your Own", href: "create.html?design=custom-idea&idea=Pumpkin%20Spice%20Latte#homeDesignBuilder" }
+  "Monthly Exclusives": { label: "Create Your Own", href: "create.html?design=pumpkin-spice-latte#homeDesignBuilder" }
 };
 
 

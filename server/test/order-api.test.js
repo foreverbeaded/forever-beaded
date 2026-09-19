@@ -152,7 +152,7 @@ test("adds another treasure to the same order number", async () => {
     assert.equal(secondBody.success, true);
     assert.equal(secondBody.orderNumber, firstBody.orderNumber);
     assert.equal(secondBody.items.length, 2);
-    assert.deepEqual(secondBody.items.map((item) => item.productName), ["Butterfly", "Gecko"]);
+    assert.deepEqual(secondBody.items.map((item) => item.productName), ["Butterfly", "Gecko Keychain"]);
     assert.deepEqual(secondBody.items.map((item) => item.lineTotalCents), [2000, 2000]);
     assert.equal(secondBody.total, 4500);
 
@@ -169,7 +169,7 @@ test("adds another treasure to the same order number", async () => {
     assert.equal(thirdBody.success, true);
     assert.equal(thirdBody.orderNumber, firstBody.orderNumber);
     assert.equal(thirdBody.items.length, 3);
-    assert.deepEqual(thirdBody.items.map((item) => item.productName), ["Butterfly", "Gecko", "Macaw"]);
+    assert.deepEqual(thirdBody.items.map((item) => item.productName), ["Butterfly", "Gecko Keychain", "Macaw"]);
     assert.equal(thirdBody.total, 8700);
 
     const orderCount = await dbGet(app.locals.db, "SELECT COUNT(*) AS count FROM orders WHERE order_number = ?", [firstBody.orderNumber]);
@@ -245,7 +245,7 @@ test("seeded product image paths point to existing jpeg assets", () => {
   const products = require("../../js/product-catalogue");
   const expectedMappings = {
     "natalies-butterfly": "etsy/images-branded/natalies-butterfly-owner-approved-master.jpg",
-    gecko: "images/gecko.jpeg",
+    gecko: "etsy/images-branded/gecko-tiny-garden-branded.png",
     macaw: "etsy/images-branded/macaw-owner-approved-master.jpg",
     fish: "etsy/images-branded/fish-approved-master.jpg",
     crab: "etsy/images-branded/crab-approved-master.jpg",
@@ -310,7 +310,7 @@ test("accepts product slugs as trusted catalogue lookups", async () => {
     const body = await response.json();
     assert.equal(response.status, 200);
     const item = await dbGet(app.locals.db, "SELECT product_id, product_name, unit_price_cents FROM order_items JOIN orders ON orders.id = order_items.order_id WHERE orders.order_number = ?", [body.orderNumber]);
-    assert.deepEqual(item, { product_id: "2", product_name: "Gecko", unit_price_cents: 2000 });
+    assert.deepEqual(item, { product_id: "2", product_name: "Gecko Keychain", unit_price_cents: 2000 });
   });
 });
 

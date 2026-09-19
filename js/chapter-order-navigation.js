@@ -45,7 +45,6 @@
   const utilityIndex = utilityPages.findIndex(([file]) => file === currentFile);
   if (collectionIndex < 0 && utilityIndex < 0) return;
 
-  const collapsibleBreakpoint = window.matchMedia("(max-width: 1024px)");
   const makeNavigationCollapsible = (navigation) => {
     if (!navigation || navigation.dataset.collapsibleReady === "true") return;
 
@@ -68,12 +67,10 @@
       if ("inert" in navigation) navigation.inert = !expanded;
     };
 
-    const applyViewportDefault = () => setExpanded(!collapsibleBreakpoint.matches);
     toggle.addEventListener("click", () => {
       setExpanded(toggle.getAttribute("aria-expanded") !== "true");
     });
-    collapsibleBreakpoint.addEventListener("change", applyViewportDefault);
-    applyViewportDefault();
+    setExpanded(false);
   };
 
   /* Back to School begins the shared master order; only the active page rotates forward. */

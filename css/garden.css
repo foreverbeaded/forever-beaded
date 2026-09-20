@@ -1435,6 +1435,40 @@ body.intro-active .scroll-monarch-layer {
   filter: var(--monarch-body-filter);
 }
 
+/* Clean monarch articulation: all visible pieces use the same transparent
+   source image. Only the wing regions move; the body remains still. */
+.svg-monarch .monarch-clean-composite {
+  overflow: visible;
+  transform-style: preserve-3d;
+}
+
+.svg-monarch .monarch-clean-wing,
+.svg-monarch .monarch-clean-body {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.svg-monarch .monarch-clean-forewing {
+  clip-path: polygon(0 0, 100% 0, 100% 67%, 72% 75%, 0 62%);
+  transform-origin: 72% 70%;
+  animation: cleanMonarchForewingFlap .58s ease-in-out infinite alternate;
+}
+
+.svg-monarch .monarch-clean-hindwing {
+  clip-path: polygon(0 52%, 73% 61%, 100% 100%, 0 100%);
+  transform-origin: 72% 69%;
+  animation: cleanMonarchHindwingFlap .58s .025s ease-in-out infinite alternate;
+}
+
+.svg-monarch .monarch-clean-body {
+  clip-path: polygon(59% 55%, 100% 45%, 100% 100%, 52% 100%, 58% 73%);
+}
+
 .svg-monarch .monarch-shadow {
   transform: translate(8px, 14px) scale(.82);
   border-radius: 50%;
@@ -3463,6 +3497,16 @@ body.intro-active .scroll-monarch-layer {
   to {
     transform: perspective(420px) rotateY(-64deg) rotateX(-3deg);
   }
+}
+
+@keyframes cleanMonarchForewingFlap {
+  from { transform: perspective(420px) rotateX(-3deg) scaleY(1); }
+  to { transform: perspective(420px) rotateX(48deg) scaleY(.72); }
+}
+
+@keyframes cleanMonarchHindwingFlap {
+  from { transform: perspective(420px) rotateX(2deg) scaleY(1); }
+  to { transform: perspective(420px) rotateX(38deg) scaleY(.78); }
 }
 
 @media (prefers-reduced-motion: reduce) {

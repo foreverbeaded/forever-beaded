@@ -125,10 +125,12 @@ const butterflyPlans = [
 function monarchMarkup(image = "images/monarch-transparent.png") {
   return `
     <span class="monarch-shadow"></span>
-    <img class="monarch-whole" src="${image}" alt="" draggable="false" decoding="async">
+    <span class="monarch-whole monarch-clean-composite" aria-hidden="true">
+      <img class="monarch-clean-wing monarch-clean-forewing" src="${image}" alt="" draggable="false" decoding="async">
+      <img class="monarch-clean-wing monarch-clean-hindwing" src="${image}" alt="" draggable="false" decoding="async">
+      <img class="monarch-clean-body" src="${image}" alt="" draggable="false" decoding="async">
+    </span>
     <span class="hero-awakening-shimmer"></span>
-    <span class="left-wing monarch-textured-wing"></span>
-    <span class="right-wing monarch-textured-wing"></span>
   `;
 }
 

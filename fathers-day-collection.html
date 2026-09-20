@@ -23,10 +23,8 @@
     body.world-fathers-day {
       --collection-text:#fff8e8;
       color:#2a211d;
-      background:#142234 url("images/fathers-day-background-plain-approved.jpg?v=20260917") center top / cover fixed no-repeat!important;
-      isolation:auto!important;
+      background:transparent!important;
     }
-    body.world-fathers-day::before,
     body.world-fathers-day::after,
     .world-fathers-day .world-hero::before {
       content:none!important;
@@ -45,11 +43,9 @@
       -webkit-backdrop-filter:none!important;
     }
     @media (max-width:1024px) {
-      body.world-fathers-day { background-position:54% top!important; background-attachment:fixed!important; }
       .world-fathers-day .world-hero h1 { font-size:clamp(38px,8vw,64px)!important; line-height:.96!important; }
     }
     @media (max-width:620px) {
-      body.world-fathers-day { background-size:auto 100vh!important; background-position:18% top!important; background-attachment:fixed!important; }
       .world-fathers-day .world-hero h1 { font-size:clamp(34px,10.5vw,44px)!important; line-height:.94!important; letter-spacing:-.025em!important; }
       body.world-fathers-day .product-grid { justify-content:center!important; }
     }

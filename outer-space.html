@@ -28,10 +28,8 @@
   <link rel="stylesheet" href="css/collection-fall.css?v=2">
   <style>
     body.world-space {
-      background:#08051f url('images/outer-space-background-approved.jpg') 50% 45%/cover fixed no-repeat!important;
-      isolation:auto!important;
+      background:transparent!important;
     }
-    body.world-space::before,
     body.world-space::after,
     body.world-space .world-hero::before { display:none!important; content:none!important; background:none!important; opacity:0!important; filter:none!important; }
     .world-space .world-hero-copy { background:transparent!important; border:0!important; box-shadow:none!important; backdrop-filter:none!important; -webkit-backdrop-filter:none!important; }
@@ -40,7 +38,6 @@
     .world-space .product-grid { width:min(660px,100%); grid-template-columns:repeat(2,minmax(0,295px)); justify-content:start; gap:2.4rem; margin-right:auto; }
     .world-space .product-card { background:rgba(255,255,255,.86)!important; border-color:rgba(235,232,255,.72)!important; }
     @media(max-width:850px){.world-space .product-grid{width:100%;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.4rem}}
-    @media(max-width:900px){body.world-space{background-attachment:scroll!important;background-position:50% 45%!important}}
     @media(max-width:560px){.world-space .product-grid{width:100%;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-inline:auto}}
   </style>
 </head>

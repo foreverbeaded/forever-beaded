@@ -399,16 +399,14 @@ body.storybook-home img {
 .opening-scene .svg-monarch .monarch-whole {
   opacity: 1;
   filter: saturate(1.08) brightness(1.08) drop-shadow(0 10px 12px rgba(24,10,21,.3));
-  animation: polishedMonarchFlutter .72s ease-in-out infinite alternate;
+}
+
+.opening-scene .svg-monarch .monarch-clean-composite {
+  animation: none;
 }
 
 .opening-scene .svg-monarch .monarch-textured-wing {
   display: none;
-}
-
-@keyframes polishedMonarchFlutter {
-  from { transform: perspective(360px) rotateX(-4deg) scaleX(.94) scaleY(1); }
-  to { transform: perspective(360px) rotateX(10deg) scaleX(1.025) scaleY(.98); }
 }
 
 @keyframes heroMergeIntoBook {

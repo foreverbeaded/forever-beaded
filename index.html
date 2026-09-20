@@ -96,6 +96,15 @@
         drop-shadow(0 0 26px rgba(183, 139, 225, .5))
         saturate(1.45) brightness(1.18);
     }
+    /* Use the same clean transparent monarch shown in the opening scene. */
+    body.storybook-home .exclusive-discovery-butterfly .monarch-shadow,
+    body.storybook-home .exclusive-discovery-butterfly .monarch-textured-wing,
+    body.storybook-home .exclusive-discovery-butterfly .hero-awakening-shimmer {
+      display: none !important;
+    }
+    body.storybook-home .exclusive-discovery-butterfly .monarch-whole {
+      opacity: 1;
+    }
     @keyframes homepageExclusiveSpotlight {
       0% { box-shadow: 0 0 12px rgba(255, 204, 111, .2), 0 34px 110px rgba(0, 0, 0, .38); }
       52% { box-shadow: 0 0 0 3px rgba(255, 229, 166, .48), 0 0 58px rgba(255, 210, 122, .78), 0 0 94px rgba(187, 142, 229, .48), 0 34px 110px rgba(0, 0, 0, .38), inset 0 0 42px rgba(255, 229, 166, .3); }

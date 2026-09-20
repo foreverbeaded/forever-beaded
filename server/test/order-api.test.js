@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
+const sharp = require("sharp");
 const { createApp, dbGet, dbRun } = require("../server");
 const { SEED_PRODUCTS } = require("../catalogue");
 
@@ -12,12 +13,17 @@ function tempDbPath() {
 }
 
 async function withServer(options = {}, callback) {
+  const referenceUploadPath = Object.prototype.hasOwnProperty.call(options, "referenceUploadPath")
+    ? options.referenceUploadPath
+    : fs.mkdtempSync(path.join(os.tmpdir(), "forever-beaded-reference-test-"));
   const app = await createApp({
     databasePath: tempDbPath(),
     allowedOrigins: "https://foreverbeaded.github.io,http://localhost,http://127.0.0.1",
     apiRateLimit: options.apiRateLimit || 200,
     orderRateLimit: options.orderRateLimit || 20,
-    emailSender: options.emailSender
+    emailSender: options.emailSender,
+    referenceUploadPath,
+    adminSecret: options.adminSecret || "test-admin-secret"
   });
   const server = await new Promise((resolve, reject) => {
     let attempts = 0;
@@ -440,7 +446,7 @@ test("requires and stores custom idea descriptions with line breaks", async () =
 
     const description = "A tiny garden charm\n  with purple flowers and initials AG.";
     const response = await postOrder(baseUrl, validOrder({
-      items: [{ productId: 10, design: "Custom Idea", quantity: 1, customDescription: `  ${description}  ` }]
+      items: [{ productId: 10, design: "Custom Idea", quantity: 1, colours: "Purple", customDescription: `  ${description}  ` }]
     }));
     const body = await response.json();
     assert.equal(response.status, 200);
@@ -543,5 +549,314 @@ test("rolls back the transaction when item insertion fails", async () => {
     assert.equal(response.status, 500);
     const row = await dbGet(app.locals.db, "SELECT COUNT(*) AS count FROM orders");
     assert.equal(row.count, 0);
+  });
+});
+
+test("stores only genuine custom colours for one, two, and three-colour requests", async () => {
+  await withServer({}, async ({ app, baseUrl }) => {
+    const cases = [
+      ["Pink, No Color, No Color", "Pink"],
+      ["Pink, Pearl, No Color", "Pink, Pearl"],
+      ["Pink, Pearl, Purple", "Pink, Pearl, Purple"]
+    ];
+    for (const [submittedColours, expectedColours] of cases) {
+      const response = await postOrder(baseUrl, validOrder({ items: [{
+        productId: 10, design: "Custom Idea", requestedProductName: "Garden keepsake",
+        customDescription: "A detailed custom garden keepsake", colours: submittedColours,
+        hardware: "Silver", quantity: 1
+      }] }));
+      const body = await response.json();
+      assert.equal(response.status, 200);
+      assert.equal(body.items[0].colours, expectedColours);
+      assert.doesNotMatch(body.items[0].colours, /No Color/i);
+      const row = await dbGet(app.locals.db, `SELECT colours FROM order_items
+        JOIN orders ON orders.id = order_items.order_id WHERE orders.order_number = ?`, [body.orderNumber]);
+      assert.equal(row.colours, expectedColours);
+    }
+  });
+});
+
+test("rejects more than three genuine colours for a custom request", async () => {
+  await withServer({}, async ({ baseUrl }) => {
+    const response = await postOrder(baseUrl, validOrder({ items: [{
+      productId: 10, design: "Custom Idea", requestedProductName: "Too many colours",
+      customDescription: "A custom design with too many requested colours",
+      colours: "Pink, Pearl, Purple, Blue", hardware: "Silver", quantity: 1
+    }] }));
+    const body = await response.json();
+    assert.equal(response.status, 400);
+    assert.match(body.error, /no more than three/i);
+  });
+});
+
+test("associates a processed reference image with its server-created order and protects retrieval", async () => {
+  const referenceUploadPath = fs.mkdtempSync(path.join(os.tmpdir(), "forever-beaded-reference-test-"));
+  await withServer({ referenceUploadPath, adminSecret: "reference-admin-secret" }, async ({ app, baseUrl }) => {
+    const orderResponse = await postOrder(baseUrl, validOrder({ items: [{
+      productId: 10, design: "Custom Idea", requestedProductName: "Pearl butterfly keepsake",
+      customDescription: "A pearl and pink butterfly with flower details", colours: "Pink, Pearl, No Color",
+      hardware: "Silver", quantity: 1, referenceImageRequested: true
+    }] }));
+    const order = await orderResponse.json();
+    assert.equal(orderResponse.status, 200);
+    assert.equal(order.referenceUploads.length, 1);
+    assert.ok(order.referenceUploads[0].token);
+
+    const image = await sharp({ create: {
+      width: 2400, height: 1200, channels: 3, background: { r: 236, g: 180, b: 214 }
+    } }).png().toBuffer();
+    const uploadResponse = await fetch(`${baseUrl}/api/orders/${encodeURIComponent(order.orderNumber)}/reference-image`, {
+      method: "POST",
+      headers: {
+        Origin: "https://foreverbeaded.github.io", "Content-Type": "image/png",
+        "X-Reference-Upload-Token": order.referenceUploads[0].token,
+        "X-File-Name": encodeURIComponent("inspiration & pearls.png")
+      },
+      body: image
+    });
+    const upload = await uploadResponse.json();
+    assert.equal(uploadResponse.status, 200);
+    assert.equal(upload.referenceImageStored, true);
+    assert.equal(upload.orderNumber, order.orderNumber);
+
+    const row = await dbGet(app.locals.db, `SELECT orders.order_number, order_reference_images.status,
+      order_reference_images.storage_key, order_reference_images.mime_type, order_reference_images.width,
+      order_reference_images.height FROM order_reference_images
+      JOIN orders ON orders.id = order_reference_images.order_id WHERE orders.order_number = ?`, [order.orderNumber]);
+    assert.equal(row.order_number, order.orderNumber);
+    assert.equal(row.status, "STORED");
+    assert.equal(row.mime_type, "image/jpeg");
+    assert.ok(row.width <= 1600);
+    assert.ok(row.height <= 1600);
+    assert.equal(fs.existsSync(path.join(referenceUploadPath, row.storage_key)), true);
+
+    const unauthenticated = await fetch(`${baseUrl}/api/admin/orders/${encodeURIComponent(order.orderNumber)}/reference-image`);
+    assert.equal(unauthenticated.status, 401);
+    const retrieved = await fetch(`${baseUrl}/api/admin/orders/${encodeURIComponent(order.orderNumber)}/reference-image`, {
+      headers: { Authorization: "Bearer reference-admin-secret" }
+    });
+    assert.equal(retrieved.status, 200);
+    assert.equal(retrieved.headers.get("content-type"), "image/jpeg");
+    assert.ok((await retrieved.arrayBuffer()).byteLength > 0);
+  });
+});
+
+test("rejects reference-image requests when durable storage is not configured", async () => {
+  await withServer({ referenceUploadPath: null }, async ({ baseUrl }) => {
+    const response = await postOrder(baseUrl, validOrder({ items: [{
+      productId: 10, design: "Custom Idea", requestedProductName: "Custom keepsake",
+      customDescription: "A custom keepsake with a supplied photo", colours: "Pearl",
+      hardware: "Silver", quantity: 1, referenceImageRequested: true
+    }] }));
+    const body = await response.json();
+    assert.equal(response.status, 503);
+    assert.match(body.error, /temporarily unavailable/i);
+  });
+});
+
+test("rejects unsupported and oversized reference image uploads safely", async () => {
+  await withServer({}, async ({ baseUrl }) => {
+    const orderResponse = await postOrder(baseUrl, validOrder({ items: [{
+      productId: 10, design: "Custom Idea", requestedProductName: "Custom keepsake",
+      customDescription: "A custom keepsake with image validation", colours: "Pink",
+      hardware: "Silver", quantity: 1, referenceImageRequested: true
+    }] }));
+    const order = await orderResponse.json();
+    const url = `${baseUrl}/api/orders/${encodeURIComponent(order.orderNumber)}/reference-image`;
+    const headers = { Origin: "https://foreverbeaded.github.io", "X-Reference-Upload-Token": order.referenceUploads[0].token, "X-File-Name": "reference.txt" };
+    const unsupported = await fetch(url, { method: "POST", headers: { ...headers, "Content-Type": "text/plain" }, body: "not an image" });
+    assert.equal(unsupported.status, 400);
+    const oversized = await fetch(url, {
+      method: "POST", headers: { ...headers, "Content-Type": "image/jpeg" },
+      body: Buffer.alloc(3 * 1024 * 1024 + 1024, 1)
+    });
+    assert.equal(oversized.status, 413);
+    assert.match((await oversized.json()).error, /too large/i);
+  });
+});
+
+test("ordinary orders remain image-free and do not receive upload credentials", async () => {
+  await withServer({}, async ({ app, baseUrl }) => {
+    const response = await postOrder(baseUrl, validOrder({
+      items: [{ productId: "butterfly", quantity: 1, colours: "Pink, Pearl", hardware: "Silver" }]
+    }));
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.deepEqual(body.referenceUploads, []);
+    const row = await dbGet(app.locals.db, "SELECT COUNT(*) AS count FROM order_reference_images");
+    assert.equal(row.count, 0);
+  });
+});
+
+test("owner adds a proposed design picture and only its customer link can retrieve it", async () => {
+  const referenceUploadPath = fs.mkdtempSync(path.join(os.tmpdir(), "forever-beaded-design-test-"));
+  await withServer({ referenceUploadPath, adminSecret: "design-admin-secret" }, async ({ app, baseUrl }) => {
+    const orderResponse = await postOrder(baseUrl, validOrder({ items: [{
+      productId: 10, design: "Custom Idea", requestedProductName: "Bear keepsake",
+      customDescription: "A friendly brown bear holding a small flower", colours: "Brown, Pink",
+      hardware: "Silver", quantity: 1
+    }] }));
+    const order = await orderResponse.json();
+    assert.equal(orderResponse.status, 200);
+    assert.deepEqual(order.referenceUploads, []);
+    const orderItem = await dbGet(app.locals.db, `SELECT order_items.id FROM order_items
+      JOIN orders ON orders.id = order_items.order_id WHERE orders.order_number = ?`, [order.orderNumber]);
+
+    const unauthorized = await fetch(`${baseUrl}/api/admin/orders/${order.orderNumber}/custom-designs`);
+    assert.equal(unauthorized.status, 401);
+    const listing = await fetch(`${baseUrl}/api/admin/orders/${order.orderNumber}/custom-designs`, {
+      headers: { Authorization: "Bearer design-admin-secret" }
+    });
+    const listingBody = await listing.json();
+    assert.equal(listing.status, 200);
+    assert.equal(listingBody.items.length, 1);
+    assert.equal(listingBody.items[0].requestedProductName, "Bear keepsake");
+    assert.equal(listingBody.items[0].hasCustomerReference, false);
+
+    const image = await sharp({ create: {
+      width: 900, height: 1200, channels: 3, background: { r: 151, g: 99, b: 66 }
+    } }).png().toBuffer();
+    const upload = await fetch(`${baseUrl}/api/admin/orders/${order.orderNumber}/custom-designs/${orderItem.id}/image`, {
+      method: "PUT",
+      headers: {
+        Authorization: "Bearer design-admin-secret", "Content-Type": "image/png",
+        "X-File-Name": encodeURIComponent("bear proposal.png")
+      },
+      body: image
+    });
+    const uploadBody = await upload.json();
+    assert.equal(upload.status, 200);
+    assert.equal(uploadBody.designPictureStored, true);
+    assert.match(uploadBody.customerPreviewPath, /token=/);
+
+    const noToken = await fetch(`${baseUrl}/api/orders/${order.orderNumber}/custom-designs/${orderItem.id}/image`);
+    assert.equal(noToken.status, 401);
+    const customerView = await fetch(new URL(uploadBody.customerPreviewPath, baseUrl));
+    assert.equal(customerView.status, 200);
+    assert.equal(customerView.headers.get("content-type"), "image/jpeg");
+    assert.ok((await customerView.arrayBuffer()).byteLength > 0);
+
+    const refreshedLinkResponse = await fetch(`${baseUrl}/api/admin/orders/${order.orderNumber}/custom-designs/${orderItem.id}/customer-link`, {
+      method: "POST",
+      headers: { Authorization: "Bearer design-admin-secret" }
+    });
+    const refreshedLink = await refreshedLinkResponse.json();
+    assert.equal(refreshedLinkResponse.status, 200);
+    assert.equal((await fetch(new URL(uploadBody.customerPreviewPath, baseUrl))).status, 404);
+    assert.equal((await fetch(new URL(refreshedLink.customerPreviewPath, baseUrl))).status, 200);
+  });
+});
+
+test("customer reference and owner design pictures stay separate and replacement revokes the old link", async () => {
+  const referenceUploadPath = fs.mkdtempSync(path.join(os.tmpdir(), "forever-beaded-design-separation-test-"));
+  await withServer({ referenceUploadPath, adminSecret: "design-admin-secret" }, async ({ app, baseUrl }) => {
+    const orderResponse = await postOrder(baseUrl, validOrder({ items: [{
+      productId: 10, design: "Custom Idea", requestedProductName: "Horse keepsake",
+      customDescription: "A pearl horse with lavender mane details", colours: "Pearl, Lavender, No Color",
+      hardware: "Silver", quantity: 1, referenceImageRequested: true
+    }] }));
+    const order = await orderResponse.json();
+    const orderItem = await dbGet(app.locals.db, `SELECT order_items.id FROM order_items
+      JOIN orders ON orders.id = order_items.order_id WHERE orders.order_number = ?`, [order.orderNumber]);
+    const reference = await sharp({ create: {
+      width: 640, height: 480, channels: 3, background: { r: 220, g: 200, b: 230 }
+    } }).png().toBuffer();
+    const referenceUpload = await fetch(`${baseUrl}/api/orders/${order.orderNumber}/reference-image`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "image/png", "X-Reference-Upload-Token": order.referenceUploads[0].token,
+        "X-File-Name": encodeURIComponent("customer horse inspiration.png")
+      },
+      body: reference
+    });
+    assert.equal(referenceUpload.status, 200);
+
+    const uploadOwnerImage = async (colour, name) => {
+      const image = await sharp({ create: { width: 720, height: 960, channels: 3, background: colour } }).png().toBuffer();
+      const response = await fetch(`${baseUrl}/api/admin/orders/${order.orderNumber}/custom-designs/${orderItem.id}/image`, {
+        method: "PUT",
+        headers: {
+          Authorization: "Bearer design-admin-secret", "Content-Type": "image/png",
+          "X-File-Name": encodeURIComponent(name)
+        },
+        body: image
+      });
+      return { response, body: await response.json() };
+    };
+
+    const first = await uploadOwnerImage({ r: 90, g: 60, b: 120 }, "first horse design.png");
+    assert.equal(first.response.status, 200);
+    const firstRow = await dbGet(app.locals.db, `SELECT storage_key FROM order_design_images WHERE order_item_id = ?`, [orderItem.id]);
+    const referenceRow = await dbGet(app.locals.db, `SELECT storage_key FROM order_reference_images WHERE order_item_id = ?`, [orderItem.id]);
+    assert.notEqual(firstRow.storage_key, referenceRow.storage_key);
+    assert.equal(fs.existsSync(path.join(referenceUploadPath, referenceRow.storage_key)), true);
+    const ownerReferenceView = await fetch(`${baseUrl}/api/admin/orders/${order.orderNumber}/custom-designs/${orderItem.id}/reference-image`, {
+      headers: { Authorization: "Bearer design-admin-secret" }
+    });
+    assert.equal(ownerReferenceView.status, 200);
+    assert.equal(ownerReferenceView.headers.get("content-type"), "image/jpeg");
+
+    const second = await uploadOwnerImage({ r: 245, g: 235, b: 220 }, "revised horse design.png");
+    assert.equal(second.response.status, 200);
+    assert.equal((await fetch(new URL(first.body.customerPreviewPath, baseUrl))).status, 404);
+    assert.equal((await fetch(new URL(second.body.customerPreviewPath, baseUrl))).status, 200);
+    assert.equal(fs.existsSync(path.join(referenceUploadPath, firstRow.storage_key)), false);
+    assert.equal(fs.existsSync(path.join(referenceUploadPath, referenceRow.storage_key)), true);
+    const count = await dbGet(app.locals.db, "SELECT COUNT(*) AS count FROM order_design_images WHERE order_item_id = ?", [orderItem.id]);
+    assert.equal(count.count, 1);
+  });
+});
+
+test("a customer design link cannot retrieve another order's picture", async () => {
+  await withServer({ adminSecret: "design-admin-secret" }, async ({ app, baseUrl }) => {
+    const createCustomOrder = async (name) => {
+      const response = await postOrder(baseUrl, validOrder({ items: [{
+        productId: 10, design: "Custom Idea", requestedProductName: name,
+        customDescription: `A detailed proposed ${name.toLowerCase()} design`, colours: "Pink",
+        hardware: "Silver", quantity: 1
+      }] }));
+      const order = await response.json();
+      const item = await dbGet(app.locals.db, `SELECT order_items.id FROM order_items
+        JOIN orders ON orders.id = order_items.order_id WHERE orders.order_number = ?`, [order.orderNumber]);
+      return { order, item };
+    };
+    const first = await createCustomOrder("Tiger keepsake");
+    const second = await createCustomOrder("Car keepsake");
+    const image = await sharp({ create: {
+      width: 500, height: 500, channels: 3, background: { r: 240, g: 130, b: 30 }
+    } }).png().toBuffer();
+    const upload = await fetch(`${baseUrl}/api/admin/orders/${first.order.orderNumber}/custom-designs/${first.item.id}/image`, {
+      method: "PUT",
+      headers: { Authorization: "Bearer design-admin-secret", "Content-Type": "image/png" },
+      body: image
+    });
+    const saved = await upload.json();
+    const token = new URL(saved.customerPreviewPath, baseUrl).searchParams.get("token");
+    const crossOrder = await fetch(`${baseUrl}/api/orders/${second.order.orderNumber}/custom-designs/${second.item.id}/image?token=${encodeURIComponent(token)}`);
+    assert.equal(crossOrder.status, 404);
+  });
+});
+
+test("ordinary catalogue orders cannot receive an owner custom design picture", async () => {
+  await withServer({ adminSecret: "design-admin-secret" }, async ({ app, baseUrl }) => {
+    const orderResponse = await postOrder(baseUrl, validOrder({ items: [{
+      productId: "butterfly", quantity: 1, colours: "Pink, Pearl", hardware: "Silver"
+    }] }));
+    const order = await orderResponse.json();
+    const item = await dbGet(app.locals.db, `SELECT order_items.id FROM order_items
+      JOIN orders ON orders.id = order_items.order_id WHERE orders.order_number = ?`, [order.orderNumber]);
+    const listing = await fetch(`${baseUrl}/api/admin/orders/${order.orderNumber}/custom-designs`, {
+      headers: { Authorization: "Bearer design-admin-secret" }
+    });
+    assert.deepEqual((await listing.json()).items, []);
+    const image = await sharp({ create: {
+      width: 100, height: 100, channels: 3, background: { r: 255, g: 180, b: 210 }
+    } }).png().toBuffer();
+    const upload = await fetch(`${baseUrl}/api/admin/orders/${order.orderNumber}/custom-designs/${item.id}/image`, {
+      method: "PUT",
+      headers: { Authorization: "Bearer design-admin-secret", "Content-Type": "image/png" },
+      body: image
+    });
+    assert.equal(upload.status, 404);
   });
 });

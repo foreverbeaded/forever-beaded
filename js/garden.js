@@ -124,6 +124,7 @@
     const source = String(value || "").trim() ? value : fallbackColours.join(", ");
     const colours = String(source || "")
       .split(",")
+      .filter((part) => !isNoColour(part))
       .map((part, index) => normalizeColour(part, index))
       .filter(Boolean);
 
@@ -174,6 +175,66 @@
   let showcaseImageRequest = 0;
   let customReferenceImageDataUrl = "";
   let customReferenceImageName = "";
+  let customReferenceImageBlob = null;
+
+  const isNoColour = (value) => /^no colou?r$/i.test(String(value || "").trim());
+
+  const clearCustomReferenceImage = () => {
+    if (customReferenceImageDataUrl?.startsWith("blob:")) URL.revokeObjectURL(customReferenceImageDataUrl);
+    customReferenceImageDataUrl = "";
+    customReferenceImageName = "";
+    customReferenceImageBlob = null;
+    const input = document.getElementById("homeCustomReferenceImage");
+    const preview = document.getElementById("homeCustomReferencePreview");
+    const previewImage = document.getElementById("homeCustomReferencePreviewImage");
+    const status = document.getElementById("homeCustomReferenceStatus");
+    if (input) input.value = "";
+    if (preview) preview.hidden = true;
+    if (previewImage) previewImage.removeAttribute("src");
+    if (status) status.textContent = "";
+  };
+
+  const processCustomReferenceImage = async (file) => {
+    const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+    if (!allowedTypes.has(file.type)) {
+      throw new Error("Please choose a JPEG, PNG or WebP photo. If your iPhone photo is HEIC, export or share it as JPEG first.");
+    }
+    if (file.size > 12 * 1024 * 1024) throw new Error("That photo is too large. Please choose a photo smaller than 12 MB.");
+
+    let source;
+    let sourceUrl = "";
+    try {
+      if (typeof createImageBitmap === "function") {
+        source = await createImageBitmap(file, { imageOrientation: "from-image" });
+      } else {
+        sourceUrl = URL.createObjectURL(file);
+        source = await new Promise((resolve, reject) => {
+          const image = new Image();
+          image.onload = () => resolve(image);
+          image.onerror = () => reject(new Error("That photo could not be read. Please choose another image."));
+          image.src = sourceUrl;
+        });
+      }
+      const width = source.width || source.naturalWidth;
+      const height = source.height || source.naturalHeight;
+      if (!width || !height || width * height > 25000000) throw new Error("That photo is too large to process safely. Please choose a smaller image.");
+      const scale = Math.min(1, 1600 / Math.max(width, height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(width * scale));
+      canvas.height = Math.max(1, Math.round(height * scale));
+      const context = canvas.getContext("2d", { alpha: false });
+      if (!context) throw new Error("This browser could not prepare the photo. Please try another browser or image.");
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(source, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", .84));
+      if (!blob || blob.size > 3 * 1024 * 1024) throw new Error("That photo could not be compressed enough. Please choose a smaller image.");
+      return blob;
+    } finally {
+      if (typeof source?.close === "function") source.close();
+      if (sourceUrl) URL.revokeObjectURL(sourceUrl);
+    }
+  };
 
   const updateShowcaseProductImage = (product) => {
     const image = document.getElementById("homeShowcaseProductImage");
@@ -513,6 +574,7 @@
     "Purple", "Lavender", "Blue", "Navy", "Turquoise", "Teal", "Green",
     "Lime", "Brown", "Grey", "Black", "Silver"
   ];
+  const optionalCustomizerColourOptions = ["No Color", ...customizerColourOptions];
 
   const colourPartsForProduct = (product) => {
     const value = `${product?.slug || ""} ${product?.name || ""} ${product?.category || ""}`.toLowerCase();
@@ -529,13 +591,14 @@
     return ["Body details", "Small details"];
   };
 
-  const colourOptionMarkup = (selected) => customizerColourOptions
+  const colourOptionMarkup = (selected) => optionalCustomizerColourOptions
     .map(colour => `<option value="${colour}"${colour === selected ? " selected" : ""}>${colour}</option>`)
     .join("");
 
-  const swatchMarkup = (name, selected) => customizerColourOptions.map(colour => {
-    const value = normalizeColour(colour);
-    return `<label class="colour-swatch-option" title="${colour}"><input type="radio" name="${name}" value="${colour}"${colour === selected ? " checked" : ""}><span class="colour-swatch-dot" style="--swatch:${value}"></span><span class="sr-only">${colour}</span></label>`;
+  const swatchMarkup = (name, selected, optional = false) => (optional ? optionalCustomizerColourOptions : customizerColourOptions).map(colour => {
+    const value = isNoColour(colour) ? "transparent" : normalizeColour(colour);
+    const noColourClass = isNoColour(colour) ? " is-no-colour" : "";
+    return `<label class="colour-swatch-option${noColourClass}" title="${colour}"><input type="radio" name="${name}" value="${colour}"${colour === selected ? " checked" : ""}><span class="colour-swatch-dot" style="--swatch:${value}"></span><span class="sr-only">${colour}</span></label>`;
   }).join("");
 
   const syncDesignColourControls = (product) => {
@@ -549,13 +612,15 @@
     if (customizer.dataset.design !== slug) {
       const defaults = (product?.defaultColours || ["Purple", "Cream", "Gold"]).map(titleCase);
       const mainDefault = customizerColourOptions.includes(defaults[0]) ? defaults[0] : "Purple";
-      const accentDefault = customizerColourOptions.includes(defaults[2]) ? defaults[2] : "Gold";
+      const accentDefault = isCustomProduct(product) ? "No Color" : (customizerColourOptions.includes(defaults[2]) ? defaults[2] : "Gold");
       main.innerHTML = swatchMarkup("mainColour", mainDefault);
-      accent.innerHTML = swatchMarkup("accentColour", accentDefault);
+      accent.innerHTML = swatchMarkup("accentColour", accentDefault, true);
       parts.innerHTML = colourPartsForProduct(product).map((part, index) => {
-        const selected = customizerColourOptions.includes(defaults[(index + 1) % defaults.length])
-          ? defaults[(index + 1) % defaults.length]
-          : "Cream";
+        const selected = isCustomProduct(product) && index > 0
+          ? "No Color"
+          : (customizerColourOptions.includes(defaults[(index + 1) % defaults.length])
+            ? defaults[(index + 1) % defaults.length]
+            : "Cream");
         return `<label class="part-colour-row"><span>${part}</span><select name="partColour" data-part="${part}">${colourOptionMarkup(selected)}</select></label>`;
       }).join("");
       customizer.dataset.design = slug;
@@ -568,7 +633,7 @@
       colour: select.value
     }));
     parts.querySelectorAll("select[data-part]").forEach(select => {
-      select.style.setProperty("--selected-colour", normalizeColour(select.value));
+      select.style.setProperty("--selected-colour", isNoColour(select.value) ? "transparent" : normalizeColour(select.value));
       select.setAttribute("aria-label", `${select.dataset.part}: ${select.value}`);
     });
     const mainSelected = document.getElementById("homeMainColourSelected");
@@ -581,9 +646,10 @@
     if (accentSelected) {
       accentSelected.value = `Selected: ${accentColour}`;
       accentSelected.textContent = `Selected: ${accentColour}`;
-      accentSelected.style.setProperty("--selected-colour", normalizeColour(accentColour));
+      accentSelected.style.setProperty("--selected-colour", isNoColour(accentColour) ? "transparent" : normalizeColour(accentColour));
     }
     const summary = [mainColour, ...partSelections.map(selection => selection.colour), accentColour]
+      .filter((colour) => !isNoColour(colour))
       .filter((colour, index, list) => list.indexOf(colour) === index);
     const colourInput = document.getElementById("homeTreasureColours");
     if (colourInput) colourInput.value = summary.join(", ");
@@ -591,8 +657,8 @@
     if (placementInput) {
       placementInput.value = [
         `Main: ${mainColour}`,
-        ...partSelections.map(selection => `${selection.part}: ${selection.colour}`),
-        `Accent: ${accentColour}`
+        ...partSelections.filter((selection) => !isNoColour(selection.colour)).map(selection => `${selection.part}: ${selection.colour}`),
+        ...(isNoColour(accentColour) ? [] : [`Accent: ${accentColour}`])
       ].join("; ");
     }
     return { mainColour, accentColour, partSelections };
@@ -602,10 +668,10 @@
     preview.className = "home-preview-beads finished-custom-preview";
     preview.removeAttribute("data-placeholder");
     const mainHex = normalizeColour(selections?.mainColour || "Purple");
-    const accentHex = normalizeColour(selections?.accentColour || "Gold");
+    const accentHex = isNoColour(selections?.accentColour) ? mainHex : normalizeColour(selections?.accentColour || "Gold");
     const chosenPart = (name, fallback = selections?.mainColour || "Purple") => {
       const match = selections?.partSelections?.find(selection => selection.part.toLowerCase() === name.toLowerCase());
-      return normalizeColour(match?.colour || fallback);
+      return isNoColour(match?.colour) ? normalizeColour(fallback) : normalizeColour(match?.colour || fallback);
     };
     const value = `${product?.slug || ""} ${product?.name || ""}`.toLowerCase();
     const bead = (cx, cy, rx, ry, fill, extra = "") => `<g class="preview-pony-bead" ${extra}><ellipse class="preview-bead-shape" cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fill}"/><ellipse class="preview-bead-shine" cx="${cx-rx*.24}" cy="${cy-ry*.3}" rx="${rx*.35}" ry="${ry*.24}"/><ellipse class="preview-bead-rim" cx="${cx}" cy="${cy}" rx="${Math.max(4.2,rx*.25)}" ry="${Math.max(3.6,ry*.23)}"/><ellipse class="preview-bead-hole" cx="${cx}" cy="${cy}" rx="${Math.max(2.7,rx*.14)}" ry="${Math.max(2.3,ry*.13)}"/></g>`;
@@ -693,7 +759,7 @@
         <circle cx="328" cy="52" r="28" fill="none" stroke="#c9a653" stroke-width="12"/>
         <g aria-hidden="true">${animalBeads}</g>`;
     } else {
-      const parts = selections?.partSelections || [];
+      const parts = (selections?.partSelections || []).filter(({ colour }) => !isNoColour(colour));
       artwork = `<path class="preview-cord" d="M296 82 C296 48 320 34 346 34"/><circle cx="328" cy="52" r="28" fill="none" stroke="#c9a653" stroke-width="12"/><rect class="preview-bead-shape" data-preview-part="Main Colour" x="166" y="116" width="260" height="290" rx="112" fill="${mainHex}"/>`;
       parts.forEach((selection, index) => {
         const columns = [224, 296, 368];
@@ -707,11 +773,12 @@
     const label = personalization ? `<text x="296" y="455" text-anchor="middle" fill="#3d2433" font-family="Inter,Arial,sans-serif" font-size="22" font-weight="800">${personalization.slice(0,18).replace(/[<>&]/g, "")}</text>` : "";
     const accessibleSelections = [
       `Main ${selections?.mainColour || "Purple"}`,
-      ...(selections?.partSelections || []).map(({ part, colour }) => `${part} ${colour}`),
-      `Accent ${selections?.accentColour || "Gold"}`,
+      ...(selections?.partSelections || []).filter(({ colour }) => !isNoColour(colour)).map(({ part, colour }) => `${part} ${colour}`),
+      ...(isNoColour(selections?.accentColour) ? [] : [`Accent ${selections?.accentColour || "Gold"}`]),
     ].join("; ");
 
-    preview.innerHTML = `<svg viewBox="0 0 592 480" role="img" aria-label="Dynamically recoloured ${product?.name || "treasure"} preview. ${accessibleSelections}" data-design="${product?.slug || "custom"}">${artwork}${label}</svg><p class="custom-preview-caption">Approximate finished ${product?.name || "treasure"} · ${selections?.mainColour || "Purple"} main · ${selections?.accentColour || "Gold"} accent</p>`;
+    const accentCaption = isNoColour(selections?.accentColour) ? "" : ` · ${selections?.accentColour || "Gold"} accent`;
+    preview.innerHTML = `<svg viewBox="0 0 592 480" role="img" aria-label="Dynamically recoloured ${product?.name || "treasure"} preview. ${accessibleSelections}" data-design="${product?.slug || "custom"}">${artwork}${label}</svg><p class="custom-preview-caption">Approximate finished ${product?.name || "treasure"} · ${selections?.mainColour || "Purple"} main${accentCaption}</p>`;
   };
 
   const renderCustomIdeaNotice = (preview, selections) => {
@@ -719,6 +786,7 @@
     const requestedName = document.getElementById("homeProductName")?.value.trim() || "your custom idea";
     const colours = [selections?.mainColour, ...(selections?.partSelections || []).map(item => item.colour), selections?.accentColour]
       .filter(Boolean)
+      .filter((colour) => !isNoColour(colour))
       .filter((colour, index, list) => list.indexOf(colour) === index)
       .join(", ");
     preview.className = "home-preview-beads finished-custom-preview custom-idea-notice";
@@ -1543,7 +1611,7 @@
         </ol>
       </div>
     ` : "";
-    const gmailItemLines = orderItems.length
+    const paymentItemLines = orderItems.length
       ? orderItems.map((item, index) => {
         const design = item.productName || item.design || "Treasure";
         const quantity = Number(item.quantity || 1);
@@ -1554,22 +1622,23 @@
         return `${index + 1}. ${design} — ${lineTotal}\n   Product Name: ${item.requestedProductName || "None"}\n   Colours: ${item.colours || ""}\n   Hardware: ${item.hardware || ""}\n   Quantity: ${quantity}\n   Personalization: ${personalization}`;
       }).join("\n\n")
       : "Order item details are listed in the Forever Beaded order record.";
-    const gmailSubject = `Forever Beaded Order ${orderNumber}`;
-    const gmailBody = [
+    const paymentSubject = `Forever Beaded Payment Confirmation – ${orderNumber}`;
+    const paymentBody = [
       "Hi Forever Beaded,",
       "",
-      `I have sent the Interac e-Transfer for order ${orderNumber}.`,
+      "I have sent my Interac e-Transfer for this order.",
       "",
+      `Order number: ${orderNumber}`,
       `Customer name: ${customerName}`,
       `Order total: ${total}`,
       "",
-      "Items:",
-      gmailItemLines,
+      "Ordered treasures:",
+      paymentItemLines,
+      ...(data.referenceImageSupplied === true ? ["", "A custom reference photo was supplied with this order."] : []),
       "",
       "Thank you."
     ].join("\n");
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(etransferEmail)}&su=${encodeURIComponent(gmailSubject)}&body=${encodeURIComponent(gmailBody)}`;
-    const mailtoFallback = `mailto:${etransferEmail}?subject=${encodeURIComponent(gmailSubject)}&body=${encodeURIComponent(gmailBody)}`;
+    const paymentMailtoUrl = `mailto:${etransferEmail}?subject=${encodeURIComponent(paymentSubject)}&body=${encodeURIComponent(paymentBody)}`;
     const { overlay, panel } = createSuccessOverlay();
 
     panel.innerHTML = `
@@ -1588,6 +1657,8 @@
         </div>
       </div>
       ${itemSummaryHtml}
+      ${data.referenceImageSupplied === true ? '<p style="margin:12px 0;color:#f8ead0;">Custom reference photo: securely attached to this order.</p>' : ''}
+      ${data.referenceImageUploadFailed === true ? '<p style="margin:12px 0;color:#fff5df;">Your order was received, but the reference photo could not be attached. Please contact Forever Beaded and mention your order number.</p>' : ''}
       <div style="margin:18px 0;padding-top:18px;border-top:1px solid rgba(212,175,55,.45);">
         <h3 style="margin:0 0 10px;color:#d4af37;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.8rem;">Next Chapter</h3>
         <p style="margin:0 0 8px;line-height:1.55;color:#f8ead0;">Please send your Interac e-Transfer to:</p>
@@ -1601,7 +1672,7 @@
           <button id="addAnotherTreasure" type="button" style="min-height:48px;padding:0 18px;border:0;border-radius:999px;background:#d4af37;color:#1f1026;font-weight:900;cursor:pointer;">Add a Friend for My Treasure</button>
           <span style="color:#f8ead0;font-size:.88rem;line-height:1.35;">Because every gecko, butterfly, and little treasure deserves a friend.</span>
         </div>
-        <button id="openGmailTransferConfirmation" type="button" style="min-height:48px;padding:0 18px;border:1px solid rgba(212,175,55,.8);border-radius:999px;background:rgba(212,175,55,.16);color:#fff;font-weight:900;cursor:pointer;">Finish and Send Payment Confirmation</button>
+        <a id="openPaymentConfirmationEmail" href="${escapeHtml(paymentMailtoUrl)}" style="min-height:48px;display:inline-flex;align-items:center;justify-content:center;padding:0 18px;border:1px solid rgba(212,175,55,.8);border-radius:999px;background:rgba(212,175,55,.16);color:#fff;font-weight:900;text-decoration:none;cursor:pointer;">Finish and Send Payment Confirmation</a>
         <a href="index.html" style="min-height:48px;display:inline-flex;align-items:center;justify-content:center;padding:0 18px;border:1px solid rgba(212,175,55,.75);border-radius:999px;color:#fff;text-decoration:none;font-weight:900;">Return to the Storybook</a>
       </div>
     `;
@@ -1613,12 +1684,6 @@
     if (successPanelVisible) {
       window.requestAnimationFrame(() => playSuccessCelebration(overlay));
     }
-    document.getElementById("openGmailTransferConfirmation")?.addEventListener("click", () => {
-      const gmailWindow = window.open(gmailUrl, "_blank", "noopener,noreferrer");
-      if (!gmailWindow) {
-        window.location.href = mailtoFallback;
-      }
-    });
     document.getElementById("addAnotherTreasure")?.addEventListener("click", () => {
       const form = document.getElementById("homeDesignBuilder");
       if (form) form.dataset.submitting = "false";
@@ -1811,6 +1876,7 @@
     syncPersonalizationField();
     if (!validatePersonalization()) return;
     if (!validateCustomDescription()) return;
+    if (!validateCustomColours()) return;
 
     const address = validateAndNormalizeAddress();
     if (!address.valid) {
@@ -1886,6 +1952,25 @@
     });
   };
 
+  const uploadCustomReferenceImage = async (apiBaseUrl, orderNumber, upload) => {
+    if (!customReferenceImageBlob) return false;
+    if (!upload?.token) throw new Error("The order was received, but reference photo upload authorization was not returned.");
+    const response = await window.fetch(`${apiBaseUrl.replace(/\/$/, "")}/api/orders/${encodeURIComponent(orderNumber)}/reference-image`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "image/jpeg",
+        "X-Reference-Upload-Token": upload.token,
+        "X-File-Name": encodeURIComponent(customReferenceImageName || "reference-photo.jpg")
+      },
+      body: customReferenceImageBlob
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.referenceImageStored !== true) {
+      throw new Error(data.error || "The reference photo could not be attached to the order.");
+    }
+    return true;
+  };
+
   const syncCustomDescriptionField = () => {
     const product = getSelectedProduct();
     const wrap = document.getElementById("homeCustomDescriptionWrap");
@@ -1904,6 +1989,7 @@
     if (referenceWrap) {
       referenceWrap.hidden = !isCustom;
       referenceWrap.setAttribute("aria-hidden", String(!isCustom));
+      referenceWrap.classList.toggle("is-visible", isCustom);
     }
     if (referenceInput) referenceInput.disabled = !isCustom;
     if (productNameWrap) {
@@ -1924,6 +2010,7 @@
       wrap.classList.remove("is-visible");
       textarea.value = "";
       textarea.setCustomValidity("");
+      clearCustomReferenceImage();
       window.setTimeout(() => {
         if (!isCustomProduct(getSelectedProduct())) {
           wrap.hidden = true;
@@ -1957,6 +2044,24 @@
     if (message) {
       textarea.reportValidity();
       setOrderStatus(message, true);
+      return false;
+    }
+    return true;
+  };
+
+  const validateCustomColours = () => {
+    if (!isCustomProduct(getSelectedProduct())) return true;
+    const colours = String(document.getElementById("homeTreasureColours")?.value || "")
+      .split(",")
+      .map((colour) => colour.trim())
+      .filter((colour) => colour && !isNoColour(colour));
+    const uniqueColours = colours.filter((colour, index, list) => list.findIndex((candidate) => candidate.toLowerCase() === colour.toLowerCase()) === index);
+    if (!uniqueColours.length) {
+      setOrderStatus("Please choose a primary bead colour.", true);
+      return false;
+    }
+    if (uniqueColours.length > 3) {
+      setOrderStatus("Please choose no more than three bead colours. Set unused details to No Color.", true);
       return false;
     }
     return true;
@@ -2279,8 +2384,7 @@
       personalizationText: personalization.text,
       requestedProductName,
       customDescription,
-      customReferenceImage: isCustomProduct(product) ? customReferenceImageDataUrl : "",
-      customReferenceImageName: isCustomProduct(product) ? customReferenceImageName : "",
+      referenceImageRequested: isCustomProduct(product) && Boolean(customReferenceImageBlob),
       quantity
     }];
 
@@ -2356,12 +2460,26 @@
       }
 
       orderSucceeded = true;
+      if (customReferenceImageBlob) {
+        try {
+          data.referenceImageSupplied = await uploadCustomReferenceImage(
+            apiBaseUrl,
+            data.orderNumber || data.orderId || extendingOrderNumber,
+            Array.isArray(data.referenceUploads) ? data.referenceUploads[0] : null
+          );
+        } catch (referenceError) {
+          data.referenceImageSupplied = false;
+          data.referenceImageUploadFailed = true;
+          console.error("[checkout] Reference photo upload failed", referenceError);
+        }
+      }
       activeTreasureOrder = {
         orderNumber: data.orderNumber || data.orderId || extendingOrderNumber,
         total: data.total,
         currency: data.currency || "CAD",
         items: Array.isArray(data.items) ? data.items : [],
-        etransferEmail: data.etransferEmail || "foreverbeaded1@gmail.com"
+        etransferEmail: data.etransferEmail || "foreverbeaded1@gmail.com",
+        referenceImageSupplied: data.referenceImageSupplied === true
       };
       console.info("ORDER SAVED");
       console.info("Order saved");
@@ -2442,32 +2560,39 @@
       validateCustomDescription();
       renderHomeTreasurePreview();
     });
-    document.getElementById("homeCustomReferenceImage")?.addEventListener("change", (event) => {
+    document.getElementById("homeCustomReferenceImage")?.addEventListener("change", async (event) => {
       const file = event.currentTarget.files?.[0] || null;
-      customReferenceImageDataUrl = "";
-      customReferenceImageName = "";
       if (!file) {
         renderHomeTreasurePreview();
         return;
       }
-      if (!file.type.startsWith("image/")) {
-        event.currentTarget.value = "";
-        setOrderStatus("Please choose an image file for your custom reference.", true);
-        renderHomeTreasurePreview();
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = () => {
-        customReferenceImageDataUrl = typeof reader.result === "string" ? reader.result : "";
+      const status = document.getElementById("homeCustomReferenceStatus");
+      if (status) status.textContent = "Preparing photo...";
+      try {
+        const processedBlob = await processCustomReferenceImage(file);
+        clearCustomReferenceImage();
+        customReferenceImageBlob = processedBlob;
         customReferenceImageName = file.name;
+        customReferenceImageDataUrl = URL.createObjectURL(processedBlob);
+        const preview = document.getElementById("homeCustomReferencePreview");
+        const previewImage = document.getElementById("homeCustomReferencePreviewImage");
+        if (previewImage) previewImage.src = customReferenceImageDataUrl;
+        if (preview) preview.hidden = false;
+        if (status) status.textContent = `Ready to attach ${file.name} to this order.`;
         renderHomeTreasurePreview();
-      };
-      reader.onerror = () => {
-        console.warn(`[Forever Beaded] Unable to read custom reference image: ${file.name}`);
-        setOrderStatus("That reference image could not be read. Please try another image.", true);
+      } catch (error) {
+        clearCustomReferenceImage();
+        setOrderStatus(error.message || "That reference image could not be read. Please try another image.", true);
         renderHomeTreasurePreview();
-      };
-      reader.readAsDataURL(file);
+      }
+    });
+    document.getElementById("homeCustomReferenceReplace")?.addEventListener("click", () => {
+      document.getElementById("homeCustomReferenceImage")?.click();
+    });
+    document.getElementById("homeCustomReferenceRemove")?.addEventListener("click", () => {
+      clearCustomReferenceImage();
+      renderHomeTreasurePreview();
+      setOrderStatus("Reference photo removed.");
     });
     document.getElementById("homeTreasureHardware")?.addEventListener("change", () => {
       syncHardwarePreviewSample();

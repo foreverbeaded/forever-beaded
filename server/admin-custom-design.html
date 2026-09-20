@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forever Beaded Custom Design Pictures</title>
+  <link rel="stylesheet" href="/admin-assets/custom-design.css">
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">Forever Beaded Owner Tools</p>
+      <h1>Custom Design Pictures</h1>
+      <p>Add or replace the picture showing a customer how their proposed custom treasure will look.</p>
+    </header>
+
+    <form id="orderLookupForm" class="panel">
+      <label for="adminSecret">Admin secret</label>
+      <input id="adminSecret" name="adminSecret" type="password" autocomplete="current-password" required>
+      <label for="orderNumber">Order number</label>
+      <input id="orderNumber" name="orderNumber" type="text" placeholder="FB-20260920-0001" autocomplete="off" required>
+      <button type="submit">Find Custom Design</button>
+    </form>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+    <section id="customDesignItems" aria-live="polite"></section>
+  </main>
+  <script src="/admin-assets/custom-design.js" defer></script>
+</body>
+</html>

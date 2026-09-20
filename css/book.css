@@ -252,6 +252,7 @@ body.storybook-home img {
   min-height: 1.1em;
   margin: 0;
   padding: 0 22px;
+  overflow: visible;
   color: transparent;
   background: none;
   font-family: "Segoe Script", "Lucida Handwriting", "URW Chancery L", cursive;
@@ -272,6 +273,35 @@ body.storybook-home img {
   z-index: 10;
   display: grid;
   place-items: center;
+}
+
+.intro-brand-tagline {
+  position: absolute;
+  top: calc(100% + clamp(10px, 1.5vw, 18px));
+  left: 50%;
+  width: min(92vw, 620px);
+  margin: 0;
+  color: #fff3d4;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(.72rem, 1.4vw, 1.08rem);
+  font-weight: 700;
+  line-height: 1.45;
+  letter-spacing: .2em;
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow: 0 2px 5px rgba(40,18,24,.88), 0 0 10px rgba(222,167,68,.35);
+  opacity: 0;
+  transform: translate(-50%, 8px);
+  transition: opacity .75s ease, transform .75s ease;
+}
+
+.intro-brand-tagline span {
+  display: block;
+}
+
+.opening-scene.title-magic-complete .intro-brand-tagline {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 .magic-letter {
@@ -356,8 +386,16 @@ body.storybook-home img {
 
   .intro-brand-type {
     max-width: calc(100% - 28px);
-    padding: 0 10px;
+    padding: 0 14px;
     font-size: clamp(2.2rem, 10.5vw, 3.55rem);
+  }
+
+  .intro-brand-tagline {
+    top: calc(100% + 8px);
+    width: min(88vw, 360px);
+    font-size: clamp(.62rem, 2.7vw, .78rem);
+    line-height: 1.42;
+    letter-spacing: .14em;
   }
 }
 

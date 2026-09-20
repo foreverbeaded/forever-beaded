@@ -253,7 +253,19 @@ body:is(
   .hero-superhero-collection
 ) > :is(main,.page-scroll){
   position:relative;
-  z-index:2;
+  z-index:3;
+}
+
+body:is(
+  .hero-animal-friends,.hero-birds-sky,.world-butterflies,.hero-flower-garden,
+  .hero-ocean-friends,.hero-sandy-beaches,.world-flags,.world-enchanted,
+  .world-bugs,.scenic-sweets,.world-sports,.world-favourites,.scenic-exclusive,
+  .world-faith,.world-accessories,.collection-back-to-school,.scenic-fall,
+  .world-space,.world-valentines,.world-mothers-day,.world-fathers-day,.scenic-collections,.world-create,
+  .hero-superhero-collection
+) > .chapter-navigation{
+  position:relative;
+  z-index:4;
 }
 
 @media (orientation:portrait) and (min-width:700px) and (max-width:1100px){
@@ -282,6 +294,21 @@ body:is(
     background-size:contain,cover!important;
     background-position:center,center!important;
   }
+}
+
+/* One storybook title treatment across every scenic collection world. */
+html body[class]:is(
+  .hero-animal-friends,.hero-birds-sky,.world-butterflies,.hero-flower-garden,
+  .hero-ocean-friends,.hero-sandy-beaches,.world-flags,.world-enchanted,
+  .world-bugs,.scenic-sweets,.world-sports,.world-favourites,.scenic-exclusive,
+  .world-faith,.world-accessories,.collection-back-to-school,.scenic-fall,
+  .world-space,.world-valentines,.world-mothers-day,.world-fathers-day,
+  .scenic-collections,.world-create,.hero-superhero-collection
+) :is(.page-heading,.world-hero,.section-heading) h1 {
+  color:#fff8e8!important;
+  text-shadow:
+    0 2px 5px rgba(45,20,38,.92),
+    0 0 14px rgba(45,20,38,.58)!important;
 }
 
 @media (max-width:840px) {

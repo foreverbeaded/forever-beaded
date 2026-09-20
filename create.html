@@ -760,6 +760,7 @@
     .world-create .colour-swatch-option { position:relative; display:inline-grid; place-items:center; width:38px; height:38px; margin:0; }
     .world-create .colour-swatch-option input { position:absolute; width:1px; height:1px; opacity:0; }
     .world-create .colour-swatch-dot { width:31px; height:31px; border:2px solid rgba(255,255,255,.82); border-radius:50%; background:var(--swatch); box-shadow:0 3px 10px rgba(0,0,0,.28); cursor:pointer; transition:transform .15s ease,box-shadow .15s ease; }
+    .world-create .colour-swatch-option.is-no-colour .colour-swatch-dot { background:linear-gradient(135deg,#fffaf1 43%,#9e4a57 44%,#9e4a57 56%,#fffaf1 57%); }
     .world-create .colour-swatch-option input:checked + .colour-swatch-dot { transform:scale(1.12); box-shadow:0 0 0 3px #d9ac50,0 4px 12px rgba(0,0,0,.35); }
     .world-create .colour-swatch-option input:focus-visible + .colour-swatch-dot { outline:3px solid #fff5df; outline-offset:3px; }
     .world-create .part-colour-controls { display:grid; gap:9px; }
@@ -768,6 +769,13 @@
     .world-create .selected-colour-output { display:inline-flex; align-items:center; gap:8px; min-height:34px; margin-top:10px; padding:6px 11px; border:1px solid rgba(255,255,255,.2); border-radius:999px; background:rgba(255,255,255,.09); color:#fff7e8; font:700 .78rem/1 Inter,sans-serif; }
     .world-create .selected-colour-output::before { content:""; width:20px; height:20px; border:2px solid rgba(255,255,255,.82); border-radius:50%; background:var(--selected-colour); box-shadow:0 2px 7px rgba(0,0,0,.3); }
     .world-create .colour-summary-field { position:absolute!important; width:1px!important; height:1px!important; margin:-1px!important; overflow:hidden!important; clip:rect(0 0 0 0)!important; white-space:nowrap!important; }
+    .world-create .reference-upload-preview { display:grid; grid-template-columns:96px minmax(0,1fr); gap:12px; align-items:center; margin-top:10px; padding:10px; border:1px solid rgba(218,174,92,.34); border-radius:12px; background:rgba(31,16,38,.36); }
+    .world-create .reference-upload-field > label { display:block; margin-bottom:8px; color:#efca7a; font-size:.76rem; font-weight:900; letter-spacing:.13em; text-transform:uppercase; }
+    .world-create .reference-upload-preview[hidden] { display:none; }
+    .world-create .reference-upload-preview img { width:96px; height:96px; object-fit:contain; object-position:center; border-radius:9px; background:#211822; }
+    .world-create .reference-upload-actions { display:flex; flex-wrap:wrap; gap:8px; }
+    .world-create .reference-upload-actions button { min-height:44px; padding:0 13px; border:1px solid rgba(218,174,92,.58); border-radius:999px; background:rgba(255,255,255,.08); color:#fff5df; font:800 .78rem/1 Inter,sans-serif; cursor:pointer; }
+    .world-create .reference-upload-actions button:focus-visible { outline:3px solid #fff5df; outline-offset:3px; }
     .world-create .finished-custom-preview { position:relative!important; display:grid!important; place-items:center!important; width:min(100%,520px)!important; height:auto!important; min-height:clamp(300px,43vw,520px)!important; overflow:hidden!important; border-radius:18px!important; background:linear-gradient(145deg,#fffaf3,#f5e7ef)!important; isolation:isolate; }
     .world-create .finished-custom-preview svg { position:absolute; z-index:1; inset:16px 16px 44px; width:calc(100% - 32px); height:calc(100% - 60px); overflow:visible; filter:drop-shadow(0 15px 18px rgba(42,20,39,.22)); }
     .world-create .finished-custom-preview .preview-cord { fill:none; stroke:#f7f2eb; stroke-width:10; stroke-linecap:round; stroke-linejoin:round; }
@@ -955,9 +963,19 @@
               <span id="homeCustomDescriptionHelp" class="field-help">Required when Custom Idea is selected.</span>
               <span id="homeCustomDescriptionCount" class="field-help">0 / 500</span>
             </label>
-            <label id="homeCustomReferenceWrap" class="custom-description-field" for="homeCustomReferenceImage" hidden aria-hidden="true">Upload an inspiration image <span class="field-help">(optional)</span>
-              <input id="homeCustomReferenceImage" name="customReferenceImage" type="file" accept="image/*">
-            </label>
+            <div id="homeCustomReferenceWrap" class="custom-description-field reference-upload-field" hidden aria-hidden="true">
+              <label for="homeCustomReferenceImage">Upload a reference photo <span class="field-help">(optional)</span></label>
+              <input id="homeCustomReferenceImage" name="customReferenceImage" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="homeCustomReferenceHelp">
+              <span id="homeCustomReferenceHelp" class="field-help">JPEG, PNG or WebP. Large photos are resized before upload.</span>
+              <span id="homeCustomReferenceStatus" class="field-help" aria-live="polite"></span>
+              <span id="homeCustomReferencePreview" class="reference-upload-preview" hidden>
+                <img id="homeCustomReferencePreviewImage" alt="Selected custom design reference preview">
+                <span class="reference-upload-actions">
+                  <button id="homeCustomReferenceReplace" type="button">Replace photo</button>
+                  <button id="homeCustomReferenceRemove" type="button">Remove photo</button>
+                </span>
+              </span>
+            </div>
             <label class="colour-summary-field">Colour summary <input id="homeTreasureColours" name="colours" type="text" value="Purple, Cream, Gold" autocomplete="off" readonly></label>
             <label>Hardware <select id="homeTreasureHardware" name="hardware"><option value="Silver" selected>Silver</option><option value="Gold">Gold</option></select></label>
             <label>Quantity <input id="homeTreasureQuantity" name="quantity" type="number" min="1" max="20" value="1" inputmode="numeric"></label>

@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 const net = require("net");
 const tls = require("tls");
 const express = require("express");
@@ -7,6 +8,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const validator = require("validator");
+const sharp = require("sharp");
 const sqlite3 = require("sqlite3").verbose();
 const { SEED_PRODUCTS, getSeedProduct } = require("./catalogue");
 
@@ -65,6 +67,48 @@ function getEtransferEmail() {
 
 function getDataPath(fileName) {
   return path.join(__dirname, "data", fileName);
+}
+
+function getReferenceUploadPath(options = {}) {
+  if (Object.prototype.hasOwnProperty.call(options, "referenceUploadPath")) {
+    return options.referenceUploadPath ? path.resolve(options.referenceUploadPath) : null;
+  }
+  const configured = process.env.REFERENCE_UPLOAD_PATH;
+  if (configured) return path.resolve(configured);
+  return isProductionRuntime() ? null : getDataPath("reference-images");
+}
+
+function hashUploadToken(token) {
+  return crypto.createHash("sha256").update(String(token || "")).digest("hex");
+}
+
+function createReferenceUploadToken() {
+  const token = crypto.randomBytes(32).toString("base64url");
+  return { token, hash: hashUploadToken(token) };
+}
+
+async function processUploadedDesignImage(buffer) {
+  if (!Buffer.isBuffer(buffer) || !buffer.length) {
+    throw new PublicError(400, "Please choose a design picture.");
+  }
+  try {
+    return await sharp(buffer, { failOn: "error", limitInputPixels: 25000000 })
+      .rotate()
+      .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
+      .jpeg({ quality: 84, mozjpeg: true })
+      .toBuffer({ resolveWithObject: true });
+  } catch (error) {
+    throw new PublicError(400, "That image could not be processed. Please choose a valid JPEG, PNG, or WebP photo.");
+  }
+}
+
+function resolveStoredImagePath(rootPath, storageKey) {
+  const resolvedRoot = path.resolve(rootPath);
+  const resolvedFile = path.resolve(resolvedRoot, String(storageKey || ""));
+  if (!resolvedFile.startsWith(`${resolvedRoot}${path.sep}`)) {
+    throw new PublicError(404, "Design picture was not found.");
+  }
+  return resolvedFile;
 }
 
 function isProductionRuntime() {
@@ -383,12 +427,20 @@ async function normalizeItem(db, rawItem) {
     ? ""
     : normalizeText(rawItem.personalizationText || rawItem.personalization || rawItem.name, personalizationType === "initials" ? 8 : 40, "Personalization", { required: true }).toUpperCase();
   const requestedProductName = normalizeText(rawItem.requestedProductName, 80, "Product name");
+  const colours = String(rawItem.colours || rawItem.colors || "")
+    .split(",")
+    .map((colour) => colour.trim())
+    .filter((colour) => colour && colour.toLowerCase() !== "no color")
+    .filter((colour, index, list) => list.findIndex((candidate) => candidate.toLowerCase() === colour.toLowerCase()) === index)
+    .join(", ");
+  if (isCustomIdea && !colours) throw new PublicError(400, "Please choose a primary bead colour.");
+  if (isCustomIdea && colours.split(",").length > 3) throw new PublicError(400, "Please choose no more than three bead colours.");
 
   return {
     productId: String(product.id),
     productName: product.name,
     design,
-    colours: normalizeText(rawItem.colours || rawItem.colors, 180, "Colours"),
+    colours: normalizeText(colours, 180, "Colours"),
     personalizationType,
     personalization: personalizationText,
     personalizationText,
@@ -397,7 +449,8 @@ async function normalizeItem(db, rawItem) {
     hardware: normalizeText(rawItem.hardware || rawItem.keychainType, 80, "Hardware"),
     quantity,
     unitPriceCents,
-    lineTotalCents: unitPriceCents * quantity
+    lineTotalCents: unitPriceCents * quantity,
+    referenceImageRequested: isCustomIdea && rawItem.referenceImageRequested === true
   };
 }
 
@@ -654,6 +707,44 @@ async function migrateSchema(db) {
     details TEXT,
     FOREIGN KEY(order_id) REFERENCES orders(id) ON DELETE CASCADE
   )`);
+
+  await dbRun(db, `CREATE TABLE IF NOT EXISTS order_reference_images (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL,
+    order_item_id INTEGER,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING' CHECK(status IN ('PENDING','STORED','REMOVED')),
+    upload_token_hash TEXT UNIQUE NOT NULL,
+    storage_key TEXT,
+    original_filename TEXT,
+    mime_type TEXT,
+    byte_size INTEGER,
+    width INTEGER,
+    height INTEGER,
+    uploaded_at TEXT,
+    FOREIGN KEY(order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY(order_item_id) REFERENCES order_items(id) ON DELETE SET NULL
+  )`);
+
+  await dbRun(db, `CREATE TABLE IF NOT EXISTS order_design_images (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL,
+    order_item_id INTEGER NOT NULL UNIQUE,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'STORED' CHECK(status IN ('STORED','REMOVED')),
+    customer_access_token_hash TEXT UNIQUE NOT NULL,
+    storage_key TEXT NOT NULL,
+    original_filename TEXT,
+    mime_type TEXT NOT NULL DEFAULT 'image/jpeg',
+    byte_size INTEGER NOT NULL,
+    width INTEGER NOT NULL,
+    height INTEGER NOT NULL,
+    uploaded_at TEXT NOT NULL,
+    FOREIGN KEY(order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY(order_item_id) REFERENCES order_items(id) ON DELETE CASCADE
+  )`);
 }
 
 async function generateOrderNumber(db, createdAt) {
@@ -678,14 +769,22 @@ async function createOrder(db, order) {
       order.paymentMethod, order.paymentStatus, order.orderStatus
     ]);
 
+    const referenceUploads = [];
     for (const item of order.items) {
-      await dbRun(db, `INSERT INTO order_items (
+      const itemResult = await dbRun(db, `INSERT INTO order_items (
         order_id, product_id, product_name, requested_product_name, design, colours, personalization_type, personalization, custom_description, hardware,
         quantity, unit_price_cents, line_total_cents
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
         result.lastID, item.productId, item.productName, item.requestedProductName, item.design, item.colours,
         item.personalizationType, item.personalizationText, item.customDescription, item.hardware, item.quantity, item.unitPriceCents, item.lineTotalCents
       ]);
+      if (item.referenceImageRequested) {
+        const upload = createReferenceUploadToken();
+        await dbRun(db, `INSERT INTO order_reference_images (
+          order_id, order_item_id, created_at, updated_at, upload_token_hash
+        ) VALUES (?, ?, ?, ?, ?)`, [result.lastID, itemResult.lastID, now, now, upload.hash]);
+        referenceUploads.push({ token: upload.token, itemIndex: referenceUploads.length });
+      }
     }
 
     await dbRun(db, "INSERT INTO order_events(order_id, created_at, event_type, details) VALUES (?, ?, ?, ?)", [
@@ -695,7 +794,7 @@ async function createOrder(db, order) {
       JSON.stringify({ paymentStatus: order.paymentStatus, orderStatus: order.orderStatus })
     ]);
     await dbRun(db, "COMMIT");
-    return { orderId: result.lastID, orderNumber };
+    return { orderId: result.lastID, orderNumber, referenceUploads };
   } catch (error) {
     await dbRun(db, "ROLLBACK").catch(() => {});
     throw error;
@@ -772,13 +871,22 @@ async function appendItemToOrder(db, orderNumber, rawItem) {
       throw new PublicError(400, "This order can no longer be updated.");
     }
 
-    await dbRun(db, `INSERT INTO order_items (
+    const itemResult = await dbRun(db, `INSERT INTO order_items (
       order_id, product_id, product_name, requested_product_name, design, colours, personalization_type, personalization, custom_description, hardware,
       quantity, unit_price_cents, line_total_cents
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
       orderRow.id, item.productId, item.productName, item.requestedProductName, item.design, item.colours,
       item.personalizationType, item.personalizationText, item.customDescription, item.hardware, item.quantity, item.unitPriceCents, item.lineTotalCents
     ]);
+    let referenceUpload = null;
+    if (item.referenceImageRequested) {
+      const upload = createReferenceUploadToken();
+      const uploadNow = new Date().toISOString();
+      await dbRun(db, `INSERT INTO order_reference_images (
+        order_id, order_item_id, created_at, updated_at, upload_token_hash
+      ) VALUES (?, ?, ?, ?, ?)`, [orderRow.id, itemResult.lastID, uploadNow, uploadNow, upload.hash]);
+      referenceUpload = { token: upload.token, itemIndex: 0 };
+    }
 
     const subtotalCents = Number(orderRow.subtotal_cents || 0) + item.lineTotalCents;
     const shippingCents = subtotalCents >= 7500 ? 0 : 500;
@@ -794,7 +902,9 @@ async function appendItemToOrder(db, orderNumber, rawItem) {
       JSON.stringify({ productId: item.productId, productName: item.productName, quantity: item.quantity })
     ]);
     await dbRun(db, "COMMIT");
-    return getOrderWithItems(db, orderNumber);
+    const savedOrder = await getOrderWithItems(db, orderNumber);
+    savedOrder.referenceUploads = referenceUpload ? [referenceUpload] : [];
+    return savedOrder;
   } catch (error) {
     await dbRun(db, "ROLLBACK").catch(() => {});
     throw error;
@@ -1027,8 +1137,8 @@ function createDatabase(databasePath) {
   return db;
 }
 
-function requireAdminAuth(req, res, next) {
-  const adminSecret = process.env.ADMIN_SECRET;
+function requireAdminAuth(req, res, next, configuredSecret) {
+  const adminSecret = configuredSecret || process.env.ADMIN_SECRET;
   if (!adminSecret || adminSecret === "replace-with-a-long-random-secret") {
     return res.status(503).json({ error: "Admin API is not configured." });
   }
@@ -1047,6 +1157,7 @@ async function createApp(options = {}) {
   readEnvFile(path.join(__dirname, ".env"));
   const app = express();
   const db = options.db || createDatabase(options.databasePath || process.env.DATABASE_PATH || path.join(__dirname, "data", "orders.db"));
+  const referenceUploadPath = getReferenceUploadPath(options);
   await migrateSchema(db);
 
   const allowedOrigins = getAllowedOrigins(options.allowedOrigins || process.env.ALLOWED_ORIGINS);
@@ -1060,10 +1171,11 @@ async function createApp(options = {}) {
     app.set("trust proxy", 1);
   }
   app.locals.db = db;
+  app.locals.referenceUploadPath = referenceUploadPath;
   app.use(helmet());
   app.use(cors({
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type"],
+    methods: ["GET", "POST", "PUT", "OPTIONS"],
+    allowedHeaders: ["Authorization", "Content-Type", "X-Reference-Upload-Token", "X-File-Name"],
     optionsSuccessStatus: 204,
     origin(origin, callback) {
       if (isOriginAllowed(origin, allowedOrigins)) return callback(null, true);
@@ -1081,6 +1193,15 @@ async function createApp(options = {}) {
 
   app.get("/health", (req, res) => res.json({ ok: true }));
   app.get("/api/health", (req, res) => res.json({ ok: true }));
+  app.get("/admin/custom-designs", (req, res) => {
+    res.sendFile(path.join(__dirname, "admin-custom-design.html"));
+  });
+  app.get("/admin-assets/custom-design.css", (req, res) => {
+    res.type("text/css").sendFile(path.join(__dirname, "admin-custom-design.css"));
+  });
+  app.get("/admin-assets/custom-design.js", (req, res) => {
+    res.type("application/javascript").sendFile(path.join(__dirname, "admin-custom-design.js"));
+  });
 
   app.use("/api", apiLimiter);
 
@@ -1125,6 +1246,9 @@ async function createApp(options = {}) {
   app.post("/api/orders", orderLimiter, async (req, res, next) => {
     try {
       const order = await normalizeOrderPayload(db, req.body || {});
+      if (order.items.some((item) => item.referenceImageRequested) && !referenceUploadPath) {
+        throw new PublicError(503, "Reference photo uploads are temporarily unavailable. Please remove the photo and try again.");
+      }
       const saved = await createOrder(db, order);
       const etransferEmail = getEtransferEmail();
       await writeOrdersWorkbook(db);
@@ -1146,6 +1270,7 @@ async function createApp(options = {}) {
         addressAsEntered: order.addressAsEntered,
         normalizedAddress: order.normalizedAddress,
         items: order.items.map(serializeOrderItem),
+        referenceUploads: saved.referenceUploads || [],
         workbookUpdated: true,
         email: emailResult,
         confirmationEmail: emailResult,
@@ -1162,6 +1287,9 @@ async function createApp(options = {}) {
         throw new PublicError(400, "Order could not be submitted.");
       }
       const rawItem = req.body?.item || (Array.isArray(req.body?.items) ? req.body.items[0] : null);
+      if (rawItem?.referenceImageRequested === true && !referenceUploadPath) {
+        throw new PublicError(503, "Reference photo uploads are temporarily unavailable. Please remove the photo and try again.");
+      }
       const orderNumber = normalizeText(req.params.orderNumber, 40, "Order number", { required: true });
       const order = await appendItemToOrder(db, orderNumber, rawItem);
       const saved = { orderId: order.orderId, orderNumber: order.orderNumber };
@@ -1187,6 +1315,7 @@ async function createApp(options = {}) {
         addressAsEntered: order.addressAsEntered,
         normalizedAddress: order.normalizedAddress,
         items: order.items.map(serializeOrderItem),
+        referenceUploads: order.referenceUploads || [],
         workbookUpdated: true,
         email: emailResult,
         confirmationEmail: emailResult,
@@ -1197,20 +1326,289 @@ async function createApp(options = {}) {
     }
   });
 
+  app.post("/api/orders/:orderNumber/reference-image", orderLimiter,
+    express.raw({ type: ["image/jpeg", "image/png", "image/webp"], limit: "3mb" }),
+    async (req, res, next) => {
+      let temporaryPath = "";
+      try {
+        if (!referenceUploadPath) throw new PublicError(503, "Reference photo uploads are temporarily unavailable.");
+        const orderNumber = normalizeText(req.params.orderNumber, 40, "Order number", { required: true });
+        const token = req.get("x-reference-upload-token") || "";
+        if (!token) throw new PublicError(401, "Reference photo authorization is required.");
+        if (!Buffer.isBuffer(req.body) || !req.body.length) throw new PublicError(400, "Please choose a reference photo.");
+
+        const reference = await dbGet(db, `SELECT order_reference_images.id, order_reference_images.status
+          FROM order_reference_images
+          JOIN orders ON orders.id = order_reference_images.order_id
+          WHERE orders.order_number = ? AND order_reference_images.upload_token_hash = ?`, [orderNumber, hashUploadToken(token)]);
+        if (!reference || reference.status !== "PENDING") throw new PublicError(401, "Reference photo authorization is invalid or has expired.");
+
+        let processed;
+        try {
+          processed = await sharp(req.body, { failOn: "error", limitInputPixels: 25000000 })
+            .rotate()
+            .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
+            .jpeg({ quality: 84, mozjpeg: true })
+            .toBuffer({ resolveWithObject: true });
+        } catch (error) {
+          throw new PublicError(400, "That image could not be processed. Please choose a valid JPEG, PNG, or WebP photo.");
+        }
+
+        fs.mkdirSync(referenceUploadPath, { recursive: true });
+        const storageKey = `${crypto.randomUUID()}.jpg`;
+        const finalPath = path.join(referenceUploadPath, storageKey);
+        temporaryPath = `${finalPath}.tmp`;
+        await fs.promises.writeFile(temporaryPath, processed.data, { flag: "wx" });
+        await fs.promises.rename(temporaryPath, finalPath);
+        temporaryPath = "";
+        const now = new Date().toISOString();
+        const originalName = normalizeText(decodeURIComponent(req.get("x-file-name") || "reference-photo"), 120, "File name");
+        await dbRun(db, `UPDATE order_reference_images SET
+          updated_at = ?, status = 'STORED', upload_token_hash = ?, storage_key = ?, original_filename = ?,
+          mime_type = 'image/jpeg', byte_size = ?, width = ?, height = ?, uploaded_at = ?
+          WHERE id = ?`, [now, hashUploadToken(crypto.randomBytes(32).toString("base64url")), storageKey, originalName,
+          processed.data.length, processed.info.width, processed.info.height, now, reference.id]);
+        await dbRun(db, `INSERT INTO order_events(order_id, created_at, event_type, details)
+          SELECT order_id, ?, 'REFERENCE_IMAGE_STORED', ? FROM order_reference_images WHERE id = ?`,
+        [now, JSON.stringify({ referenceImageId: reference.id }), reference.id]);
+        res.status(200).json({ success: true, orderNumber, referenceImageStored: true });
+      } catch (error) {
+        if (temporaryPath) await fs.promises.unlink(temporaryPath).catch(() => {});
+        next(error);
+      }
+    });
+
+  app.get("/api/orders/:orderNumber/custom-designs/:orderItemId/image", async (req, res, next) => {
+    try {
+      if (!referenceUploadPath) throw new PublicError(503, "Custom design picture storage is not configured.");
+      const orderNumber = normalizeText(req.params.orderNumber, 40, "Order number", { required: true });
+      const orderItemId = Number.parseInt(req.params.orderItemId, 10);
+      const token = String(req.query.token || "");
+      if (!Number.isSafeInteger(orderItemId) || orderItemId < 1 || !token) {
+        throw new PublicError(401, "This custom design preview link is invalid.");
+      }
+      const designImage = await dbGet(db, `SELECT order_design_images.storage_key
+        FROM order_design_images
+        JOIN orders ON orders.id = order_design_images.order_id
+        WHERE orders.order_number = ? AND order_design_images.order_item_id = ?
+          AND order_design_images.status = 'STORED'
+          AND order_design_images.customer_access_token_hash = ?`,
+      [orderNumber, orderItemId, hashUploadToken(token)]);
+      if (!designImage?.storage_key) throw new PublicError(404, "Custom design picture was not found.");
+      res.set("Cache-Control", "private, no-store");
+      res.type("image/jpeg");
+      res.sendFile(resolveStoredImagePath(referenceUploadPath, designImage.storage_key));
+    } catch (error) {
+      next(error);
+    }
+  });
+
   app.all("/api/orders/:orderNumber/items", rejectUnsupportedOrderMethod);
   app.all("/api/orders", rejectUnsupportedOrderMethod);
 
-  app.use("/api/admin", requireAdminAuth);
+  app.use("/api/admin", (req, res, next) => requireAdminAuth(req, res, next, options.adminSecret));
   app.get("/api/admin/health", (req, res) => {
     res.json({ ok: true, admin: true });
+  });
+  app.get("/api/admin/orders/:orderNumber/reference-image", async (req, res, next) => {
+    try {
+      if (!referenceUploadPath) throw new PublicError(503, "Reference photo storage is not configured.");
+      const orderNumber = normalizeText(req.params.orderNumber, 40, "Order number", { required: true });
+      const reference = await dbGet(db, `SELECT order_reference_images.storage_key
+        FROM order_reference_images JOIN orders ON orders.id = order_reference_images.order_id
+        WHERE orders.order_number = ? AND order_reference_images.status = 'STORED'
+        ORDER BY order_reference_images.id DESC LIMIT 1`, [orderNumber]);
+      if (!reference?.storage_key) throw new PublicError(404, "Reference photo was not found.");
+      const rootPath = path.resolve(referenceUploadPath);
+      const filePath = path.resolve(rootPath, reference.storage_key);
+      if (!filePath.startsWith(`${rootPath}${path.sep}`)) throw new PublicError(404, "Reference photo was not found.");
+      res.set("Cache-Control", "private, no-store");
+      res.type("image/jpeg");
+      res.sendFile(filePath);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/admin/orders/:orderNumber/custom-designs", async (req, res, next) => {
+    try {
+      const orderNumber = normalizeText(req.params.orderNumber, 40, "Order number", { required: true });
+      const order = await dbGet(db, "SELECT id FROM orders WHERE order_number = ?", [orderNumber]);
+      if (!order) throw new PublicError(404, "Order was not found.");
+      const items = await new Promise((resolve, reject) => {
+        db.all(`SELECT order_items.id, order_items.requested_product_name, order_items.custom_description,
+          order_items.colours, order_items.hardware, order_items.personalization_type, order_items.personalization,
+          order_design_images.status AS design_image_status, order_design_images.updated_at AS design_image_updated_at,
+          EXISTS(SELECT 1 FROM order_reference_images
+            WHERE order_reference_images.order_item_id = order_items.id
+              AND order_reference_images.status = 'STORED') AS has_customer_reference
+          FROM order_items
+          LEFT JOIN products ON CAST(products.id AS TEXT) = order_items.product_id
+          LEFT JOIN order_design_images ON order_design_images.order_item_id = order_items.id
+          WHERE order_items.order_id = ?
+            AND (products.slug = 'custom-idea' OR order_items.product_id = '10' OR order_items.design = 'Custom Idea')
+          ORDER BY order_items.id ASC`, [order.id], (error, rows) => {
+          if (error) reject(error);
+          else resolve(rows || []);
+        });
+      });
+      res.json({
+        success: true,
+        orderNumber,
+        items: items.map((item) => ({
+          orderItemId: item.id,
+          requestedProductName: item.requested_product_name || "Custom Design",
+          customDescription: item.custom_description || "",
+          colours: item.colours || "",
+          hardware: item.hardware || "",
+          personalizationType: item.personalization_type || "none",
+          personalizationText: item.personalization || "",
+          hasCustomerReference: Boolean(item.has_customer_reference),
+          hasDesignPicture: item.design_image_status === "STORED",
+          designPictureUpdatedAt: item.design_image_updated_at || null
+        }))
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/admin/orders/:orderNumber/custom-designs/:orderItemId/image", async (req, res, next) => {
+    try {
+      if (!referenceUploadPath) throw new PublicError(503, "Custom design picture storage is not configured.");
+      const orderNumber = normalizeText(req.params.orderNumber, 40, "Order number", { required: true });
+      const orderItemId = Number.parseInt(req.params.orderItemId, 10);
+      if (!Number.isSafeInteger(orderItemId) || orderItemId < 1) throw new PublicError(400, "Order item is invalid.");
+      const image = await dbGet(db, `SELECT order_design_images.storage_key
+        FROM order_design_images JOIN orders ON orders.id = order_design_images.order_id
+        WHERE orders.order_number = ? AND order_design_images.order_item_id = ?
+          AND order_design_images.status = 'STORED'`, [orderNumber, orderItemId]);
+      if (!image?.storage_key) throw new PublicError(404, "Custom design picture was not found.");
+      res.set("Cache-Control", "private, no-store");
+      res.type("image/jpeg");
+      res.sendFile(resolveStoredImagePath(referenceUploadPath, image.storage_key));
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/admin/orders/:orderNumber/custom-designs/:orderItemId/reference-image", async (req, res, next) => {
+    try {
+      if (!referenceUploadPath) throw new PublicError(503, "Reference photo storage is not configured.");
+      const orderNumber = normalizeText(req.params.orderNumber, 40, "Order number", { required: true });
+      const orderItemId = Number.parseInt(req.params.orderItemId, 10);
+      if (!Number.isSafeInteger(orderItemId) || orderItemId < 1) throw new PublicError(400, "Order item is invalid.");
+      const image = await dbGet(db, `SELECT order_reference_images.storage_key
+        FROM order_reference_images JOIN orders ON orders.id = order_reference_images.order_id
+        WHERE orders.order_number = ? AND order_reference_images.order_item_id = ?
+          AND order_reference_images.status = 'STORED'`, [orderNumber, orderItemId]);
+      if (!image?.storage_key) throw new PublicError(404, "Customer reference photo was not found.");
+      res.set("Cache-Control", "private, no-store");
+      res.type("image/jpeg");
+      res.sendFile(resolveStoredImagePath(referenceUploadPath, image.storage_key));
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.put("/api/admin/orders/:orderNumber/custom-designs/:orderItemId/image",
+    express.raw({ type: ["image/jpeg", "image/png", "image/webp"], limit: "3mb" }),
+    async (req, res, next) => {
+      let temporaryPath = "";
+      let finalPath = "";
+      try {
+        if (!referenceUploadPath) throw new PublicError(503, "Custom design picture storage is not configured.");
+        const orderNumber = normalizeText(req.params.orderNumber, 40, "Order number", { required: true });
+        const orderItemId = Number.parseInt(req.params.orderItemId, 10);
+        if (!Number.isSafeInteger(orderItemId) || orderItemId < 1) throw new PublicError(400, "Order item is invalid.");
+        const item = await dbGet(db, `SELECT orders.id AS order_id, order_items.id AS order_item_id,
+          order_design_images.storage_key AS previous_storage_key
+          FROM orders JOIN order_items ON order_items.order_id = orders.id
+          LEFT JOIN products ON CAST(products.id AS TEXT) = order_items.product_id
+          LEFT JOIN order_design_images ON order_design_images.order_item_id = order_items.id
+          WHERE orders.order_number = ? AND order_items.id = ?
+            AND (products.slug = 'custom-idea' OR order_items.product_id = '10' OR order_items.design = 'Custom Idea')`,
+        [orderNumber, orderItemId]);
+        if (!item) throw new PublicError(404, "Custom design order item was not found.");
+
+        const processed = await processUploadedDesignImage(req.body);
+        fs.mkdirSync(referenceUploadPath, { recursive: true });
+        const storageKey = `design-${crypto.randomUUID()}.jpg`;
+        finalPath = path.join(referenceUploadPath, storageKey);
+        temporaryPath = `${finalPath}.tmp`;
+        await fs.promises.writeFile(temporaryPath, processed.data, { flag: "wx" });
+        await fs.promises.rename(temporaryPath, finalPath);
+        temporaryPath = "";
+
+        const now = new Date().toISOString();
+        const access = createReferenceUploadToken();
+        let originalName = "custom-design.jpg";
+        try {
+          originalName = decodeURIComponent(req.get("x-file-name") || originalName);
+        } catch (error) {
+          throw new PublicError(400, "The design picture file name is invalid.");
+        }
+        originalName = normalizeText(originalName, 120, "File name");
+        await dbRun(db, `INSERT INTO order_design_images (
+          order_id, order_item_id, created_at, updated_at, status, customer_access_token_hash,
+          storage_key, original_filename, mime_type, byte_size, width, height, uploaded_at
+        ) VALUES (?, ?, ?, ?, 'STORED', ?, ?, ?, 'image/jpeg', ?, ?, ?, ?)
+        ON CONFLICT(order_item_id) DO UPDATE SET
+          updated_at = excluded.updated_at, status = 'STORED',
+          customer_access_token_hash = excluded.customer_access_token_hash,
+          storage_key = excluded.storage_key, original_filename = excluded.original_filename,
+          mime_type = excluded.mime_type, byte_size = excluded.byte_size,
+          width = excluded.width, height = excluded.height, uploaded_at = excluded.uploaded_at`,
+        [item.order_id, item.order_item_id, now, now, access.hash, storageKey, originalName,
+          processed.data.length, processed.info.width, processed.info.height, now]);
+        await dbRun(db, "INSERT INTO order_events(order_id, created_at, event_type, details) VALUES (?, ?, ?, ?)", [
+          item.order_id, now, item.previous_storage_key ? "CUSTOM_DESIGN_IMAGE_REPLACED" : "CUSTOM_DESIGN_IMAGE_ADDED",
+          JSON.stringify({ orderItemId })
+        ]);
+        if (item.previous_storage_key && item.previous_storage_key !== storageKey) {
+          const previousPath = resolveStoredImagePath(referenceUploadPath, item.previous_storage_key);
+          await fs.promises.unlink(previousPath).catch(() => {});
+        }
+        finalPath = "";
+        const customerPreviewPath = `/api/orders/${encodeURIComponent(orderNumber)}/custom-designs/${orderItemId}/image?token=${encodeURIComponent(access.token)}`;
+        res.json({ success: true, orderNumber, orderItemId, designPictureStored: true, customerPreviewPath });
+      } catch (error) {
+        if (temporaryPath) await fs.promises.unlink(temporaryPath).catch(() => {});
+        if (finalPath) await fs.promises.unlink(finalPath).catch(() => {});
+        next(error);
+      }
+    });
+
+  app.post("/api/admin/orders/:orderNumber/custom-designs/:orderItemId/customer-link", async (req, res, next) => {
+    try {
+      const orderNumber = normalizeText(req.params.orderNumber, 40, "Order number", { required: true });
+      const orderItemId = Number.parseInt(req.params.orderItemId, 10);
+      if (!Number.isSafeInteger(orderItemId) || orderItemId < 1) throw new PublicError(400, "Order item is invalid.");
+      const image = await dbGet(db, `SELECT order_design_images.id
+        FROM order_design_images JOIN orders ON orders.id = order_design_images.order_id
+        WHERE orders.order_number = ? AND order_design_images.order_item_id = ?
+          AND order_design_images.status = 'STORED'`, [orderNumber, orderItemId]);
+      if (!image) throw new PublicError(404, "Custom design picture was not found.");
+      const access = createReferenceUploadToken();
+      await dbRun(db, "UPDATE order_design_images SET customer_access_token_hash = ?, updated_at = ? WHERE id = ?", [
+        access.hash, new Date().toISOString(), image.id
+      ]);
+      const customerPreviewPath = `/api/orders/${encodeURIComponent(orderNumber)}/custom-designs/${orderItemId}/image?token=${encodeURIComponent(access.token)}`;
+      res.json({ success: true, orderNumber, orderItemId, customerPreviewPath });
+    } catch (error) {
+      next(error);
+    }
   });
 
   app.use((error, req, res, next) => {
     if (res.headersSent) return next(error);
     const status = error.status || error.statusCode || 500;
     if (status >= 500) console.error("Server error:", error.message);
+    const publicMessage = error.type === "entity.too.large"
+      ? "That file is too large. Please choose a smaller reference photo."
+      : (error.publicMessage || "Request could not be completed.");
     res.status(status).json({
-      error: status >= 500 ? "Something went wrong. Please try again later." : (error.publicMessage || "Request could not be completed.")
+      error: error.publicMessage ? publicMessage : (status >= 500 ? "Something went wrong. Please try again later." : publicMessage)
     });
   });
 

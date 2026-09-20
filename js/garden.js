@@ -324,7 +324,7 @@
       <span class="preview-hardware-clasp"></span>
     </span>`;
 
-  const currentHardwareValue = () => document.getElementById("homeTreasureHardware")?.value || "Gold";
+  const currentHardwareValue = () => document.getElementById("homeTreasureHardware")?.value || "Silver";
 
   const syncHardwarePreviewSample = () => {
     const sample = document.getElementById("homeHardwarePreviewSample");
@@ -380,7 +380,7 @@
   const designDropdownGroups = [
     { label: "Flower Garden", slugs: ["big-flower", "flower", "deluxe-flower"] },
     { label: "Butterfly Garden", slugs: ["natalies-butterfly", "butterfly", "butterfly-with-flowers", "butterfly-collection"] },
-    { label: "Animal Friends", slugs: ["gecko", "baby-gecko", "monkey", "panda", "giraffe"] },
+    { label: "Animal Friends", slugs: ["gecko", "baby-gecko", "monkey", "lion", "zebra", "panda", "giraffe"] },
     { label: "Birds of the Sky", slugs: ["macaw"] },
     { label: "Ocean Friends", slugs: ["turtle", "octopus", "fish", "penguin", "whale", "jellyfish", "lobster", "shark"] },
     { label: "Sandy Beaches", slugs: ["crab", "palm-tree"] },
@@ -509,7 +509,7 @@
   };
 
   const customizerColourOptions = [
-    "White", "Cream", "Yellow", "Gold", "Orange", "Red", "Pink", "Coral",
+    "White", "Cream", "Pearl", "Yellow", "Gold", "Orange", "Red", "Pink", "Coral",
     "Purple", "Lavender", "Blue", "Navy", "Turquoise", "Teal", "Green",
     "Lime", "Brown", "Grey", "Black", "Silver"
   ];
@@ -663,6 +663,35 @@
         <g data-preview-part="Petals" fill="${petals}">${bead(296,112,45,63,petals)}${bead(378,158,45,63,petals,'transform="rotate(52 378 158)"')}${bead(375,252,45,63,petals,'transform="rotate(126 375 252)"')}${bead(217,252,45,63,petals,'transform="rotate(-126 217 252)"')}${bead(214,158,45,63,petals,'transform="rotate(-52 214 158)"')}</g>
         <g data-preview-part="Centre" fill="${centre}">${bead(296,206,57,52,centre)}</g>
         <g data-preview-part="Accent Colour" fill="${accentHex}">${bead(276,196,10,9,accentHex)}${bead(316,196,10,9,accentHex)}${bead(296,224,10,9,accentHex)}</g>`;
+    } else if (/lion|zebra/.test(value) && Array.isArray(product?.previewPattern) && product.previewPattern.length) {
+      const points = product.previewPattern;
+      const xs = points.map(point => point.x);
+      const ys = points.map(point => point.y);
+      const minX = Math.min(...xs);
+      const maxX = Math.max(...xs);
+      const minY = Math.min(...ys);
+      const maxY = Math.max(...ys);
+      const spacing = Math.min(28, 310 / Math.max(1, maxX - minX), 300 / Math.max(1, maxY - minY));
+      const width = (maxX - minX) * spacing;
+      const height = (maxY - minY) * spacing;
+      const startX = 296 - width / 2;
+      const startY = 116 + (300 - height) / 2;
+      const animalDetail = chosenPart("Body details", selections?.accentColour);
+      const tokenColours = /zebra/.test(value)
+        ? { a: mainHex, b: animalDetail }
+        : { a: animalDetail, b: accentHex, c: mainHex, d: "#252125" };
+      const animalBeads = points.map(point => bead(
+        startX + (point.x - minX) * spacing,
+        startY + (point.y - minY) * spacing,
+        Math.max(7, spacing * .42),
+        Math.max(6, spacing * .36),
+        tokenColours[point.c] || mainHex,
+        `data-preview-part="${point.c === "a" ? "Main Colour" : "Body details"}"`
+      )).join("");
+      artwork = `
+        <path class="preview-cord" d="M296 82 C296 48 320 34 346 34"/>
+        <circle cx="328" cy="52" r="28" fill="none" stroke="#c9a653" stroke-width="12"/>
+        <g aria-hidden="true">${animalBeads}</g>`;
     } else {
       const parts = selections?.partSelections || [];
       artwork = `<path class="preview-cord" d="M296 82 C296 48 320 34 346 34"/><circle cx="328" cy="52" r="28" fill="none" stroke="#c9a653" stroke-width="12"/><rect class="preview-bead-shape" data-preview-part="Main Colour" x="166" y="116" width="260" height="290" rx="112" fill="${mainHex}"/>`;
@@ -705,7 +734,7 @@
     const design = product?.name || "Butterfly";
     const colourSelections = syncDesignColourControls(product);
     const colourInput = document.getElementById("homeTreasureColours")?.value || "Purple, Cream, Gold";
-    const hardware = document.getElementById("homeTreasureHardware")?.value || "Gold";
+    const hardware = document.getElementById("homeTreasureHardware")?.value || "Silver";
     const quantity = document.getElementById("homeTreasureQuantity")?.value || "1";
     const personalization = getPersonalizationState();
     const requestedProductName = isCustomProduct(product) ? (document.getElementById("homeProductName")?.value.trim() || "") : "";
@@ -1614,7 +1643,7 @@
       if (productName) productName.value = "";
       if (design) design.value = fallbackProduct?.slug || productCatalogue[0]?.slug || "";
       if (colours) colours.value = "Purple, Cream, Gold";
-      if (hardware) hardware.value = "Gold";
+      if (hardware) hardware.value = "Silver";
       if (quantity) quantity.value = "1";
       if (customDescription) {
         customDescription.value = "";
@@ -2149,7 +2178,7 @@
       console.warn("[checkout] Missing product catalogue record for request item", item.productId);
     }
     if (colours) colours.value = item.colours || (product?.defaultColours || ["Purple", "Cream", "Gold"]).join(", ");
-    if (hardware) hardware.value = item.hardware || "Gold";
+    if (hardware) hardware.value = item.hardware || "Silver";
     if (quantity) quantity.value = String(item.quantity || 1);
     if (personalizationEnabled) personalizationEnabled.value = item.personalizationType !== "none" && item.personalizationText ? "yes" : "no";
     if (personalizationKind) personalizationKind.value = item.personalizationType === "initials" ? "initials" : "name";
@@ -2231,7 +2260,7 @@
     const design = product?.name || "Custom idea";
     const colours = document.getElementById("homeTreasureColours")?.value.trim() || "Custom colours";
     const colourPlacement = document.getElementById("homeColourPlacement")?.value.trim() || "";
-    const hardware = document.getElementById("homeTreasureHardware")?.value || "Gold";
+    const hardware = document.getElementById("homeTreasureHardware")?.value || "Silver";
     const quantity = Number(document.getElementById("homeTreasureQuantity")?.value || 1);
     const personalization = getPersonalizationState();
     const requestedProductName = isCustomProduct(product) ? (document.getElementById("homeProductName")?.value.trim() || "") : "";

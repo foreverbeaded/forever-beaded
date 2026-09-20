@@ -220,7 +220,7 @@ test("seeds active products and exposes safe catalogue metadata", async () => {
     assert.equal(response.status, 200);
     assert.equal(body.success, true);
     assert.equal(body.products.length, activeProductCount);
-    for (const slug of ["natalies-butterfly", "fish", "crab", "penguin", "whale", "jellyfish", "lobster", "shark", "custom-idea", "gecko", "big-flower"]) {
+    for (const slug of ["natalies-butterfly", "fish", "crab", "penguin", "whale", "jellyfish", "lobster", "shark", "custom-idea", "gecko", "big-flower", "lion", "zebra"]) {
       const expected = SEED_PRODUCTS.find((product) => product.slug === slug);
       const actual = body.products.find((product) => product.slug === slug);
       assert.ok(actual, `${slug} is missing from the catalogue API`);
@@ -241,6 +241,58 @@ test("seeds active products and exposes safe catalogue metadata", async () => {
   });
 });
 
+test("trusted catalogue IDs are unique after resolving the legacy collision", () => {
+  const ids = SEED_PRODUCTS.map((product) => product.id);
+  assert.equal(new Set(ids).size, ids.length);
+  assert.equal(SEED_PRODUCTS.find((product) => product.slug === "monkey").id, 42);
+  assert.equal(SEED_PRODUCTS.find((product) => product.slug === "pumpkin-spice-latte").id, 114);
+  assert.equal(SEED_PRODUCTS.find((product) => product.slug === "lion").id, 134);
+  assert.equal(SEED_PRODUCTS.find((product) => product.slug === "zebra").id, 135);
+});
+
+test("stores Pearl exactly through the trusted order flow", async () => {
+  await withServer({}, async ({ app, baseUrl }) => {
+    const response = await postOrder(baseUrl, validOrder({
+      items: [{ productId: "butterfly", quantity: 1, colours: "Pink, Purple, Pearl", hardware: "Silver" }]
+    }));
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(body.items[0].colours, "Pink, Purple, Pearl");
+    const row = await dbGet(app.locals.db, `SELECT colours FROM order_items
+      JOIN orders ON orders.id = order_items.order_id
+      WHERE orders.order_number = ?`, [body.orderNumber]);
+    assert.equal(row.colours, "Pink, Purple, Pearl");
+  });
+});
+
+test("uses trusted Lion and Zebra prices instead of browser totals", async () => {
+  await withServer({}, async ({ app, baseUrl }) => {
+    const response = await postOrder(baseUrl, validOrder({
+      total: 1,
+      items: [
+        { productId: "lion", quantity: 1, unitPriceCents: 1, colours: "Orange, Yellow", hardware: "Silver" },
+        { productId: "zebra", quantity: 2, unitPriceCents: 1, colours: "Black, White", hardware: "Silver" }
+      ]
+    }));
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(body.total, 7500);
+    assert.deepEqual(body.items.map((item) => [item.productName, item.unitPriceCents, item.lineTotalCents]), [
+      ["Lion", 2500, 2500],
+      ["Zebra", 2500, 5000]
+    ]);
+    const rows = await new Promise((resolve, reject) => {
+      app.locals.db.all(`SELECT product_name, unit_price_cents, line_total_cents FROM order_items
+        JOIN orders ON orders.id = order_items.order_id
+        WHERE orders.order_number = ? ORDER BY order_items.id`, [body.orderNumber], (error, result) => error ? reject(error) : resolve(result));
+    });
+    assert.deepEqual(rows, [
+      { product_name: "Lion", unit_price_cents: 2500, line_total_cents: 2500 },
+      { product_name: "Zebra", unit_price_cents: 2500, line_total_cents: 5000 }
+    ]);
+  });
+});
+
 test("seeded product image paths point to existing jpeg assets", () => {
   const products = require("../../js/product-catalogue");
   const expectedMappings = {
@@ -253,7 +305,9 @@ test("seeded product image paths point to existing jpeg assets", () => {
     octopus: "etsy/images-branded/octopus-etsy-branded.jpg",
     "soccer-ball": "images/sports/soccer-ball.jpg",
     flower: "etsy/images-branded/flower-owner-approved-master.jpg",
-    "big-flower": "etsy/images-branded/big-flower-approved-master.jpg"
+    "big-flower": "etsy/images-branded/big-flower-approved-master.jpg",
+    lion: "etsy/images-branded/lion-safari-owner-approved.jpg",
+    zebra: "etsy/images-branded/zebra-safari-owner-approved.jpg"
   };
 
   for (const product of products) {

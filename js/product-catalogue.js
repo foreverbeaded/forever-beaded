@@ -359,6 +359,34 @@
       ".a..a..a..",
       "a...a...a."
     ]),
+    lion: patternFromRows([
+      "..ccccccc..",
+      ".ccaaaaacc.",
+      "ccaaabaaaac",
+      "caaababaac.",
+      "caaaadaaac.",
+      ".caaaaaaac.",
+      "..caaaaac..",
+      "...bbbbb...",
+      "..bbbbb....",
+      ".bbb.bbb...",
+      "bbb...bbb..",
+      "bb.....bb.."
+    ]),
+    zebra: patternFromRows([
+      "....bbb....",
+      "...babbb...",
+      "...bbabb...",
+      "....bbb....",
+      "....aba....",
+      "....aba....",
+      "..bbabaaabb",
+      ".bbaaaabbb.",
+      "...ababa...",
+      "...ababa...",
+      "..ab...ba..",
+      ".ab.....ba."
+    ]),
     panda: patternFromRows([
       "..bb...bb..",
       ".bbaaaaabb.",
@@ -555,7 +583,8 @@
       id: 1,
       slug: "butterfly",
       name: "Butterfly",
-      category: "Nature",
+      category: "Butterfly",
+      collections: ["Butterfly", "Mother's Day"],
       description: "A handmade beaded butterfly design.",
       basePriceCents: 2000,
       basePrice: 2000,
@@ -563,7 +592,7 @@
       referenceImageUrl: "etsy/images-branded/butterfly-owner-approved-master.jpg",
       previewImageUrl: "etsy/images-branded/butterfly-owner-approved-master.jpg",
       previewPattern: previewPatterns.butterfly,
-      defaultColours: ["purple", "blue", "black"],
+      defaultColours: ["pink", "purple", "white", "pearl"],
       active: true,
       sortOrder: 10
     },
@@ -1137,7 +1166,7 @@
       sortOrder: 125
     },
     {
-      id: 114,
+      id: 42,
       slug: "monkey",
       name: "Monkey",
       category: "Animals",
@@ -1151,6 +1180,40 @@
       defaultColours: ["brown", "tan", "black", "red"],
       active: true,
       sortOrder: 126
+    },
+    {
+      id: 134,
+      slug: "lion",
+      name: "Lion",
+      category: "Animals",
+      collections: ["Safari"],
+      description: "A warm orange-and-yellow handmade beaded lion keychain.",
+      basePriceCents: 2500,
+      basePrice: 2500,
+      imageUrl: "etsy/images-branded/lion-safari-owner-approved.jpg",
+      referenceImageUrl: "etsy/images-branded/lion-safari-owner-approved.jpg",
+      previewImageUrl: "etsy/images-branded/lion-safari-owner-approved.jpg",
+      previewPattern: previewPatterns.lion,
+      defaultColours: ["orange", "yellow", "red", "white"],
+      active: true,
+      sortOrder: 126.1
+    },
+    {
+      id: 135,
+      slug: "zebra",
+      name: "Zebra",
+      category: "Animals",
+      collections: ["Safari"],
+      description: "A classic black-and-white handmade beaded zebra keychain.",
+      basePriceCents: 2500,
+      basePrice: 2500,
+      imageUrl: "etsy/images-branded/zebra-safari-owner-approved.jpg",
+      referenceImageUrl: "etsy/images-branded/zebra-safari-owner-approved.jpg",
+      previewImageUrl: "etsy/images-branded/zebra-safari-owner-approved.jpg",
+      previewPattern: previewPatterns.zebra,
+      defaultColours: ["black", "white", "white"],
+      active: true,
+      sortOrder: 126.2
     },
     {
       id: 115,

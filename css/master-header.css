@@ -181,12 +181,12 @@
 /* Continuous scenic collection backdrops.
    Each page keeps its approved artwork; the fixed layer stays behind the entire
    document so products, navigation and the footer never fall onto a flat fill. */
-body.hero-animal-friends { --scenic-art:url('../images/animal-friends-background-board-free.png'); --scenic-position:50% 48%; }
-body.hero-birds-sky { --scenic-art:url('../images/birds-of-the-sky-background.jpg'); --scenic-position:50% 34%; }
-body.world-butterflies { --scenic-art:url('../images/butterfly-garden-background.jpeg'); --scenic-position:50% 35%; }
-body.hero-flower-garden { --scenic-art:url('../images/flower-garden-background.jpg'); --scenic-position:50% 36%; }
-body.hero-ocean-friends { --scenic-art:url('../images/ocean-friends-background.jpg'); --scenic-position:50% 32%; }
-body.hero-sandy-beaches { --scenic-art:url('../images/sandy-beaches-background.png'); --scenic-position:50% 34%; }
+body.hero-animal-friends { --scenic-art:url('../images/animal-friends-background-board-free.png'); --scenic-position:50% 48%; --scenic-mobile-fill:linear-gradient(#477048,#203b2a); }
+body.hero-birds-sky { --scenic-art:url('../images/birds-of-the-sky-background.jpg'); --scenic-position:50% 34%; --scenic-mobile-fill:linear-gradient(#8bc8e7,#315b48); }
+body.world-butterflies { --scenic-art:url('../images/butterfly-garden-background.jpeg'); --scenic-position:50% 35%; --scenic-mobile-fill:linear-gradient(#b8d394,#704878); }
+body.hero-flower-garden { --scenic-art:url('../images/flower-garden-background.jpg'); --scenic-position:50% 36%; --scenic-mobile-fill:linear-gradient(#d9b7c7,#4d6940); }
+body.hero-ocean-friends { --scenic-art:url('../images/ocean-friends-background.jpg'); --scenic-position:50% 32%; --scenic-mobile-fill:linear-gradient(#217ca1,#032f55); }
+body.hero-sandy-beaches { --scenic-art:url('../images/sandy-beaches-background.png'); --scenic-position:50% 34%; --scenic-mobile-fill:linear-gradient(#78c8d3,#ddba87); }
 body.world-flags { --scenic-art:url('../images/flags-of-the-world-background.jpg'); --scenic-position:50% 42%; }
 body.world-enchanted { --scenic-art:url('../images/enchanted-beings-background.jpg'); --scenic-position:50% 40%; }
 body.world-bugs { --scenic-art:url('../images/tiny-garden-friends-background.jpg'); --scenic-position:50% 38%; }
@@ -203,13 +203,15 @@ body.world-valentines { --scenic-art:url('../images/valentines-collection-scene-
 body.world-fathers-day { --scenic-art:url('../images/fathers-day-collection-background.jpg'); --scenic-position:50% 45%; }
 body.scenic-collections { --scenic-art:url('../images/collections-scenery-background.jpeg'); --scenic-position:50% 38%; }
 body.world-create { --scenic-art:url('../images/a_cozy_warm_sunlit_artist_craft_studio_scene_view.png'); --scenic-position:50% 42%; }
+body.hero-superhero-collection { --scenic-art:url('../images/superhero-collection-background.jpg'); --scenic-position:50% 38%; --scenic-mobile-fill:linear-gradient(#172c5a,#08142f); }
 
 body:is(
   .hero-animal-friends,.hero-birds-sky,.world-butterflies,.hero-flower-garden,
   .hero-ocean-friends,.hero-sandy-beaches,.world-flags,.world-enchanted,
   .world-bugs,.scenic-sweets,.world-sports,.world-favourites,.scenic-exclusive,
   .world-faith,.world-accessories,.collection-back-to-school,.scenic-fall,
-  .world-space,.world-valentines,.world-fathers-day,.scenic-collections,.world-create
+  .world-space,.world-valentines,.world-fathers-day,.scenic-collections,.world-create,
+  .hero-superhero-collection
 ){
   position:relative;
   isolation:isolate;
@@ -222,7 +224,8 @@ body:is(
   .hero-ocean-friends,.hero-sandy-beaches,.world-flags,.world-enchanted,
   .world-bugs,.scenic-sweets,.world-sports,.world-favourites,.scenic-exclusive,
   .world-faith,.world-accessories,.collection-back-to-school,.scenic-fall,
-  .world-space,.world-valentines,.world-fathers-day,.scenic-collections,.world-create
+  .world-space,.world-valentines,.world-fathers-day,.scenic-collections,.world-create,
+  .hero-superhero-collection
 )::before{
   content:""!important;
   position:fixed!important;
@@ -262,6 +265,35 @@ body:is(
   body.world-fathers-day{--scenic-position:50% 44%}
   body.scenic-collections{--scenic-position:50% 40%}
   body.world-create{--scenic-position:52% 42%}
+}
+
+/* Portrait screens cannot both fill the viewport and preserve a landscape
+   illustration. Show the complete composition over a theme-matched fill. */
+@media (max-width:900px), (max-width:1024px) and (orientation:portrait) {
+  body:is(
+    .hero-animal-friends,.hero-birds-sky,.world-butterflies,.hero-flower-garden,
+    .hero-ocean-friends,.hero-sandy-beaches,.world-flags,.world-enchanted,
+    .world-bugs,.scenic-sweets,.world-sports,.world-favourites,.scenic-exclusive,
+    .world-faith,.world-accessories,.collection-back-to-school,.scenic-fall,
+    .world-space,.world-valentines,.world-fathers-day,.scenic-collections,.world-create,
+    .hero-superhero-collection
+  )::before {
+    background-color:#3c2c3d!important;
+    background-image:var(--scenic-art),var(--scenic-mobile-fill,linear-gradient(#66526b,#2c2131))!important;
+    background-size:calc(100% - 16px) auto,cover!important;
+    background-position:center 68px,center!important;
+    background-repeat:no-repeat!important;
+  }
+}
+
+@media (max-width:840px) {
+  .story-header {
+    min-height:64px!important;
+    padding:9px 12px!important;
+  }
+
+  .story-header .story-brand span { font-size:1.45rem!important; }
+  .story-header .story-brand small { font-size:.58rem!important; }
 }
 
 /* Shared responsive product grid: two comfortable cards on phones, then

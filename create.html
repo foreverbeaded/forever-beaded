@@ -882,7 +882,7 @@
                 </div>
                 <div class="custom-concept-specs">
                   <div class="custom-concept-spec"><span class="custom-concept-label">Product Name</span><strong id="homeCustomConceptProductName">Not entered</strong></div>
-                  <div class="custom-concept-spec"><span class="custom-concept-label">Hardware</span><strong id="homeCustomConceptHardware">Gold</strong></div>
+                  <div class="custom-concept-spec"><span class="custom-concept-label">Hardware</span><strong id="homeCustomConceptHardware">Silver</strong></div>
                   <div class="custom-concept-spec"><span class="custom-concept-label">Personalization / Name</span><strong id="homeCustomConceptPersonalization">None</strong></div>
                   <div class="custom-concept-spec"><span class="custom-concept-label">Quantity</span><strong id="homeCustomConceptQuantity">1</strong></div>
                 </div>
@@ -917,11 +917,11 @@
             <label>Your Name <input id="homeCustomerName" name="customerName" type="text" autocomplete="name" required></label>
             <label>Email <input id="homeCustomerEmail" name="email" type="email" autocomplete="email" required></label>
             <label>Phone <input id="homeCustomerPhone" name="phone" type="tel" autocomplete="tel"></label>
-            <label>Street Address <input id="homeShippingAddress" name="shippingAddress" type="text" autocomplete="street-address"></label>
-            <label>City <input id="homeCity" name="city" type="text" autocomplete="address-level2"></label>
-            <label>Province <input id="homeProvince" name="province" type="text" autocomplete="address-level1"></label>
-            <label>Postal Code <input id="homePostalCode" name="postalCode" type="text" autocomplete="postal-code"></label>
-            <label>Country <input id="homeCountry" name="country" type="text" autocomplete="country-name" value="Canada"></label>
+            <label for="homeShippingAddress">Street Address <input id="homeShippingAddress" name="shippingAddress" type="text" autocomplete="shipping street-address"></label>
+            <label for="homeCity">City <input id="homeCity" name="city" type="text" autocomplete="shipping address-level2"></label>
+            <label for="homeProvince">Province <input id="homeProvince" name="province" type="text" autocomplete="shipping address-level1"></label>
+            <label for="homePostalCode">Postal Code <input id="homePostalCode" name="postalCode" type="text" autocomplete="shipping postal-code"></label>
+            <label for="homeCountry">Country <input id="homeCountry" name="country" type="text" autocomplete="shipping country-name" value="Canada"></label>
             <label id="homeProductNameWrap" class="custom-description-field" for="homeProductName" hidden aria-hidden="true">Product Name
               <input id="homeProductName" name="productName" type="text" placeholder="e.g. Teddy Bear, Butterfly, or Flower" autocomplete="off" maxlength="80">
             </label>
@@ -959,17 +959,17 @@
               <input id="homeCustomReferenceImage" name="customReferenceImage" type="file" accept="image/*">
             </label>
             <label class="colour-summary-field">Colour summary <input id="homeTreasureColours" name="colours" type="text" value="Purple, Cream, Gold" autocomplete="off" readonly></label>
-            <label>Hardware <select id="homeTreasureHardware" name="hardware"><option value="Gold">Gold</option><option value="Silver">Silver</option></select></label>
+            <label>Hardware <select id="homeTreasureHardware" name="hardware"><option value="Silver" selected>Silver</option><option value="Gold">Gold</option></select></label>
             <label>Quantity <input id="homeTreasureQuantity" name="quantity" type="number" min="1" max="20" value="1" inputmode="numeric"></label>
             <label class="order-honeypot" aria-hidden="true" tabindex="-1">Website <input id="homeOrderWebsite" name="website" type="text" autocomplete="off" tabindex="-1"></label>
           </div>
           <div class="treasure-preview" aria-live="polite">
-            <div class="preview-copy"><span class="preview-label">Approximate Finished Preview</span><p id="homeTreasurePreviewSelected" class="preview-selected-design">Selected Design: Loading…</p><h4 id="homeTreasurePreviewTitle">Loading selected design…</h4><p id="homeTreasurePreviewMeta">Gold hardware, quantity 1, no personalization.</p><p id="homeTreasurePreviewDescription" class="preview-description">Approximate colour visualization; the final handmade treasure may vary slightly.</p></div>
+            <div class="preview-copy"><span class="preview-label">Approximate Finished Preview</span><p id="homeTreasurePreviewSelected" class="preview-selected-design">Selected Design: Loading…</p><h4 id="homeTreasurePreviewTitle">Loading selected design…</h4><p id="homeTreasurePreviewMeta">Silver hardware, quantity 1, no personalization.</p><p id="homeTreasurePreviewDescription" class="preview-description">Approximate colour visualization; the final handmade treasure may vary slightly.</p></div>
             <div class="home-preview-art-wrap">
               <aside class="hardware-preview-card" aria-label="Hardware preview">
                 <span class="preview-label">Hardware preview</span>
-                <div id="homeHardwarePreviewSample" class="hardware-preview-sample has-gold-hardware" aria-hidden="true"></div>
-                <p id="homeHardwarePreviewText">Gold ring and clasp</p>
+                <div id="homeHardwarePreviewSample" class="hardware-preview-sample has-silver-hardware" aria-hidden="true"></div>
+                <p id="homeHardwarePreviewText">Silver ring and clasp</p>
               </aside>
               <div id="homeTreasurePreview" class="home-preview-beads" aria-label="Approximate finished bead colour preview"></div>
               <p id="homeTreasurePreviewPersonalization" class="preview-personalization" hidden></p>

@@ -727,6 +727,56 @@ body > .storybook-footer { display: none !important; }
   }
 }
 
+/* Phase A responsive polish: compact story heading and cards while retaining
+   the established two-column collection presentation on phones. */
+@media (max-width: 900px) {
+  .page-scroll {
+    padding:32px 12px 52px!important;
+  }
+
+  body.world-page > main {
+    padding:32px 0 52px!important;
+  }
+
+  .page-heading,
+  .world-page .world-hero-copy {
+    margin-bottom:18px!important;
+  }
+
+  .page-heading h1,
+  .world-page .world-hero h1 {
+    margin-bottom:12px!important;
+    font-size:clamp(38px,9vw,64px)!important;
+    line-height:.96!important;
+  }
+
+  .page-subtitle,
+  .world-page .world-hero p:last-child {
+    min-height:0!important;
+    margin:8px auto 14px!important;
+    font-size:1rem!important;
+    line-height:1.45!important;
+  }
+
+  .search-wrap input,
+  .world-page .world-search-row input {
+    min-height:48px!important;
+    padding-inline:18px!important;
+  }
+
+  body .chapter-order-toggle {
+    min-height:42px!important;
+    margin:8px auto 2px!important;
+    padding:8px 16px!important;
+  }
+
+  .chapter-order-nav,
+  .page-heading > .chapter-order-nav,
+  .world-browser > .chapter-order-nav {
+    margin:12px auto 16px!important;
+  }
+}
+
 /* These two themed pages define colour rules above; keep final hero contrast authoritative. */
 .world-flags .world-hero h1 { color:#17233f!important; text-shadow:-1px -1px 0 #fff4d4,1px -1px 0 #fff4d4,-1px 1px 0 #fff4d4,1px 1px 0 #fff4d4,0 2px 4px rgba(0,0,0,.72),0 0 14px rgba(255,222,151,.96)!important; }
 .world-flags .world-kicker,
@@ -958,5 +1008,58 @@ body[class] .product-grid > .product-card {
     padding: 4px 7px !important;
     font-size: 14px !important;
     line-height: 1.08 !important;
+  }
+}
+
+/* Keep the compact Phase A phone geometry authoritative after the historical
+   collection overrides above. */
+@media (max-width: 620px) {
+  body[class] .product-grid,
+  .product-grid,
+  .world-page .product-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:10px 8px!important;
+  }
+
+  body[class] .product-grid > .product-card,
+  body[class] .product-grid > .product-card:has(.product-card-link),
+  .product-card,
+  .world-page .product-card {
+    width:100%!important;
+    max-width:none!important;
+    aspect-ratio:1.06 / 1!important;
+    justify-self:stretch!important;
+  }
+
+  .product-card img,
+  .world-page .product-card img,
+  .world-page .product-card .product-image,
+  .product-card-link > img { padding:5px 5px 58px!important; }
+
+  .product-card .product-name,
+  .product-card-link > .product-name {
+    inset:auto 5% 23px!important;
+    min-height:29px!important;
+    max-height:42px!important;
+    padding:3px 5px!important;
+    font-size:clamp(11px,3.25vw,13px)!important;
+    line-height:1.05!important;
+  }
+
+  .product-card .product-price,
+  .product-card-link > .product-price {
+    inset:auto 5% 3px!important;
+    height:21px!important;
+    padding:1px 6px 2px!important;
+    font-size:10.5px!important;
+  }
+
+  .product-card .favourite-btn,
+  .world-page .product-card .favourite-btn {
+    top:2px!important;
+    right:2px!important;
+    width:44px!important;
+    height:44px!important;
+    font-size:22px!important;
   }
 }

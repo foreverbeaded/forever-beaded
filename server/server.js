@@ -1610,8 +1610,11 @@ async function createApp(options = {}) {
     if (res.headersSent) return next(error);
     const status = error.status || error.statusCode || 500;
     if (status >= 500) console.error("Server error:", error.message);
+    const ownerDesignUpload = req.method === "PUT" && /^\/api\/admin\/orders\/[^/]+\/custom-designs\/\d+\/image$/.test(req.path);
     const publicMessage = error.type === "entity.too.large"
-      ? "That file is too large. Please choose a smaller reference photo."
+      ? (ownerDesignUpload
+        ? "That design picture is too large. Please choose a smaller design picture."
+        : "That file is too large. Please choose a smaller reference photo.")
       : (error.publicMessage || "Request could not be completed.");
     res.status(status).json({
       error: error.publicMessage ? publicMessage : (status >= 500 ? "Something went wrong. Please try again later." : publicMessage)

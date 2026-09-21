@@ -20,6 +20,8 @@ button.secondary { background: transparent; color: #fff8e8; }
 button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid #fff8e8; outline-offset: 3px; }
 .status { min-height: 1.5em; color: #fff8e8; }
 .status.error { color: #ffb6b6; }
+.item-status { min-height: 1.5em; margin: 0; color: #fff8e8; }
+.item-status.error { color: #ffb6b6; }
 .item-meta { margin: 0; color: #eadfdc; line-height: 1.55; white-space: pre-line; }
 .item-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .item-actions > * { flex: 1 1 180px; }

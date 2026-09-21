@@ -715,6 +715,16 @@ test("owner adds a proposed design picture and only its customer link can retrie
     const orderItem = await dbGet(app.locals.db, `SELECT order_items.id FROM order_items
       JOIN orders ON orders.id = order_items.order_id WHERE orders.order_number = ?`, [order.orderNumber]);
 
+    const oversized = await fetch(`${baseUrl}/api/admin/orders/${order.orderNumber}/custom-designs/${orderItem.id}/image`, {
+      method: "PUT",
+      headers: { Authorization: "Bearer design-admin-secret", "Content-Type": "image/jpeg" },
+      body: Buffer.alloc(3 * 1024 * 1024 + 1024, 1)
+    });
+    assert.equal(oversized.status, 413);
+    const oversizedBody = await oversized.json();
+    assert.match(oversizedBody.error, /design picture/i);
+    assert.doesNotMatch(oversizedBody.error, /reference photo/i);
+
     const unauthorized = await fetch(`${baseUrl}/api/admin/orders/${order.orderNumber}/custom-designs`);
     assert.equal(unauthorized.status, 401);
     const listing = await fetch(`${baseUrl}/api/admin/orders/${order.orderNumber}/custom-designs`, {

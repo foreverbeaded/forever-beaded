@@ -1172,7 +1172,13 @@ async function createApp(options = {}) {
   }
   app.locals.db = db;
   app.locals.referenceUploadPath = referenceUploadPath;
-  app.use(helmet());
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        imgSrc: ["'self'", "data:", "blob:"]
+      }
+    }
+  }));
   app.use(cors({
     methods: ["GET", "POST", "PUT", "OPTIONS"],
     allowedHeaders: ["Authorization", "Content-Type", "X-Reference-Upload-Token", "X-File-Name"],

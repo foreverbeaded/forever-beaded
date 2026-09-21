@@ -147,10 +147,17 @@
           const { response } = await adminFetch(`/api/admin/orders/${encodeURIComponent(currentOrderNumber)}/custom-designs/${item.orderItemId}/reference-image`);
           const blob = await response.blob();
           const objectUrl = URL.createObjectURL(blob);
-          customerReference.onload = () => URL.revokeObjectURL(objectUrl);
+          customerReference.onload = () => {
+            setStatus("Customer reference photo displayed separately below.");
+            setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+          };
+          customerReference.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            customerReference.hidden = true;
+            setStatus("The protected customer reference photo could not be displayed.", true);
+          };
           customerReference.src = objectUrl;
           customerReference.hidden = false;
-          setStatus("Customer reference photo displayed separately below.");
         } catch (error) {
           setStatus(error.message, true);
         } finally {

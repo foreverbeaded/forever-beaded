@@ -247,6 +247,19 @@ test("seeds active products and exposes safe catalogue metadata", async () => {
   });
 });
 
+test("admin page permits protected blob previews while admin APIs remain authenticated", async () => {
+  await withServer({ adminSecret: "csp-admin-secret" }, async ({ baseUrl }) => {
+    const page = await fetch(`${baseUrl}/admin/custom-designs`);
+    assert.equal(page.status, 200);
+    const policy = page.headers.get("content-security-policy") || "";
+    assert.match(policy, /img-src[^;]*'self'[^;]*data:[^;]*blob:/);
+
+    const unauthenticated = await fetch(`${baseUrl}/api/admin/health`);
+    assert.equal(unauthenticated.status, 401);
+    assert.equal((await unauthenticated.json()).error, "Authentication required.");
+  });
+});
+
 test("trusted catalogue IDs are unique after resolving the legacy collision", () => {
   const ids = SEED_PRODUCTS.map((product) => product.id);
   assert.equal(new Set(ids).size, ids.length);

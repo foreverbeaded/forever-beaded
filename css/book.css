@@ -399,6 +399,15 @@ body.storybook-home img {
   }
 }
 
+@media (max-width: 460px) {
+  .intro-brand-type {
+    width: calc(100% - 48px);
+    max-width: none;
+    padding-inline: 8px;
+    font-size: clamp(1.9rem, 8.8vw, 2.4rem);
+  }
+}
+
 @keyframes introBeadScatter {
   0% { opacity: 0; transform: translate(-50%,-50%) scale(.25) rotate(0deg); }
   14% { opacity: 1; }

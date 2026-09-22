@@ -226,7 +226,7 @@ test("seeds active products and exposes safe catalogue metadata", async () => {
     assert.equal(response.status, 200);
     assert.equal(body.success, true);
     assert.equal(body.products.length, activeProductCount);
-    for (const slug of ["natalies-butterfly", "fish", "crab", "penguin", "whale", "jellyfish", "lobster", "shark", "custom-idea", "gecko", "big-flower", "lion", "zebra"]) {
+    for (const slug of ["natalies-butterfly", "fish", "crab", "penguin", "whale", "jellyfish", "lobster", "shark", "custom-idea", "gecko", "big-flower", "lion", "zebra", "personalized-love-heart-keychain"]) {
       const expected = SEED_PRODUCTS.find((product) => product.slug === slug);
       const actual = body.products.find((product) => product.slug === slug);
       assert.ok(actual, `${slug} is missing from the catalogue API`);
@@ -267,6 +267,28 @@ test("trusted catalogue IDs are unique after resolving the legacy collision", ()
   assert.equal(SEED_PRODUCTS.find((product) => product.slug === "pumpkin-spice-latte").id, 114);
   assert.equal(SEED_PRODUCTS.find((product) => product.slug === "lion").id, 134);
   assert.equal(SEED_PRODUCTS.find((product) => product.slug === "zebra").id, 135);
+  assert.equal(SEED_PRODUCTS.find((product) => product.slug === "personalized-love-heart-keychain").id, 136);
+});
+
+test("uses the trusted Personalized Love Heart Keychain price", async () => {
+  await withServer({}, async ({ baseUrl }) => {
+    const response = await postOrder(baseUrl, validOrder({
+      total: 1,
+      items: [{
+        productId: "personalized-love-heart-keychain",
+        quantity: 1,
+        unitPriceCents: 1,
+        colours: "Pink, Red, White, Pearl",
+        hardware: "Silver",
+        personalization: "NOAH LOVES FIONA"
+      }]
+    }));
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(body.total, 3500);
+    assert.equal(body.items[0].productName, "Personalized Love Heart Keychain");
+    assert.equal(body.items[0].unitPriceCents, 3000);
+  });
 });
 
 test("stores Pearl exactly through the trusted order flow", async () => {

@@ -439,47 +439,66 @@
   };
 
   const designDropdownGroups = [
-    { label: "Flower Garden", slugs: ["big-flower", "flower", "deluxe-flower"] },
-    { label: "Butterfly Garden", slugs: ["natalies-butterfly", "butterfly", "butterfly-with-flowers", "butterfly-collection"] },
-    { label: "Animal Friends", slugs: ["gecko", "baby-gecko", "monkey", "lion", "zebra", "panda", "giraffe"] },
-    { label: "Birds of the Sky", slugs: ["macaw"] },
-    { label: "Ocean Friends", slugs: ["turtle", "octopus", "fish", "penguin", "whale", "jellyfish", "lobster", "shark"] },
-    { label: "Sandy Beaches", slugs: ["crab", "palm-tree"] },
-    { label: "Tiny Garden Friends", slugs: ["mushroom", "ladybug-backpack", "dragonfly-keychain"] },
-    { label: "Enchanted Beings", slugs: ["unicorn", "magical-mane-unicorn", "ariel"] },
-    { label: "Outer Space", slugs: ["rocket"] },
-    { label: "Flags of the World", slugs: ["canada-flag"] },
-    { label: "Sports", slugs: ["soccer-ball"] },
-    { label: "Back to School", slugs: ["pencil"] },
-    { label: "Faith Collection", slugs: ["faith-cross", "joy-cross", "peace-cross"] },
-    { label: "Sweet Treats", slugs: [] },
-    { label: "Monthly Exclusive", slugs: ["pumpkin-spice-latte"] }
+    { label: "Flower Garden", categories: ["Flower"], collections: ["Flower"], slugs: ["flower"] },
+    { label: "Butterfly Garden", categories: ["Butterfly"], collections: ["Butterfly"], slugs: ["natalies-butterfly", "butterfly-with-flowers"] },
+    { label: "Animal Friends", categories: ["Animals"] },
+    { label: "Birds of the Sky", categories: ["Birds"] },
+    { label: "Ocean Friends", categories: ["Ocean Animals", "Arctic Ocean Animals"] },
+    { label: "Sandy Beaches", categories: ["Sandy Beaches"] },
+    { label: "Tiny Garden Friends", categories: ["Tiny Garden Friends"], slugs: ["mushroom"] },
+    { label: "Enchanted Beings", categories: ["Enchanted Beings"] },
+    { label: "Outer Space", categories: ["Outer Space"] },
+    { label: "Flags of the World", categories: ["Flags"] },
+    { label: "Sports", categories: ["Sports"] },
+    { label: "Back to School", categories: ["Back to School"] },
+    { label: "Faith Collection", categories: ["Faith"] },
+    { label: "Sweet Treats", categories: ["Sweet Treats"] },
+    { label: "Monthly Exclusive", categories: ["Monthly Exclusives"] },
+    { label: "Valentine's Collection", categories: ["Valentine's"], collections: ["Valentine's"] },
+    { label: "Accessories & Bracelets", categories: ["Accessories"] },
+    { label: "Mother's Day", categories: ["Mother's Day"], collections: ["Mother's Day"] },
+    { label: "Father's Day", categories: ["Father's Day"] }
   ];
+
+  const productMatchesDesignGroup = (product, group) => {
+    const collections = Array.isArray(product.collections) ? product.collections : [];
+    return (group.slugs || []).includes(product.slug)
+      || (group.collections || []).some(collection => collections.includes(collection))
+      || (group.categories || []).includes(product.category);
+  };
+
+  const designGroupLabelForProduct = (product) => {
+    const configuredGroup = designDropdownGroups.find(group => productMatchesDesignGroup(product, group));
+    return configuredGroup?.label || String(product.category || "Other Treasures").trim() || "Other Treasures";
+  };
 
   const populateDesignOptions = () => {
     const select = document.getElementById("homeTreasureDesign");
     const selectableProducts = productCatalogue.filter(isSelectableProduct);
     if (!select || !selectableProducts.length) return;
     const currentValue = select.value;
-    const productBySlug = new Map(selectableProducts.map(product => [product.slug, product]));
-    const groupedSlugs = new Set(designDropdownGroups.flatMap(group => group.slugs));
-    const groups = designDropdownGroups.map((group) => {
-      const options = group.slugs
-        .map(slug => productBySlug.get(slug))
-        .filter(Boolean)
+    const customIdea = selectableProducts.find(product => product.slug === "custom-idea");
+    const productsByGroup = new Map(designDropdownGroups.map(group => [group.label, []]));
+
+    selectableProducts
+      .filter(product => product.slug !== "custom-idea")
+      .forEach((product) => {
+        const label = designGroupLabelForProduct(product);
+        if (!productsByGroup.has(label)) productsByGroup.set(label, []);
+        productsByGroup.get(label).push(product);
+      });
+
+    const groups = [...productsByGroup.entries()].map(([label, products]) => {
+      if (!products.length) return "";
+      const options = products
         .map(product => `<option value="${product.slug}">${product.name}</option>`)
         .join("");
-      return options ? `<optgroup label="${group.label}">${options}</optgroup>` : "";
+      return `<optgroup label="${label}">${options}</optgroup>`;
     });
-    const remainingOptions = selectableProducts
-      .filter(product => !groupedSlugs.has(product.slug) && product.slug !== "custom-idea")
-      .map(product => `<option value="${product.slug}">${product.name}</option>`)
-      .join("");
-    const customIdea = productBySlug.get("custom-idea");
     const customIdeaOption = customIdea
       ? `<optgroup label="Custom Design"><option value="${customIdea.slug}">${customIdea.name}</option></optgroup>`
       : "";
-    select.innerHTML = [...groups, remainingOptions, customIdeaOption].filter(Boolean).join("");
+    select.innerHTML = [...groups, customIdeaOption].filter(Boolean).join("");
     const currentProduct = selectableProducts.find(product => product.slug === currentValue);
     select.value = currentProduct?.slug || fallbackProduct?.slug || selectableProducts[0].slug;
   };

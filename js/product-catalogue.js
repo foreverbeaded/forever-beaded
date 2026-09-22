@@ -333,6 +333,17 @@
       "..aa........aa..",
       "....aaaaaaaa...."
     ]),
+    loveHeart: patternFromRows([
+      ".aaa...aaa.",
+      "aaaaa.aaaaa",
+      "aaaaaaaaaaa",
+      "aaaaaaaaaaa",
+      ".aaaaaaaaa.",
+      "..aaaaaaa..",
+      "...aaaaa...",
+      "....aaa....",
+      ".....a....."
+    ]),
     unicorn: patternFromRows([
       ".........c...",
       "........cc...",
@@ -1008,6 +1019,7 @@
       slug: "sweetheart-bracelet",
       name: "Sweetheart Bracelet",
       category: "Accessories",
+      collections: ["Valentine's"],
       description: "A personalized heart-name bracelet in bright, playful colours.",
       basePriceCents: 1500,
       basePrice: 1500,
@@ -1018,6 +1030,23 @@
       defaultColours: ["pink", "purple", "blue", "white"],
       active: true,
       sortOrder: 96
+    },
+    {
+      id: 136,
+      slug: "personalized-love-heart-keychain",
+      name: "Personalized Love Heart Keychain",
+      category: "Valentine's",
+      collections: ["Valentine's"],
+      description: "A personalized heart-shaped keepsake handmade for someone you love.",
+      basePriceCents: 3000,
+      basePrice: 3000,
+      imageUrl: "etsy/images-branded/personalized-love-heart-keychain-approved.jpg",
+      referenceImageUrl: "etsy/images-branded/personalized-love-heart-keychain-approved.jpg",
+      previewImageUrl: "etsy/images-branded/personalized-love-heart-keychain-approved.jpg",
+      previewPattern: previewPatterns.loveHeart,
+      defaultColours: ["pink", "red", "white", "pearl"],
+      active: true,
+      sortOrder: 96.1
     },
     {
       id: 124,

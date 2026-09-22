@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/book.css" />
-  <link rel="stylesheet" href="css/garden.css?v=create-layout-20260725" />
+  <link rel="stylesheet" href="css/garden.css?v=designer-selection-20260922" />
   <link rel="stylesheet" href="css/animations.css" />
   <link rel="stylesheet" href="css/world-pages.css?v=clean-worlds-1" />
 
@@ -922,6 +922,9 @@
             <p id="treasureRequestTotals" class="treasure-request-total"></p>
           </section>
           <div class="builder-grid">
+            <label class="design-selector-field" for="homeTreasureDesign">Design
+              <select id="homeTreasureDesign" name="design"><option value="">Loading designs...</option></select>
+            </label>
             <label>Your Name <input id="homeCustomerName" name="customerName" type="text" autocomplete="name" required></label>
             <label>Email <input id="homeCustomerEmail" name="email" type="email" autocomplete="email" required></label>
             <label>Phone <input id="homeCustomerPhone" name="phone" type="tel" autocomplete="tel"></label>
@@ -936,7 +939,6 @@
             <label id="homePersonalizationTextWrap" class="personalization-text-field is-visible" for="homePersonalizationText">Personalization / Name <span class="field-help">(optional)</span>
               <input id="homePersonalizationText" name="personalizationText" type="text" placeholder="e.g. Natalie" autocomplete="off" maxlength="40">
             </label>
-            <label>Design <select id="homeTreasureDesign" name="design"><option value="">Loading designs...</option></select></label>
             <fieldset id="homeColourCustomizer" class="colour-customizer" aria-labelledby="homeColourCustomizerTitle">
               <legend id="homeColourCustomizerTitle">Custom colour preview</legend>
               <div class="colour-control-group">
@@ -1007,8 +1009,8 @@
       </a>
       <span class="chapter-navigation__ornament" aria-hidden="true">&#9825;</span>
     </section>
-  <script src="js/product-catalogue.js?v=treasure-catalogue-20260717"></script>
-  <script src="js/garden.js?v=colour-customizer-preview-7"></script>
+  <script src="js/product-catalogue.js?v=designer-selection-20260922"></script>
+  <script src="js/garden.js?v=designer-selection-20260922"></script>
   <script src="js/world-pages.js?v=clean-worlds-1"></script>
   <script src="js/site-butterflies.js?v=homepage-book-only-20260731"></script>
   <script src="js/chapter-order-navigation.js?v=mothers-day-shared-20260916"></script>

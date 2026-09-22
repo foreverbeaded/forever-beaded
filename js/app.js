@@ -82,6 +82,22 @@ function normalizeProductRecord(product) {
   };
 }
 
+const trustedCatalogueProducts = Array.isArray(window.FOREVER_BEADED_PRODUCTS)
+  ? window.FOREVER_BEADED_PRODUCTS
+    .filter(product => product?.active !== false && product?.slug !== "custom-idea")
+    .map(product => ({
+      ...product,
+      productId: product.slug,
+      price: Number(product.basePriceCents) / 100,
+      image: product.imageUrl,
+      createUrl: `create.html?design=${encodeURIComponent(product.slug)}`
+    }))
+  : [];
+
+if (trustedCatalogueProducts.length) {
+  products.splice(0, products.length, ...trustedCatalogueProducts);
+}
+
 function productValidationDetails(product) {
   const missingFields = [];
   if (!String(product.name || "").trim()) missingFields.push("name/title");
@@ -109,14 +125,10 @@ const CART_CHECKOUT_FLAG_KEY = "foreverBeadedCartCheckout";
 const FAVOURITES_STORAGE_KEY = "foreverBeadedFavourites";
 const MAX_CART_QUANTITY = 20;
 const productById = new Map(products.map(product => [String(product.id), product]));
-const CREATE_DESIGN_SLUG_ALIASES = {
-  "flower-braided": "flower"
-};
 
 function createDesignUrl(product) {
   if (product.createUrl) return product.createUrl;
-  const slug = CREATE_DESIGN_SLUG_ALIASES[product.slug] || product.slug;
-  return `create.html?design=${encodeURIComponent(slug)}`;
+  return `create.html?design=${encodeURIComponent(product.slug)}`;
 }
 
 let cart = loadCart();
@@ -307,9 +319,6 @@ function getProductCategories() {
 function productMatchesShopFilters(product) {
   if (activeShopCategory === "Mother's Day" && product.slug === "natalies-butterfly") return false;
   const productCollections = new Set([product.category, ...(Array.isArray(product.collections) ? product.collections : [])]);
-  if (product.category === "Flower" || product.category === "Butterfly" || product.category === "Butterfly & Flower") {
-    productCollections.add("Mother's Day");
-  }
   const categoryMatch = activeShopCategory === "All" ||
     (activeShopCategory === "My Favourites" ? isFavouriteProduct(product) :
     productCollections.has(activeShopCategory));

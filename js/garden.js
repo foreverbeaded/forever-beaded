@@ -241,7 +241,7 @@
     const fallbackMessage = document.getElementById("homeShowcaseImageFallback");
     if (!image) return;
 
-    const productName = product?.name || "Butterfly";
+    const productName = product?.name || "Selected design";
     const customDesignSelected = product?.slug === "custom-idea";
     const requestedUrl = customDesignSelected
       ? customReferenceImageDataUrl
@@ -262,7 +262,9 @@
       if (!customDesignSelected) {
         console.warn(`[Forever Beaded] No selected design image is available for: ${productName}`);
       }
-      showFallbackMessage(customDesignSelected ? "Your Custom Treasure" : undefined);
+      showFallbackMessage(customDesignSelected
+        ? "Your Custom Treasure"
+        : (product ? undefined : "Please choose an available design."));
       return;
     }
 
@@ -304,6 +306,7 @@
       console.warn(`[Forever Beaded] Selected product is missing from the catalogue: ${selectedSlug}`);
       return null;
     }
+    if (!selectedSlug && invalidRequestedDesign()) return null;
     return selectedProduct || fallbackProduct;
   };
 
@@ -356,7 +359,17 @@
     const selectedFrame = selectedPhoto?.closest(".home-selected-product-photo");
     const referenceProductPhoto = document.getElementById("homeReferenceProductPhoto");
     const referenceProductFrame = referenceProductPhoto?.closest(".home-reference-product-photo");
-    if (!product) return;
+    if (!product) {
+      updateShowcaseProductImage(null);
+      [referenceImage, selectedPhoto, referenceProductPhoto].forEach((image) => {
+        if (!image) return;
+        image.removeAttribute("src");
+        image.hidden = true;
+        image.closest(".workspace-photo-primary, .home-selected-product-photo, .home-reference-product-photo")
+          ?.classList.add("image-missing");
+      });
+      return;
+    }
 
     updateShowcaseProductImage(product);
 
@@ -456,6 +469,8 @@
     { label: "Monthly Exclusive", categories: ["Monthly Exclusives"] },
     { label: "Valentine's Collection", categories: ["Valentine's"], collections: ["Valentine's"] },
     { label: "Accessories & Bracelets", categories: ["Accessories"] },
+    { label: "Fall Collection", categories: ["Fall Collection"], collections: ["Fall Collection"] },
+    { label: "Superhero Collection", categories: ["Superhero"] },
     { label: "Mother's Day", categories: ["Mother's Day"], collections: ["Mother's Day"] },
     { label: "Father's Day", categories: ["Father's Day"] }
   ];
@@ -468,7 +483,9 @@
   };
 
   const designGroupLabelForProduct = (product) => {
-    const configuredGroup = designDropdownGroups.find(group => productMatchesDesignGroup(product, group));
+    const categoryGroup = designDropdownGroups.find(group => (group.categories || []).includes(product.category));
+    const configuredGroup = categoryGroup
+      || designDropdownGroups.find(group => productMatchesDesignGroup(product, group));
     return configuredGroup?.label || String(product.category || "Other Treasures").trim() || "Other Treasures";
   };
 
@@ -498,16 +515,29 @@
     const customIdeaOption = customIdea
       ? `<optgroup label="Custom Design"><option value="${customIdea.slug}">${customIdea.name}</option></optgroup>`
       : "";
-    select.innerHTML = [...groups, customIdeaOption].filter(Boolean).join("");
-    const currentProduct = selectableProducts.find(product => product.slug === currentValue);
-    select.value = currentProduct?.slug || fallbackProduct?.slug || selectableProducts[0].slug;
+    const invalidOption = invalidRequestedDesign()
+      ? '<option value="" disabled>Please choose an available design</option>'
+      : "";
+    select.innerHTML = [invalidOption, ...groups, customIdeaOption].filter(Boolean).join("");
+    if (invalidRequestedDesign()) {
+      select.value = "";
+    } else {
+      const currentProduct = selectableProducts.find(product => product.slug === currentValue);
+      select.value = currentProduct?.slug || fallbackProduct?.slug || selectableProducts[0].slug;
+    }
+  };
+
+  const requestedDesignValue = () => {
+    const params = new URLSearchParams(window.location.search);
+    return String(params.get("design") || params.get("product") || "").trim().toLowerCase();
   };
 
   const requestedDesignSlug = () => {
-    const params = new URLSearchParams(window.location.search);
-    const requested = String(params.get("design") || params.get("product") || "").trim().toLowerCase();
+    const requested = requestedDesignValue();
     return productCatalogue.some(product => product.slug === requested && isSelectableProduct(product)) ? requested : "";
   };
+
+  const invalidRequestedDesign = () => Boolean(requestedDesignValue() && !requestedDesignSlug());
 
   const applyRequestedIdea = () => {
     const params = new URLSearchParams(window.location.search);
@@ -536,7 +566,7 @@
   };
 
   const scrollToRequestedDesign = () => {
-    if (!requestedDesignSlug()) return;
+    if (!requestedDesignValue()) return;
     const target = document.getElementById("homeDesignBuilder");
     if (!target) return;
     window.requestAnimationFrame(() => {
@@ -818,7 +848,7 @@
     if (!preview) return;
 
     const product = getSelectedProduct();
-    const design = product?.name || "Butterfly";
+    const design = product?.name || "Design unavailable";
     const colourSelections = syncDesignColourControls(product);
     const colourInput = document.getElementById("homeTreasureColours")?.value || "Purple, Cream, Gold";
     const hardware = document.getElementById("homeTreasureHardware")?.value || "Silver";
@@ -857,7 +887,10 @@
     updateProductImages(product);
     const showcasePreview = document.getElementById("homeShowcaseDynamicPreview");
     const showcaseImage = document.getElementById("homeShowcaseProductImage");
-    if (customSelected) {
+    if (!product) {
+      renderBeadPattern(preview, null, colours);
+      renderBeadPattern(showcasePreview, null, colours);
+    } else if (customSelected) {
       renderCustomIdeaNotice(preview, colourSelections);
       renderCustomIdeaNotice(showcasePreview, colourSelections);
     } else {
@@ -1891,6 +1924,11 @@
   const beginHomeTreasureOrder = (form) => {
     checkoutTrace("Create My Treasure submitted");
     if (form.dataset.submitting === "true") return;
+    if (!getSelectedProduct()) {
+      setOrderStatus("That design is not available. Please choose another design.", true);
+      document.getElementById("homeTreasureDesign")?.focus();
+      return;
+    }
     syncCustomDescriptionField();
     syncPersonalizationField();
     if (!validatePersonalization()) return;
@@ -2629,7 +2667,7 @@
     syncPersonalizationField();
     renderHomeTreasurePreview();
     const storedRequestItems = loadStoredRequestItems();
-    if (storedRequestItems.length && !requestedDesignSlug()) {
+    if (storedRequestItems.length && !requestedDesignValue()) {
       applyRequestItemToBuilder(0);
     }
     if (cartCheckoutRequested() && storedRequestItems.length) {

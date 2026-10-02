@@ -459,7 +459,8 @@ const COLLECTION_THEME_BY_CATEGORY = {
   "Monthly Exclusives": "is-sundae-active",
   Flags: "is-flags-active",
   "Enchanted Beings": "is-enchanted-active",
-  "Tiny Garden Friends": "is-tiny-garden-active"
+  "Tiny Garden Friends": "is-tiny-garden-active",
+  "October Collection": "is-forest-active"
 };
 
 const NEXT_COLLECTION_CHAPTERS = {
@@ -475,8 +476,9 @@ const NEXT_COLLECTION_CHAPTERS = {
   "Tiny Garden Friends": { label: "Back to School", category: "Back to School" },
   "Back to School": { label: "Faith", category: "Faith" },
   Faith: { label: "Sports", category: "Sports" },
-  Sports: { label: "Monthly Exclusive", href: "monthly-exclusive.html?v=september-2026" },
-  "Monthly Exclusives": { label: "Create Your Own", href: "create.html?design=pumpkin-spice-latte#homeDesignBuilder" }
+  Sports: { label: "October Collection", category: "October Collection" },
+  "October Collection": { label: "Monthly Exclusive", href: "monthly-exclusive.html?v=october-2026" },
+  "Monthly Exclusives": { label: "Create Your Own", href: "create.html?design=autumn-tree#homeDesignBuilder" }
 };
 
 
@@ -492,7 +494,8 @@ const COLLECTION_WORLD_COPY = {
   "Back to School": { title: "The Creative Classroom", description: "A cosy classroom filled with pencils, books, beads, and bright ideas." },
   Faith: { title: "The Peaceful Bible Garden", description: "A quiet chapter of faith, warm light, and meaningful handmade keepsakes." },
   Sports: { title: "The Sports Field", description: "A lively field for favourite teams, games, and sporty treasures." },
-  "Monthly Exclusives": { title: "September's Pumpkin Spice Latte", description: "Discover September's cozy fall-inspired handmade treasure." }
+  "October Collection": { title: "The October Collection", description: "Discover warm autumn colours, cozy favourites, and woodland treasures made bead by bead." },
+  "Monthly Exclusives": { title: "October's Autumn Tree", description: "Discover October's colourful handmade exclusive treasure." }
 };
 
 function updateCollectionWorldCopy() {

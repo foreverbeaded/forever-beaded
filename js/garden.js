@@ -470,6 +470,7 @@
     { label: "Valentine's Collection", categories: ["Valentine's"], collections: ["Valentine's"] },
     { label: "Accessories & Bracelets", categories: ["Accessories"] },
     { label: "Fall Collection", categories: ["Fall Collection"], collections: ["Fall Collection"] },
+    { label: "October Collection", categories: ["October Collection"], collections: ["October Collection"] },
     { label: "Superhero Collection", categories: ["Superhero"] },
     { label: "Mother's Day", categories: ["Mother's Day"], collections: ["Mother's Day"] },
     { label: "Father's Day", categories: ["Father's Day"] }

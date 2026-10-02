@@ -57,7 +57,7 @@ test("trusted catalogue has unique active identities and valid local images", ()
 
   assert.equal(new Set(catalogue.map(product => product.id)).size, catalogue.length, "duplicate trusted product ID");
   assert.equal(new Set(catalogue.map(product => product.slug)).size, catalogue.length, "duplicate trusted product slug");
-  assert.equal(activeProducts.length, 80);
+  assert.equal(activeProducts.length, 90);
 
   activeProducts.forEach((product) => {
     assert.ok(product.basePriceCents > 0, `${product.slug} must have a positive trusted price`);
@@ -119,7 +119,17 @@ test("newly reconciled storefront designs use the same trusted server prices", (
     "fall-coffee-cup": 2500,
     "fall-leaves-keychain": 2500,
     "spider-man": 4000,
-    "spider-man-version-1": 4000
+    "spider-man-version-1": 4000,
+    "autumn-tree": 2000,
+    "cinnamon-roll": 2000,
+    "pie-slice": 2000,
+    "cozy-sweater": 2000,
+    scarf: 2000,
+    "rain-boots": 2000,
+    umbrella: 2000,
+    "hot-chocolate": 2000,
+    pinecone: 2000,
+    squirrel: 2000
   };
 
   Object.entries(expectedPrices).forEach(([slug, priceCents]) => {

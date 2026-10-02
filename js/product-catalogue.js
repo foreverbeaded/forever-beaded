@@ -2179,6 +2179,7 @@
       slug: "hot-chocolate",
       name: "Hot Chocolate",
       category: "October Collection",
+      collections: ["October Collection", "Sweet Treats"],
       description: "A cozy handmade beaded hot chocolate keychain.",
       basePriceCents: 2000,
       basePrice: 2000,

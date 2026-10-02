@@ -172,11 +172,12 @@ test("Flower Beaded Lanyard is one trusted multi-collection product", () => {
   assert.ok(Array.isArray(lanyard?.previewPattern) && lanyard.previewPattern.length > 0);
 });
 
-test("Pie Slice and Cinnamon Roll retain one trusted identity across Sweet Treats", () => {
+test("October treats retain one trusted identity across Sweet Treats", () => {
   const catalogue = loadCatalogue();
   const expected = [
     { id: 161, slug: "cinnamon-roll", image: "images/october-collection/cinnamon-roll.jpg" },
-    { id: 162, slug: "pie-slice", image: "images/october-collection/pie-slice.jpg" }
+    { id: 162, slug: "pie-slice", image: "images/october-collection/pie-slice.jpg" },
+    { id: 167, slug: "hot-chocolate", image: "images/october-collection/hot-chocolate.jpg" }
   ];
 
   expected.forEach(({ id, slug, image }) => {
@@ -196,5 +197,5 @@ test("Pie Slice and Cinnamon Roll retain one trusted identity across Sweet Treat
   const sweetTreatCards = extractStaticProductCards()
     .filter(card => card.file === "sweet-treats.html")
     .map(card => card.name);
-  assert.deepEqual(sweetTreatCards, ["Ice Cream Keychain", "Melting Ice Cream", "Pie Slice", "Cinnamon Roll"]);
+  assert.deepEqual(sweetTreatCards, ["Ice Cream Keychain", "Melting Ice Cream", "Cinnamon Roll", "Pie Slice", "Hot Chocolate"]);
 });

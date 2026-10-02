@@ -57,7 +57,7 @@ test("trusted catalogue has unique active identities and valid local images", ()
 
   assert.equal(new Set(catalogue.map(product => product.id)).size, catalogue.length, "duplicate trusted product ID");
   assert.equal(new Set(catalogue.map(product => product.slug)).size, catalogue.length, "duplicate trusted product slug");
-  assert.equal(activeProducts.length, 91);
+  assert.equal(activeProducts.length, 92);
 
   activeProducts.forEach((product) => {
     assert.ok(product.basePriceCents > 0, `${product.slug} must have a positive trusted price`);
@@ -121,6 +121,7 @@ test("newly reconciled storefront designs use the same trusted server prices", (
     "spider-man": 4000,
     "spider-man-version-1": 4000,
     tiger: 3000,
+    "flower-beaded-lanyard": 4500,
     "autumn-tree": 2000,
     "cinnamon-roll": 2000,
     "pie-slice": 2000,
@@ -154,4 +155,19 @@ test("Tiger and Squirrel retain one trusted identity across Animal Friends", () 
   assert.deepEqual(Array.from(tiger?.defaultColours || []), ["orange", "black", "white"]);
   assert.equal(squirrel?.basePriceCents, 2000);
   assert.deepEqual(Array.from(squirrel?.collections || []), ["October Collection", "Animals"]);
+});
+
+test("Flower Beaded Lanyard is one trusted multi-collection product", () => {
+  const catalogue = loadCatalogue();
+  const matches = catalogue.filter(product => product.slug === "flower-beaded-lanyard");
+  const lanyard = matches[0];
+
+  assert.equal(matches.length, 1);
+  assert.equal(lanyard?.id, 170);
+  assert.equal(lanyard?.active, true);
+  assert.equal(lanyard?.basePriceCents, 4500);
+  assert.equal(lanyard?.imageUrl, "images/accessories/flower-beaded-lanyard.jpg");
+  assert.deepEqual(Array.from(lanyard?.collections || []), ["Accessories", "Flower"]);
+  assert.equal(lanyard?.supportsPersonalization, false);
+  assert.ok(Array.isArray(lanyard?.previewPattern) && lanyard.previewPattern.length > 0);
 });

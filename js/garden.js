@@ -596,6 +596,18 @@
     const textWrap = document.getElementById("homePersonalizationTextWrap");
     const input = document.getElementById("homePersonalizationText");
     if (!textWrap || !input) return;
+    const supportsPersonalization = getSelectedProduct()?.supportsPersonalization !== false;
+    if (!supportsPersonalization) {
+      input.value = "";
+      input.disabled = true;
+      input.required = false;
+      input.setCustomValidity("");
+      textWrap.hidden = true;
+      textWrap.setAttribute("aria-hidden", "true");
+      textWrap.classList.remove("is-visible");
+      return;
+    }
+    input.disabled = false;
     textWrap.hidden = false;
     textWrap.setAttribute("aria-hidden", "false");
     textWrap.classList.add("is-visible");
@@ -728,7 +740,24 @@
     const beadSet = (points, fill, part, size = [18, 15]) => `<g data-preview-part="${part}">${points.map(([x,y,rx=size[0],ry=size[1]]) => bead(x,y,rx,ry,fill)).join("")}</g>`;
     let artwork = "";
 
-    if (/butterfl/.test(value)) {
+    if (/lanyard/.test(value)) {
+      const petals = chosenPart("Petals");
+      const centre = chosenPart("Centre", selections?.accentColour);
+      const flowerColours = [mainHex, petals, accentHex, centre];
+      const flower = (cx, cy, colour, index) => {
+        const petalPoints = [[0,-18],[17,-6],[11,15],[-11,15],[-17,-6]];
+        return `<g data-preview-part="${index % 2 ? "Petals" : "Main Colour"}">${petalPoints.map(([dx,dy]) => bead(cx+dx,cy+dy,11,10,colour)).join("")}${bead(cx,cy,9,8,centre)}</g>`;
+      };
+      const leftFlowers = [[222,132],[205,190],[192,249],[189,308],[207,366]];
+      const rightFlowers = [[370,132],[387,190],[400,249],[403,308],[385,366]];
+      artwork = `
+        <path class="preview-cord" d="M222 104 Q182 205 186 314 Q188 398 296 438 Q404 398 406 314 Q410 205 370 104"/>
+        ${leftFlowers.map(([x,y],index) => flower(x,y,flowerColours[index % flowerColours.length],index)).join("")}
+        ${rightFlowers.map(([x,y],index) => flower(x,y,flowerColours[(index+2) % flowerColours.length],index)).join("")}
+        ${flower(296,410,flowerColours[1],10)}
+        <circle cx="296" cy="468" r="24" fill="none" stroke="#c9a653" stroke-width="11"/>
+        <path d="M296 438 L296 445" stroke="#c9a653" stroke-width="10" stroke-linecap="round"/>`;
+    } else if (/butterfl/.test(value)) {
       const wings = chosenPart("Wings");
       const details = chosenPart("Wing details", selections?.accentColour);
       const body = chosenPart("Body");

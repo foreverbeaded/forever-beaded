@@ -333,6 +333,20 @@
       "..aa........aa..",
       "....aaaaaaaa...."
     ]),
+    flowerLanyard: patternFromRows([
+      "aa...........aa",
+      "aba.........aba",
+      "aca.........aca",
+      "ada.........ada",
+      "aea.........aea",
+      ".aba.......aba.",
+      ".aca.......aca.",
+      "..ada.....ada..",
+      "...aea...aea...",
+      "....aba.aba....",
+      ".....acaca.....",
+      "......ada......"
+    ]),
     loveHeart: patternFromRows([
       ".aaa...aaa.",
       "aaaaa.aaaaa",
@@ -1196,6 +1210,24 @@
       defaultColours: ["aqua", "purple", "pink", "white"],
       active: true,
       sortOrder: 97
+    },
+    {
+      id: 170,
+      slug: "flower-beaded-lanyard",
+      name: "Flower Beaded Lanyard",
+      category: "Accessories",
+      collections: ["Accessories", "Flower"],
+      description: "A colourful handmade beaded flower lanyard with coordinated clasp hardware.",
+      basePriceCents: 4500,
+      basePrice: 4500,
+      imageUrl: "images/accessories/flower-beaded-lanyard.jpg",
+      referenceImageUrl: "images/accessories/flower-beaded-lanyard.jpg",
+      previewImageUrl: "images/accessories/flower-beaded-lanyard.jpg",
+      previewPattern: previewPatterns.flowerLanyard,
+      defaultColours: ["pink", "turquoise", "orange", "purple", "yellow", "white"],
+      supportsPersonalization: false,
+      active: true,
+      sortOrder: 97.5
     },
     {
       id: 10,

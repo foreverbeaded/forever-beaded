@@ -596,6 +596,18 @@
       "...bbb...",
       "....b...."
     ]),
+    acorn: patternFromRows([
+      "....b....",
+      "....b....",
+      "..bbbbb..",
+      ".bbbbbbb.",
+      "..aaaaa..",
+      ".aaaaaaa.",
+      ".aaaaaaa.",
+      "..aaaaa..",
+      "...aaa...",
+      "....a...."
+    ]),
     scarf: patternFromRows([
       "...aaaa...",
       "..abbbba..",
@@ -1896,13 +1908,14 @@
       slug: "fall-acorn",
       name: "Acorn",
       category: "Fall Collection",
+      collections: ["Fall Collection", "October Collection"],
       description: "A handmade beaded acorn keychain.",
       basePriceCents: 2000,
       basePrice: 2000,
-      imageUrl: "images/fall-collection/acorn.jpg",
-      referenceImageUrl: "images/fall-collection/acorn.jpg",
-      previewImageUrl: "images/fall-collection/acorn.jpg",
-      previewPattern: previewPatterns.iceCream,
+      imageUrl: "images/october-collection/acorn.jpg",
+      referenceImageUrl: "images/october-collection/acorn.jpg",
+      previewImageUrl: "images/october-collection/acorn.jpg",
+      previewPattern: previewPatterns.acorn,
       defaultColours: ["brown", "tan", "cream"],
       active: true,
       sortOrder: 153

@@ -57,7 +57,7 @@ test("trusted catalogue has unique active identities and valid local images", ()
 
   assert.equal(new Set(catalogue.map(product => product.id)).size, catalogue.length, "duplicate trusted product ID");
   assert.equal(new Set(catalogue.map(product => product.slug)).size, catalogue.length, "duplicate trusted product slug");
-  assert.equal(activeProducts.length, 90);
+  assert.equal(activeProducts.length, 91);
 
   activeProducts.forEach((product) => {
     assert.ok(product.basePriceCents > 0, `${product.slug} must have a positive trusted price`);
@@ -120,6 +120,7 @@ test("newly reconciled storefront designs use the same trusted server prices", (
     "fall-leaves-keychain": 2500,
     "spider-man": 4000,
     "spider-man-version-1": 4000,
+    tiger: 3000,
     "autumn-tree": 2000,
     "cinnamon-roll": 2000,
     "pie-slice": 2000,
@@ -137,4 +138,20 @@ test("newly reconciled storefront designs use the same trusted server prices", (
     assert.ok(product, `${slug} is missing from the server catalogue`);
     assert.equal(product.basePriceCents, priceCents, `${slug} server price mismatch`);
   });
+});
+
+test("Tiger and Squirrel retain one trusted identity across Animal Friends", () => {
+  const catalogue = loadCatalogue();
+  const tiger = catalogue.find(product => product.slug === "tiger");
+  const squirrel = catalogue.find(product => product.slug === "squirrel");
+
+  assert.equal(catalogue.filter(product => product.slug === "tiger").length, 1);
+  assert.equal(catalogue.filter(product => product.slug === "squirrel").length, 1);
+  assert.equal(tiger?.active, true);
+  assert.equal(tiger?.basePriceCents, 3000);
+  assert.equal(tiger?.imageUrl, "etsy/images-branded/tiger-safari-owner-approved.jpg");
+  assert.ok(Array.isArray(tiger?.previewPattern) && tiger.previewPattern.length > 0);
+  assert.deepEqual(Array.from(tiger?.defaultColours || []), ["orange", "black", "white"]);
+  assert.equal(squirrel?.basePriceCents, 2000);
+  assert.deepEqual(Array.from(squirrel?.collections || []), ["October Collection", "Animals"]);
 });

@@ -141,10 +141,12 @@ test("newly reconciled storefront designs use the same trusted server prices", (
   });
 });
 
-test("Tiger and Squirrel retain one trusted identity across Animal Friends", () => {
+test("Animal Friends retains its exact trusted cross-collection identities", () => {
   const catalogue = loadCatalogue();
   const tiger = catalogue.find(product => product.slug === "tiger");
   const squirrel = catalogue.find(product => product.slug === "squirrel");
+  const fox = catalogue.find(product => product.slug === "fall-fox");
+  const owl = catalogue.find(product => product.slug === "owl");
 
   assert.equal(catalogue.filter(product => product.slug === "tiger").length, 1);
   assert.equal(catalogue.filter(product => product.slug === "squirrel").length, 1);
@@ -155,6 +157,24 @@ test("Tiger and Squirrel retain one trusted identity across Animal Friends", () 
   assert.deepEqual(Array.from(tiger?.defaultColours || []), ["orange", "black", "white"]);
   assert.equal(squirrel?.basePriceCents, 2000);
   assert.deepEqual(Array.from(squirrel?.collections || []), ["October Collection", "Animals"]);
+  assert.equal(catalogue.filter(product => product.slug === "fall-fox").length, 1);
+  assert.equal(fox?.id, 152);
+  assert.equal(fox?.basePriceCents, 2500);
+  assert.equal(fox?.imageUrl, "images/fall-collection/fox.jpg");
+  assert.deepEqual(Array.from(fox?.collections || []), ["Fall Collection", "Animals"]);
+  assert.equal(owl?.category, "Birds");
+  assert.equal((owl?.collections || []).includes("Animals"), false);
+
+  const animalNames = Array.from(catalogue
+    .filter(product => product.active !== false)
+    .filter(product => product.category === "Animals" || (product.collections || []).includes("Animals"))
+    .map(product => product.name)).sort();
+  assert.deepEqual(animalNames, ["Fox", "Giraffe", "Lion", "Monkey", "Panda", "Puppy", "Squirrel", "Tiger", "Zebra"]);
+
+  const animalFriends = extractStaticProductCards()
+    .filter(card => card.file === "animal-friends.html")
+    .map(card => card.name);
+  assert.deepEqual(animalFriends, ["Puppy", "Monkey", "Tiger", "Lion", "Zebra", "Panda", "Giraffe", "Squirrel", "Fox"]);
 });
 
 test("Flower Beaded Lanyard is one trusted multi-collection product", () => {

@@ -1935,6 +1935,7 @@
       slug: "fall-fox",
       name: "Fox",
       category: "Fall Collection",
+      collections: ["Fall Collection", "Animals"],
       description: "A personalized handmade fox keychain.",
       basePriceCents: 2500,
       basePrice: 2500,

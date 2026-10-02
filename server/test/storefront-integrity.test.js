@@ -171,3 +171,30 @@ test("Flower Beaded Lanyard is one trusted multi-collection product", () => {
   assert.equal(lanyard?.supportsPersonalization, false);
   assert.ok(Array.isArray(lanyard?.previewPattern) && lanyard.previewPattern.length > 0);
 });
+
+test("Pie Slice and Cinnamon Roll retain one trusted identity across Sweet Treats", () => {
+  const catalogue = loadCatalogue();
+  const expected = [
+    { id: 161, slug: "cinnamon-roll", image: "images/october-collection/cinnamon-roll.jpg" },
+    { id: 162, slug: "pie-slice", image: "images/october-collection/pie-slice.jpg" }
+  ];
+
+  expected.forEach(({ id, slug, image }) => {
+    const matches = catalogue.filter(product => product.slug === slug);
+    const product = matches[0];
+    assert.equal(matches.length, 1, `${slug} should have one trusted identity`);
+    assert.equal(product?.id, id);
+    assert.equal(product?.basePriceCents, 2000);
+    assert.equal(product?.imageUrl, image);
+    assert.deepEqual(Array.from(product?.collections || []), ["October Collection", "Sweet Treats"]);
+  });
+
+  const sweetTreats = fs.readFileSync(path.join(projectRoot, "sweet-treats.html"), "utf8");
+  expected.forEach(({ slug }) => {
+    assert.match(sweetTreats, new RegExp(`create\\.html\\?design=${slug}(?:#homeDesignBuilder)?`));
+  });
+  const sweetTreatCards = extractStaticProductCards()
+    .filter(card => card.file === "sweet-treats.html")
+    .map(card => card.name);
+  assert.deepEqual(sweetTreatCards, ["Ice Cream Keychain", "Melting Ice Cream", "Pie Slice", "Cinnamon Roll"]);
+});

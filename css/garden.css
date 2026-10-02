@@ -3639,6 +3639,14 @@ body.intro-active .scroll-monarch-layer {
   }
 }
 
+@media (max-width: 360px) {
+  .world-create .builder-grid .design-selector-field select {
+    padding-left: 10px;
+    padding-right: 8px;
+    font-size: .82rem;
+  }
+}
+
 /* Customer favourites and moderated reviews */
 .product-card {
   position: relative;

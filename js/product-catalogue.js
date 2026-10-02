@@ -754,6 +754,25 @@
       sortOrder: 10
     },
     {
+      id: 171,
+      slug: "personalized-butterfly-keychain",
+      name: "Personalized Butterfly Keychain",
+      category: "Butterfly",
+      collections: ["Butterfly"],
+      description: "A personalized handmade butterfly keychain with a custom letter-bead name loop.",
+      basePriceCents: 2500,
+      basePrice: 2500,
+      imageUrl: "images/products/personalized-butterfly-keychain.jpg",
+      referenceImageUrl: "images/products/personalized-butterfly-keychain.jpg",
+      previewImageUrl: "images/products/personalized-butterfly-keychain.jpg",
+      additionalImageUrls: ["images/products/personalized-butterfly-keychain-example-2.jpg"],
+      previewPattern: previewPatterns.butterfly,
+      defaultColours: ["pink", "purple", "black"],
+      supportsPersonalization: true,
+      active: true,
+      sortOrder: 10.5
+    },
+    {
       id: 2,
       slug: "gecko",
       name: "Gecko Keychain",
@@ -916,6 +935,23 @@
       defaultColours: ["green", "brown", "cream"],
       active: true,
       sortOrder: 58
+    },
+    {
+      id: 172,
+      slug: "personalized-turtle-keychain",
+      name: "Personalized Turtle Keychain",
+      category: "Ocean Animals",
+      description: "A personalized handmade turtle keychain with the customer name incorporated across the shell.",
+      basePriceCents: 2500,
+      basePrice: 2500,
+      imageUrl: "images/products/personalized-turtle-keychain.jpg",
+      referenceImageUrl: "images/products/personalized-turtle-keychain.jpg",
+      previewImageUrl: "images/products/personalized-turtle-keychain.jpg",
+      previewPattern: previewPatterns.turtle,
+      defaultColours: ["green", "brown", "blue"],
+      supportsPersonalization: true,
+      active: true,
+      sortOrder: 58.5
     },
     {
       id: 21,

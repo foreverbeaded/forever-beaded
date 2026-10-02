@@ -19,6 +19,15 @@ This document prepares listing information only. It does not authorize automatic
 - Action: update an approved existing Butterfly listing rather than create another listing. Keep both apparent Etsy duplicates unchanged until duplicate policy is confirmed.
 - Options to review: colour choice including Pearl, personalization, and applicable Silver/Gold hardware choices.
 
+## Newly released personalized designs eligible for Etsy preparation
+
+| Website product | Slug | Website price | Approved images | Etsy preparation status |
+| --- | --- | ---: | --- | --- |
+| Personalized Butterfly Keychain | `personalized-butterfly-keychain` | $25 CAD | `images/products/personalized-butterfly-keychain.jpg`; `images/products/personalized-butterfly-keychain-example-2.jpg` | Prepare one made-to-order listing using both approved colour/name examples. Do not create separate listings for different names or colours. Include the existing supported colour choices and customer-name personalization. |
+| Personalized Turtle Keychain | `personalized-turtle-keychain` | $25 CAD | `images/products/personalized-turtle-keychain.jpg` | Prepare a new made-to-order listing separate from the existing non-personalized Turtle. Include the existing supported colour choices and customer-name personalization. |
+
+These products are eligible for listing preparation only. This document does not authorize Etsy publication or changes to an existing Turtle or Butterfly listing.
+
 ## Website products not confidently represented on Etsy
 
 | Website product | Website price | Website image |

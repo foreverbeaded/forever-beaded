@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
@@ -57,7 +58,7 @@ test("trusted catalogue has unique active identities and valid local images", ()
 
   assert.equal(new Set(catalogue.map(product => product.id)).size, catalogue.length, "duplicate trusted product ID");
   assert.equal(new Set(catalogue.map(product => product.slug)).size, catalogue.length, "duplicate trusted product slug");
-  assert.equal(activeProducts.length, 92);
+  assert.equal(activeProducts.length, 94);
 
   activeProducts.forEach((product) => {
     assert.ok(product.basePriceCents > 0, `${product.slug} must have a positive trusted price`);
@@ -218,4 +219,72 @@ test("October treats retain one trusted identity across Sweet Treats", () => {
     .filter(card => card.file === "sweet-treats.html")
     .map(card => card.name);
   assert.deepEqual(sweetTreatCards, ["Ice Cream Keychain", "Melting Ice Cream", "Cinnamon Roll", "Pie Slice", "Hot Chocolate"]);
+});
+
+test("new personalized butterfly and turtle keychains remain distinct trusted products", () => {
+  const catalogue = loadCatalogue();
+  const personalizedButterfly = catalogue.find(product => product.slug === "personalized-butterfly-keychain");
+  const personalizedTurtle = catalogue.find(product => product.slug === "personalized-turtle-keychain");
+  const butterflyNameKeychain = catalogue.find(product => product.slug === "butterfly-name-keychain");
+  const turtle = catalogue.find(product => product.slug === "turtle");
+
+  assert.equal(catalogue.filter(product => product.slug === "personalized-butterfly-keychain").length, 1);
+  assert.equal(personalizedButterfly?.id, 171);
+  assert.equal(personalizedButterfly?.name, "Personalized Butterfly Keychain");
+  assert.equal(personalizedButterfly?.basePriceCents, 2500);
+  assert.equal(personalizedButterfly?.category, "Butterfly");
+  assert.deepEqual(Array.from(personalizedButterfly?.collections || []), ["Butterfly"]);
+  assert.equal(personalizedButterfly?.imageUrl, "images/products/personalized-butterfly-keychain.jpg");
+  assert.deepEqual(Array.from(personalizedButterfly?.additionalImageUrls || []), ["images/products/personalized-butterfly-keychain-example-2.jpg"]);
+  assert.deepEqual(Array.from(personalizedButterfly?.defaultColours || []), ["pink", "purple", "black"]);
+  assert.equal(personalizedButterfly?.supportsPersonalization, true);
+  assert.ok(Array.isArray(personalizedButterfly?.previewPattern) && personalizedButterfly.previewPattern.length > 0);
+
+  assert.equal(catalogue.filter(product => product.slug === "personalized-turtle-keychain").length, 1);
+  assert.equal(personalizedTurtle?.id, 172);
+  assert.equal(personalizedTurtle?.name, "Personalized Turtle Keychain");
+  assert.equal(personalizedTurtle?.basePriceCents, 2500);
+  assert.equal(personalizedTurtle?.category, "Ocean Animals");
+  assert.equal(personalizedTurtle?.imageUrl, "images/products/personalized-turtle-keychain.jpg");
+  assert.deepEqual(Array.from(personalizedTurtle?.defaultColours || []), ["green", "brown", "blue"]);
+  assert.equal(personalizedTurtle?.supportsPersonalization, true);
+  assert.ok(Array.isArray(personalizedTurtle?.previewPattern) && personalizedTurtle.previewPattern.length > 0);
+
+  const existingButterflies = [
+    { slug: "butterfly", id: 1, name: "Butterfly", price: 2000, image: "etsy/images-branded/butterfly-owner-approved-master.jpg" },
+    { slug: "natalies-butterfly", id: 12, name: "Natalie’s Butterfly", price: 2500, image: "etsy/images-branded/natalies-butterfly-owner-approved-master.jpg" },
+    { slug: "butterfly-with-flowers", id: 4, name: "Butterfly with Flowers", price: 3000, image: "etsy/images-branded/phoenix-butterfly-owner-approved-master.jpg" },
+    { slug: "butterfly-name-keychain", id: 131, name: "Butterfly Name Keychain", price: 2500, image: "images/mothers-day-butterfly-name-keychain.jpg" },
+    { slug: "butterfly-and-flower", id: 139, name: "Butterfly and Flower", price: 3000, image: "etsy/images-branded/phoenix-butterfly-owner-approved-master.jpg" },
+    { slug: "butterfly-collection", id: 104, name: "Butterflies Collection", price: 2200, image: "etsy/images-branded/butterflies-collection-approved-master.jpg" }
+  ];
+  existingButterflies.forEach((expected) => {
+    const product = catalogue.find(item => item.slug === expected.slug);
+    assert.deepEqual(
+      { id: product?.id, name: product?.name, price: product?.basePriceCents, image: product?.imageUrl },
+      { id: expected.id, name: expected.name, price: expected.price, image: expected.image },
+      `${expected.name} must remain unchanged`
+    );
+  });
+  assert.equal(butterflyNameKeychain?.id, 131);
+  assert.deepEqual(
+    { id: turtle?.id, name: turtle?.name, price: turtle?.basePriceCents, image: turtle?.imageUrl },
+    { id: 20, name: "Turtle", price: 2000, image: "etsy/images-branded/turtle-approved-master.jpg" }
+  );
+
+  const imageHashes = {
+    "images/products/personalized-butterfly-keychain.jpg": "6700c36046251173575ec08ebcd5371a67a7a649c308f46b112f0bf1199a4e08",
+    "images/products/personalized-butterfly-keychain-example-2.jpg": "1874875884deedc5a6e9668bd3cd7bfd6a0f98ff587d83c9ca4d2c0fbd76d0e9",
+    "images/products/personalized-turtle-keychain.jpg": "cfd0f47586f6319b23267a6932e34044411797d04710a0335ce2aca35747ccd4"
+  };
+  Object.entries(imageHashes).forEach(([relativePath, expectedHash]) => {
+    const image = fs.readFileSync(path.join(projectRoot, relativePath));
+    assert.equal(crypto.createHash("sha256").update(image).digest("hex"), expectedHash, `${relativePath} must remain owner-approved`);
+  });
+
+  const oceanCards = extractStaticProductCards().filter(card => card.file === "ocean-friends.html");
+  assert.equal(oceanCards.filter(card => card.slug === "personalized-turtle-keychain").length, 1);
+  const etsyPreparation = fs.readFileSync(path.join(projectRoot, "etsy", "phase-a-listing-reconciliation.md"), "utf8");
+  assert.match(etsyPreparation, /Personalized Butterfly Keychain[\s\S]*one made-to-order listing/);
+  assert.match(etsyPreparation, /Personalized Turtle Keychain[\s\S]*separate from the existing non-personalized Turtle/);
 });

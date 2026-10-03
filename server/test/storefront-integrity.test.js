@@ -157,7 +157,7 @@ test("Animal Friends retains its exact trusted cross-collection identities", () 
   assert.ok(Array.isArray(tiger?.previewPattern) && tiger.previewPattern.length > 0);
   assert.deepEqual(Array.from(tiger?.defaultColours || []), ["orange", "black", "white"]);
   assert.equal(squirrel?.basePriceCents, 2000);
-  assert.deepEqual(Array.from(squirrel?.collections || []), ["October Collection", "Animals"]);
+  assert.deepEqual(Array.from(squirrel?.collections || []), ["Fall Collection", "Animals"]);
   assert.equal(catalogue.filter(product => product.slug === "fall-fox").length, 1);
   assert.equal(fox?.id, 152);
   assert.equal(fox?.basePriceCents, 2500);
@@ -193,7 +193,7 @@ test("Flower Beaded Lanyard is one trusted multi-collection product", () => {
   assert.ok(Array.isArray(lanyard?.previewPattern) && lanyard.previewPattern.length > 0);
 });
 
-test("October treats retain one trusted identity across Sweet Treats", () => {
+test("Fall treats retain one trusted identity across Sweet Treats", () => {
   const catalogue = loadCatalogue();
   const expected = [
     { id: 161, slug: "cinnamon-roll", image: "images/october-collection/cinnamon-roll.jpg" },
@@ -208,7 +208,7 @@ test("October treats retain one trusted identity across Sweet Treats", () => {
     assert.equal(product?.id, id);
     assert.equal(product?.basePriceCents, 2000);
     assert.equal(product?.imageUrl, image);
-    assert.deepEqual(Array.from(product?.collections || []), ["October Collection", "Sweet Treats"]);
+    assert.deepEqual(Array.from(product?.collections || []), ["Fall Collection", "Sweet Treats"]);
   });
 
   const sweetTreats = fs.readFileSync(path.join(projectRoot, "sweet-treats.html"), "utf8");
@@ -219,6 +219,63 @@ test("October treats retain one trusted identity across Sweet Treats", () => {
     .filter(card => card.file === "sweet-treats.html")
     .map(card => card.name);
   assert.deepEqual(sweetTreatCards, ["Ice Cream Keychain", "Melting Ice Cream", "Cinnamon Roll", "Pie Slice", "Hot Chocolate"]);
+});
+
+test("October Collection is consolidated into one deduplicated Fall Collection", () => {
+  const catalogue = loadCatalogue();
+  const formerOctoberProducts = [
+    { id: 160, slug: "autumn-tree", name: "Autumn Tree", price: 2000, collections: ["Fall Collection"] },
+    { id: 161, slug: "cinnamon-roll", name: "Cinnamon Roll", price: 2000, collections: ["Fall Collection", "Sweet Treats"] },
+    { id: 162, slug: "pie-slice", name: "Pie Slice", price: 2000, collections: ["Fall Collection", "Sweet Treats"] },
+    { id: 163, slug: "cozy-sweater", name: "Cozy Sweater", price: 2000, collections: ["Fall Collection"] },
+    { id: 164, slug: "scarf", name: "Scarf", price: 2000, collections: ["Fall Collection"] },
+    { id: 165, slug: "rain-boots", name: "Rain Boots", price: 2000, collections: ["Fall Collection"] },
+    { id: 166, slug: "umbrella", name: "Umbrella", price: 2000, collections: ["Fall Collection"] },
+    { id: 167, slug: "hot-chocolate", name: "Hot Chocolate", price: 2000, collections: ["Fall Collection", "Sweet Treats"] },
+    { id: 168, slug: "pinecone", name: "Pinecone", price: 2000, collections: ["Fall Collection"] },
+    { id: 169, slug: "squirrel", name: "Squirrel", price: 2000, collections: ["Fall Collection", "Animals"] }
+  ];
+
+  catalogue.forEach((product) => {
+    assert.notEqual(product.category, "October Collection", `${product.slug} retains the retired category`);
+    assert.equal((product.collections || []).includes("October Collection"), false, `${product.slug} retains the retired collection`);
+  });
+  formerOctoberProducts.forEach((expected) => {
+    const product = catalogue.find(item => item.slug === expected.slug);
+    assert.deepEqual(
+      { id: product?.id, name: product?.name, price: product?.basePriceCents, collections: Array.from(product?.collections || []) },
+      { id: expected.id, name: expected.name, price: expected.price, collections: expected.collections }
+    );
+  });
+
+  const acorn = catalogue.find(product => product.slug === "fall-acorn");
+  assert.deepEqual(Array.from(acorn?.collections || []), ["Fall Collection"]);
+
+  const fallCards = extractStaticProductCards().filter(card => card.file === "fall-collection.html");
+  assert.equal(fallCards.length, 20);
+  assert.equal(new Set(fallCards.map(card => card.slug)).size, 20);
+  assert.deepEqual(fallCards.map(card => card.name), [
+    "Fox", "Owl", "Acorn", "Autumn Tree", "Cinnamon Roll", "Pie Slice", "Cozy Sweater", "Scarf", "Rain Boots", "Umbrella",
+    "Hot Chocolate", "Pinecone", "Squirrel", "Maple Leaf", "Sunflower", "Best Friends Forever Bracelet", "Coffee Cup", "Mushroom",
+    "Pumpkin Spice Latte", "Fall Leaves Keychain"
+  ]);
+
+  const fallPage = fs.readFileSync(path.join(projectRoot, "fall-collection.html"), "utf8");
+  assert.equal((fallPage.match(/<span class="exclusive-label">October Exclusive<\/span>/g) || []).length, 1);
+  const autumnTree = catalogue.find(product => product.slug === "autumn-tree");
+  assert.match(autumnTree?.description || "", /^October Exclusive\b/);
+  assert.equal(catalogue.filter(product => /^October Exclusive\b/.test(product.description || "")).length, 1);
+
+  const collectionsPage = fs.readFileSync(path.join(projectRoot, "collections.html"), "utf8");
+  assert.match(collectionsPage, /href="fall-collection\.html"><img src="images\/fall-collection\/autumn-forest-background\.png"/);
+  assert.doesNotMatch(collectionsPage, /href="october-collection\.html"/);
+  assert.equal((collectionsPage.match(/<span>Fall Collection<\/span>/g) || []).length, 1);
+  assert.doesNotMatch(collectionsPage, /<span>October Collection<\/span>/);
+
+  const legacyOctoberPage = fs.readFileSync(path.join(projectRoot, "october-collection.html"), "utf8");
+  assert.match(legacyOctoberPage, /http-equiv="refresh" content="0; url=fall-collection\.html"/);
+  assert.match(legacyOctoberPage, /rel="canonical" href="https:\/\/foreverbeaded\.ca\/fall-collection\.html"/);
+  assert.match(legacyOctoberPage, /href="fall-collection\.html"/);
 });
 
 test("new personalized butterfly and turtle keychains remain distinct trusted products", () => {

@@ -26,7 +26,6 @@
     ["sweet-treats.html", "Sweet Treats"],
     ["back-to-school.html", "Back to School"],
     ["fall-collection.html", "Fall Collection"],
-    ["october-collection.html", "October Collection"],
     ["tiny-garden-friends.html", "Tiny Garden Friends"],
     ["enchanted-beings.html", "Enchanted Beings"],
     ["outer-space.html", "Outer Space"],

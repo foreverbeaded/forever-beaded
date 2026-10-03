@@ -64,7 +64,7 @@ const products = [
   { id: 31, slug: "ariel", productId: "ariel", name: "Ariel Keychain", price: 25, category: "Enchanted Beings", image: "etsy/images-branded/ariel-keychain-master.png", description: "A handmade beaded mermaid keychain inspired by an undersea fairytale." },
   { id: 32, slug: "palm-tree", productId: "palm-tree", name: "Palm Tree", price: 20, category: "Sandy Beaches", image: "etsy/images-branded/palm-tree-approved-master.jpg", description: "A handmade beaded palm tree inspired by warm sandy shores." },
   { id: 35, slug: "fall-fox", name: "Fox", price: 25, category: "Fall Collection", image: "images/fall-collection/fox.jpg", createUrl: "create.html?design=custom-idea&idea=Fox#homeDesignBuilder", description: "A personalized handmade fox keychain." },
-  { id: 36, slug: "fall-acorn", name: "Acorn", price: 20, category: "Fall Collection", collections: ["Fall Collection", "October Collection"], image: "images/october-collection/acorn.jpg", createUrl: "create.html?design=fall-acorn#homeDesignBuilder", description: "A personalized handmade acorn keychain." },
+  { id: 36, slug: "fall-acorn", name: "Acorn", price: 20, category: "Fall Collection", collections: ["Fall Collection"], image: "images/october-collection/acorn.jpg", createUrl: "create.html?design=fall-acorn#homeDesignBuilder", description: "A personalized handmade acorn keychain." },
   { id: 37, slug: "fall-maple-leaf", name: "Maple Leaf", price: 20, category: "Fall Collection", image: "images/fall-collection/maple-leaf.jpg", createUrl: "create.html?design=custom-idea&idea=Maple%20Leaf#homeDesignBuilder", description: "A personalized handmade maple leaf keychain." },
   { id: 38, slug: "fall-sunflower", name: "Sunflower", price: 25, category: "Fall Collection", image: "images/fall-collection/sunflower.jpg", createUrl: "create.html?design=custom-idea&idea=Sunflower#homeDesignBuilder", description: "A handmade sunflower keychain." },
   { id: 39, slug: "pumpkin-spice-latte", name: "Pumpkin Spice Latte", price: 45, category: "Fall Collection", image: "etsy/images-branded/pumpkin-spice-latte-etsy-branded.jpg", createUrl: "create.html?design=pumpkin-spice-latte#homeDesignBuilder", description: "September Exclusive Pumpkin Spice Latte keychain." },
@@ -459,8 +459,7 @@ const COLLECTION_THEME_BY_CATEGORY = {
   "Monthly Exclusives": "is-sundae-active",
   Flags: "is-flags-active",
   "Enchanted Beings": "is-enchanted-active",
-  "Tiny Garden Friends": "is-tiny-garden-active",
-  "October Collection": "is-forest-active"
+  "Tiny Garden Friends": "is-tiny-garden-active"
 };
 
 const NEXT_COLLECTION_CHAPTERS = {
@@ -476,8 +475,7 @@ const NEXT_COLLECTION_CHAPTERS = {
   "Tiny Garden Friends": { label: "Back to School", category: "Back to School" },
   "Back to School": { label: "Faith", category: "Faith" },
   Faith: { label: "Sports", category: "Sports" },
-  Sports: { label: "October Collection", category: "October Collection" },
-  "October Collection": { label: "Monthly Exclusive", href: "monthly-exclusive.html?v=october-2026" },
+  Sports: { label: "Monthly Exclusive", href: "monthly-exclusive.html?v=october-2026" },
   "Monthly Exclusives": { label: "Create Your Own", href: "create.html?design=autumn-tree#homeDesignBuilder" }
 };
 
@@ -494,7 +492,6 @@ const COLLECTION_WORLD_COPY = {
   "Back to School": { title: "The Creative Classroom", description: "A cosy classroom filled with pencils, books, beads, and bright ideas." },
   Faith: { title: "The Peaceful Bible Garden", description: "A quiet chapter of faith, warm light, and meaningful handmade keepsakes." },
   Sports: { title: "The Sports Field", description: "A lively field for favourite teams, games, and sporty treasures." },
-  "October Collection": { title: "The October Collection", description: "Discover warm autumn colours, cozy favourites, and woodland treasures made bead by bead." },
   "Monthly Exclusives": { title: "October's Autumn Tree", description: "Discover October's colourful handmade exclusive treasure." }
 };
 

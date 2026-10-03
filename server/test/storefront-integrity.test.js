@@ -123,7 +123,7 @@ test("newly reconciled storefront designs use the same trusted server prices", (
     "spider-man-version-1": 4000,
     tiger: 3000,
     "flower-beaded-lanyard": 4500,
-    "autumn-tree": 2000,
+    "autumn-tree": 2500,
     "cinnamon-roll": 2000,
     "pie-slice": 2000,
     "cozy-sweater": 2000,
@@ -224,7 +224,7 @@ test("Fall treats retain one trusted identity across Sweet Treats", () => {
 test("October Collection is consolidated into one deduplicated Fall Collection", () => {
   const catalogue = loadCatalogue();
   const formerOctoberProducts = [
-    { id: 160, slug: "autumn-tree", name: "Autumn Tree", price: 2000, collections: ["Fall Collection"] },
+    { id: 160, slug: "autumn-tree", name: "Autumn Tree", price: 2500, collections: ["Fall Collection"] },
     { id: 161, slug: "cinnamon-roll", name: "Cinnamon Roll", price: 2000, collections: ["Fall Collection", "Sweet Treats"] },
     { id: 162, slug: "pie-slice", name: "Pie Slice", price: 2000, collections: ["Fall Collection", "Sweet Treats"] },
     { id: 163, slug: "cozy-sweater", name: "Cozy Sweater", price: 2000, collections: ["Fall Collection"] },

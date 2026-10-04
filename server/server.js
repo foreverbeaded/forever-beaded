@@ -389,12 +389,14 @@ async function getTrustedProduct(db, productId) {
     FROM products
     WHERE (CAST(id AS TEXT) = ? OR slug = ?) AND active = 1`, [id, id]);
   if (row) {
+    const seed = getSeedProduct(row.slug || row.id);
     return {
       id: row.id,
       slug: row.slug,
       name: row.name,
       priceCents: row.base_price_cents,
-      imageUrl: row.image_url
+      imageUrl: row.image_url,
+      personalizationMaxLength: seed?.personalizationMaxLength ?? null
     };
   }
 
@@ -404,7 +406,8 @@ async function getTrustedProduct(db, productId) {
     slug: seed.slug,
     name: seed.name,
     priceCents: seed.basePriceCents,
-    imageUrl: seed.imageUrl
+    imageUrl: seed.imageUrl,
+    personalizationMaxLength: seed.personalizationMaxLength ?? null
   } : null;
 }
 
@@ -423,9 +426,12 @@ async function normalizeItem(db, rawItem) {
     minLength: isCustomIdea ? 10 : 0
   });
   const personalizationType = normalizePersonalizationType(rawItem.personalizationType);
+  const personalizationMaxLength = Number.isInteger(product.personalizationMaxLength)
+    ? Math.min(40, Math.max(1, product.personalizationMaxLength))
+    : (personalizationType === "initials" ? 8 : 40);
   const personalizationText = personalizationType === "none"
     ? ""
-    : normalizeText(rawItem.personalizationText || rawItem.personalization || rawItem.name, personalizationType === "initials" ? 8 : 40, "Personalization", { required: true }).toUpperCase();
+    : normalizeText(rawItem.personalizationText || rawItem.personalization || rawItem.name, personalizationMaxLength, "Personalization", { required: true }).toUpperCase();
   const requestedProductName = normalizeText(rawItem.requestedProductName, 80, "Product name");
   const colours = String(rawItem.colours || rawItem.colors || "")
     .split(",")

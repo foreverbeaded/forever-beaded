@@ -58,7 +58,7 @@ test("trusted catalogue has unique active identities and valid local images", ()
 
   assert.equal(new Set(catalogue.map(product => product.id)).size, catalogue.length, "duplicate trusted product ID");
   assert.equal(new Set(catalogue.map(product => product.slug)).size, catalogue.length, "duplicate trusted product slug");
-  assert.equal(activeProducts.length, 94);
+  assert.equal(activeProducts.length, 95);
 
   activeProducts.forEach((product) => {
     assert.ok(product.basePriceCents > 0, `${product.slug} must have a positive trusted price`);
@@ -113,6 +113,7 @@ test("newly reconciled storefront designs use the same trusted server prices", (
     "stack-of-books": 2500,
     owl: 2500,
     "personalized-faith-heart-keychain": 3000,
+    "personalized-scripture-cross-keychain": 3000,
     "fall-fox": 2500,
     "fall-acorn": 2000,
     "fall-maple-leaf": 2000,
@@ -344,4 +345,60 @@ test("new personalized butterfly and turtle keychains remain distinct trusted pr
   const etsyPreparation = fs.readFileSync(path.join(projectRoot, "etsy", "phase-a-listing-reconciliation.md"), "utf8");
   assert.match(etsyPreparation, /Personalized Butterfly Keychain[\s\S]*one made-to-order listing/);
   assert.match(etsyPreparation, /Personalized Turtle Keychain[\s\S]*separate from the existing non-personalized Turtle/);
+});
+
+test("Personalized Scripture Cross Keychain is one trusted Faith product", () => {
+  const catalogue = loadCatalogue();
+  const matches = catalogue.filter(product => product.slug === "personalized-scripture-cross-keychain");
+  const scriptureCross = matches[0];
+
+  assert.equal(matches.length, 1);
+  assert.equal(scriptureCross?.id, 173);
+  assert.equal(scriptureCross?.name, "Personalized Scripture Cross Keychain");
+  assert.equal(scriptureCross?.basePriceCents, 3000);
+  assert.equal(scriptureCross?.category, "Faith");
+  assert.deepEqual(Array.from(scriptureCross?.collections || []), ["Faith"]);
+  assert.equal(scriptureCross?.imageUrl, "images/products/personalized-scripture-cross-keychain.jpg");
+  assert.deepEqual(Array.from(scriptureCross?.defaultColours || []), ["white", "grey", "yellow", "green", "brown"]);
+  assert.equal(scriptureCross?.supportsPersonalization, true);
+  assert.equal(scriptureCross?.personalizationLabel, "Scripture reference / short faith reference");
+  assert.equal(scriptureCross?.personalizationPlaceholder, "e.g. ISAIAH 41:10");
+  assert.equal(scriptureCross?.personalizationMaxLength, 12);
+  assert.ok(Array.isArray(scriptureCross?.previewPattern) && scriptureCross.previewPattern.length > 0);
+  const approvedImage = fs.readFileSync(path.join(projectRoot, scriptureCross.imageUrl));
+  assert.equal(
+    crypto.createHash("sha256").update(approvedImage).digest("hex"),
+    "a6de6eaa53c8f603655eaa377d3f2572375c74040dcc7bdc7ebe197adc251591"
+  );
+
+  const faithCards = extractStaticProductCards().filter(card => card.file === "faith-collection.html");
+  assert.equal(faithCards.length, 5);
+  assert.equal(faithCards.filter(card => card.slug === scriptureCross.slug).length, 1);
+  assert.deepEqual(faithCards.find(card => card.slug === scriptureCross.slug), {
+    file: "faith-collection.html",
+    slug: "personalized-scripture-cross-keychain",
+    image: "images/products/personalized-scripture-cross-keychain.jpg",
+    name: "Personalized Scripture Cross Keychain",
+    priceCents: 3000
+  });
+
+  const existingFaith = [
+    { id: 6, slug: "faith-cross", name: "Faith Cross", price: 2000 },
+    { id: 112, slug: "joy-cross", name: "Joy Cross", price: 2000 },
+    { id: 113, slug: "peace-cross", name: "Peace Cross", price: 2000 },
+    { id: 151, slug: "personalized-faith-heart-keychain", name: "Personalized Faith Heart Keychain", price: 3000 }
+  ];
+  existingFaith.forEach((expected) => {
+    const product = catalogue.find(item => item.slug === expected.slug);
+    assert.deepEqual(
+      { id: product?.id, name: product?.name, price: product?.basePriceCents },
+      { id: expected.id, name: expected.name, price: expected.price }
+    );
+  });
+
+  const etsyPreparation = fs.readFileSync(path.join(projectRoot, "etsy", "phase-a-listing-reconciliation.md"), "utf8");
+  assert.match(etsyPreparation, /Personalized Scripture Cross Keychain, Custom Bible Verse Reference/);
+  assert.match(etsyPreparation, /FB-173-PERSONALIZED-SCRIPTURE-CROSS-KEYCHAIN/);
+  assert.match(etsyPreparation, /up to 12 characters/);
+  assert.match(etsyPreparation, /Do not publish it automatically/);
 });

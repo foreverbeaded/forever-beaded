@@ -1070,6 +1070,27 @@
       sortOrder: 62
     },
     {
+      id: 173,
+      slug: "personalized-scripture-cross-keychain",
+      name: "Personalized Scripture Cross Keychain",
+      category: "Faith",
+      collections: ["Faith"],
+      description: "A personalized handmade beaded cross keychain with a short Scripture or faith reference strand.",
+      basePriceCents: 3000,
+      basePrice: 3000,
+      imageUrl: "images/products/personalized-scripture-cross-keychain.jpg",
+      referenceImageUrl: "images/products/personalized-scripture-cross-keychain.jpg",
+      previewImageUrl: "images/products/personalized-scripture-cross-keychain.jpg",
+      previewPattern: previewPatterns.cross,
+      defaultColours: ["white", "grey", "yellow", "green", "brown"],
+      supportsPersonalization: true,
+      personalizationLabel: "Scripture reference / short faith reference",
+      personalizationPlaceholder: "e.g. ISAIAH 41:10",
+      personalizationMaxLength: 12,
+      active: true,
+      sortOrder: 63
+    },
+    {
       id: 7,
       slug: "pencil",
       name: "Colouring Pencil",

@@ -14,6 +14,7 @@ function normalizeSeedProduct(product) {
     previewImageUrl: String(product.previewImageUrl || product.referenceImageUrl || product.imageUrl),
     previewPattern: Array.isArray(product.previewPattern) ? product.previewPattern : null,
     defaultColours: Array.isArray(product.defaultColours) ? product.defaultColours : [],
+    personalizationMaxLength: Number.isInteger(product.personalizationMaxLength) ? product.personalizationMaxLength : null,
     active: product.active ? 1 : 0,
     sortOrder: Number(product.sortOrder)
   };

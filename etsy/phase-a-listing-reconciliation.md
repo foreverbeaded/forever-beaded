@@ -28,6 +28,37 @@ This document prepares listing information only. It does not authorize automatic
 
 These products are eligible for listing preparation only. This document does not authorize Etsy publication or changes to an existing Turtle or Butterfly listing.
 
+## Personalized Scripture Cross Keychain listing preparation
+
+- **Trusted product:** Personalized Scripture Cross Keychain
+- **Trusted ID / slug:** `173` / `personalized-scripture-cross-keychain`
+- **Etsy title:** Personalized Scripture Cross Keychain, Custom Bible Verse Reference
+- **Price:** $30 CAD
+- **Approved primary image:** `images/products/personalized-scripture-cross-keychain.jpg`
+- **Suggested Etsy category:** Accessories > Keychains & Lanyards > Keychains
+- **SKU:** `FB-173-PERSONALIZED-SCRIPTURE-CROSS-KEYCHAIN`
+- **Production:** Handmade and made to order in Maple Ridge, BC, Canada.
+
+**Opening description**
+
+Carry a meaningful faith reference with a handmade beaded cross keychain personalized with your chosen short Scripture reference.
+
+**Full description**
+
+The Personalized Scripture Cross Keychain pairs a handmade beaded cross with a personalized letter-bead strand. The approved photo shows `ISAIAH 41:10` as an example; customers may request another Bible Scripture reference or short faith reference that fits the design's 12-character capacity. The full Bible verse is not included automatically.
+
+Choose colours from the supported Forever Beaded palette and select Silver or Gold hardware when ordering. The reference photo shows a white and grey cross with yellow, green, and brown details and Silver hardware. Each piece is handmade and made to order, so natural handmade variation is expected.
+
+**Personalization instructions**
+
+Enter one Bible Scripture reference or short faith reference, up to 12 characters including spaces and punctuation. Example: `ISAIAH 41:10`. Please provide the reference only, not the full verse text.
+
+**Suggested Etsy tags**
+
+`scripture keychain`, `bible verse keychain`, `cross keychain`, `personalized cross`, `christian keychain`, `faith keychain`, `bible reference`, `beaded cross`, `christian accessory`, `religious gift`, `custom faith gift`, `scripture gift`, `made in canada`
+
+Prepare exactly one new Etsy listing from this record. Do not publish it automatically and do not merge it with an existing Cross listing.
+
 ## Website products not confidently represented on Etsy
 
 | Website product | Website price | Website image |

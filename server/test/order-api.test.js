@@ -291,6 +291,40 @@ test("uses the trusted Personalized Love Heart Keychain price", async () => {
   });
 });
 
+test("uses the trusted Scripture cross price and enforces its physical personalization limit", async () => {
+  await withServer({}, async ({ baseUrl }) => {
+    const validResponse = await postOrder(baseUrl, validOrder({
+      total: 1,
+      items: [{
+        productId: "personalized-scripture-cross-keychain",
+        quantity: 1,
+        unitPriceCents: 1,
+        colours: "White, Grey, Yellow, Green, Brown",
+        hardware: "Silver",
+        personalizationType: "name",
+        personalizationText: "ISAIAH 41:10"
+      }]
+    }));
+    const validBody = await validResponse.json();
+    assert.equal(validResponse.status, 200);
+    assert.equal(validBody.items[0].productName, "Personalized Scripture Cross Keychain");
+    assert.equal(validBody.items[0].unitPriceCents, 3000);
+    assert.equal(validBody.items[0].personalizationText, "ISAIAH 41:10");
+
+    const tooLongResponse = await postOrder(baseUrl, validOrder({
+      items: [{
+        productId: "personalized-scripture-cross-keychain",
+        quantity: 1,
+        colours: "White, Grey, Yellow, Green, Brown",
+        hardware: "Silver",
+        personalizationType: "name",
+        personalizationText: "PSALM 119:105"
+      }]
+    }));
+    assert.equal(tooLongResponse.status, 400);
+  });
+});
+
 test("stores Pearl exactly through the trusted order flow", async () => {
   await withServer({}, async ({ app, baseUrl }) => {
     const response = await postOrder(baseUrl, validOrder({

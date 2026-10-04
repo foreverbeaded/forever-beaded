@@ -594,8 +594,10 @@
   const syncPersonalizationField = () => {
     const textWrap = document.getElementById("homePersonalizationTextWrap");
     const input = document.getElementById("homePersonalizationText");
+    const label = document.getElementById("homePersonalizationLabelText");
     if (!textWrap || !input) return;
-    const supportsPersonalization = getSelectedProduct()?.supportsPersonalization !== false;
+    const product = getSelectedProduct();
+    const supportsPersonalization = product?.supportsPersonalization !== false;
     if (!supportsPersonalization) {
       input.value = "";
       input.disabled = true;
@@ -611,7 +613,9 @@
     textWrap.setAttribute("aria-hidden", "false");
     textWrap.classList.add("is-visible");
     input.required = false;
-    input.maxLength = 40;
+    input.maxLength = Math.min(40, Math.max(1, Number(product?.personalizationMaxLength) || 40));
+    input.placeholder = String(product?.personalizationPlaceholder || "e.g. Natalie");
+    if (label) label.textContent = String(product?.personalizationLabel || "Personalization / Name");
     input.setCustomValidity("");
   };
 

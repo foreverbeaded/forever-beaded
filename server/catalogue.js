@@ -4,6 +4,7 @@ function normalizeSeedProduct(product) {
   return {
     id: Number(product.id),
     slug: String(product.slug),
+    legacySlugs: Array.isArray(product.legacySlugs) ? product.legacySlugs.map(String) : [],
     name: String(product.name),
     category: String(product.category),
     description: String(product.description),
@@ -24,7 +25,9 @@ const SEED_PRODUCTS = Object.freeze(PRODUCTS.map(normalizeSeedProduct));
 
 function getSeedProduct(productId) {
   const id = String(productId || "").trim();
-  return SEED_PRODUCTS.find((product) => String(product.id) === id || product.slug === id) || null;
+  return SEED_PRODUCTS.find((product) => (
+    String(product.id) === id || product.slug === id || product.legacySlugs.includes(id)
+  )) || null;
 }
 
 module.exports = {

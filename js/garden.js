@@ -532,9 +532,14 @@
     return String(params.get("design") || params.get("product") || "").trim().toLowerCase();
   };
 
+  const productForRequestedSlug = (slug) => productCatalogue.find(product => (
+    product.slug === slug || product.legacySlugs?.includes(slug)
+  ));
+
   const requestedDesignSlug = () => {
     const requested = requestedDesignValue();
-    return productCatalogue.some(product => product.slug === requested && isSelectableProduct(product)) ? requested : "";
+    const product = productForRequestedSlug(requested);
+    return product && isSelectableProduct(product) ? product.slug : "";
   };
 
   const invalidRequestedDesign = () => Boolean(requestedDesignValue() && !requestedDesignSlug());
@@ -555,7 +560,7 @@
     if (!requested || !select) return false;
     const selectionChanged = select.value !== requested;
     select.value = requested;
-    const requestedProduct = productCatalogue.find(product => product.slug === requested);
+    const requestedProduct = productForRequestedSlug(requested);
     const colours = document.getElementById("homeTreasureColours");
     if (colours && requestedProduct?.defaultColours?.length) {
       colours.value = requestedProduct.defaultColours.map(titleCase).join(", ");
@@ -2189,7 +2194,9 @@
     28: "dragonfly-keychain"
   };
 
-  const productBySlug = (slug) => productCatalogue.find(product => product.slug === slug) || null;
+  const productBySlug = (slug) => productCatalogue.find(product => (
+    product.slug === slug || product.legacySlugs?.includes(slug)
+  )) || null;
 
   const trustedProductSlugFromCartItem = (item) => {
     if (item?.productId && !/^\d+$/.test(String(item.productId))) return String(item.productId);

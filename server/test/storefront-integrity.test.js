@@ -113,7 +113,7 @@ test("newly reconciled storefront designs use the same trusted server prices", (
     "stack-of-books": 2500,
     owl: 2500,
     "personalized-faith-heart-keychain": 3000,
-    "personalized-scripture-cross-keychain": 3000,
+    "personalized-scripture-dove-keychain": 3000,
     "fall-fox": 2500,
     "fall-acorn": 2000,
     "fall-maple-leaf": 2000,
@@ -347,25 +347,26 @@ test("new personalized butterfly and turtle keychains remain distinct trusted pr
   assert.match(etsyPreparation, /Personalized Turtle Keychain[\s\S]*separate from the existing non-personalized Turtle/);
 });
 
-test("Personalized Scripture Cross Keychain is one trusted Faith product", () => {
+test("Personalized Scripture Dove Keychain is one trusted Faith product", () => {
   const catalogue = loadCatalogue();
-  const matches = catalogue.filter(product => product.slug === "personalized-scripture-cross-keychain");
-  const scriptureCross = matches[0];
+  const matches = catalogue.filter(product => product.slug === "personalized-scripture-dove-keychain");
+  const scriptureDove = matches[0];
 
   assert.equal(matches.length, 1);
-  assert.equal(scriptureCross?.id, 173);
-  assert.equal(scriptureCross?.name, "Personalized Scripture Cross Keychain");
-  assert.equal(scriptureCross?.basePriceCents, 3000);
-  assert.equal(scriptureCross?.category, "Faith");
-  assert.deepEqual(Array.from(scriptureCross?.collections || []), ["Faith"]);
-  assert.equal(scriptureCross?.imageUrl, "images/products/personalized-scripture-cross-keychain.jpg");
-  assert.deepEqual(Array.from(scriptureCross?.defaultColours || []), ["white", "grey", "yellow", "green", "brown"]);
-  assert.equal(scriptureCross?.supportsPersonalization, true);
-  assert.equal(scriptureCross?.personalizationLabel, "Scripture reference / short faith reference");
-  assert.equal(scriptureCross?.personalizationPlaceholder, "e.g. ISAIAH 41:10");
-  assert.equal(scriptureCross?.personalizationMaxLength, 12);
-  assert.ok(Array.isArray(scriptureCross?.previewPattern) && scriptureCross.previewPattern.length > 0);
-  const approvedImage = fs.readFileSync(path.join(projectRoot, scriptureCross.imageUrl));
+  assert.equal(scriptureDove?.id, 173);
+  assert.equal(scriptureDove?.name, "Personalized Scripture Dove Keychain");
+  assert.equal(scriptureDove?.basePriceCents, 3000);
+  assert.equal(scriptureDove?.category, "Faith");
+  assert.deepEqual(Array.from(scriptureDove?.collections || []), ["Faith"]);
+  assert.deepEqual(Array.from(scriptureDove?.legacySlugs || []), ["personalized-scripture-cross-keychain"]);
+  assert.equal(scriptureDove?.imageUrl, "images/products/personalized-scripture-dove-keychain.jpg");
+  assert.deepEqual(Array.from(scriptureDove?.defaultColours || []), ["white", "grey", "yellow", "green", "brown"]);
+  assert.equal(scriptureDove?.supportsPersonalization, true);
+  assert.equal(scriptureDove?.personalizationLabel, "Scripture reference / short faith reference");
+  assert.equal(scriptureDove?.personalizationPlaceholder, "e.g. ISAIAH 41:10");
+  assert.equal(scriptureDove?.personalizationMaxLength, 12);
+  assert.ok(Array.isArray(scriptureDove?.previewPattern) && scriptureDove.previewPattern.length > 0);
+  const approvedImage = fs.readFileSync(path.join(projectRoot, scriptureDove.imageUrl));
   assert.equal(
     crypto.createHash("sha256").update(approvedImage).digest("hex"),
     "a6de6eaa53c8f603655eaa377d3f2572375c74040dcc7bdc7ebe197adc251591"
@@ -373,12 +374,12 @@ test("Personalized Scripture Cross Keychain is one trusted Faith product", () =>
 
   const faithCards = extractStaticProductCards().filter(card => card.file === "faith-collection.html");
   assert.equal(faithCards.length, 5);
-  assert.equal(faithCards.filter(card => card.slug === scriptureCross.slug).length, 1);
-  assert.deepEqual(faithCards.find(card => card.slug === scriptureCross.slug), {
+  assert.equal(faithCards.filter(card => card.slug === scriptureDove.slug).length, 1);
+  assert.deepEqual(faithCards.find(card => card.slug === scriptureDove.slug), {
     file: "faith-collection.html",
-    slug: "personalized-scripture-cross-keychain",
-    image: "images/products/personalized-scripture-cross-keychain.jpg",
-    name: "Personalized Scripture Cross Keychain",
+    slug: "personalized-scripture-dove-keychain",
+    image: "images/products/personalized-scripture-dove-keychain.jpg",
+    name: "Personalized Scripture Dove Keychain",
     priceCents: 3000
   });
 
@@ -397,8 +398,9 @@ test("Personalized Scripture Cross Keychain is one trusted Faith product", () =>
   });
 
   const etsyPreparation = fs.readFileSync(path.join(projectRoot, "etsy", "phase-a-listing-reconciliation.md"), "utf8");
-  assert.match(etsyPreparation, /Personalized Scripture Cross Keychain, Custom Bible Verse Reference/);
-  assert.match(etsyPreparation, /FB-173-PERSONALIZED-SCRIPTURE-CROSS-KEYCHAIN/);
+  assert.match(etsyPreparation, /Personalized Scripture Dove Keychain, Custom Bible Verse Reference/);
+  assert.match(etsyPreparation, /FB-173-PERSONALIZED-SCRIPTURE-DOVE-KEYCHAIN/);
+  assert.doesNotMatch(etsyPreparation, /cross keychain|personalized cross|beaded cross/i);
   assert.match(etsyPreparation, /up to 12 characters/);
   assert.match(etsyPreparation, /Do not publish it automatically/);
 });

@@ -291,12 +291,12 @@ test("uses the trusted Personalized Love Heart Keychain price", async () => {
   });
 });
 
-test("uses the trusted Scripture cross price and enforces its physical personalization limit", async () => {
+test("uses the trusted Scripture dove price and enforces its physical personalization limit", async () => {
   await withServer({}, async ({ baseUrl }) => {
     const validResponse = await postOrder(baseUrl, validOrder({
       total: 1,
       items: [{
-        productId: "personalized-scripture-cross-keychain",
+        productId: "personalized-scripture-dove-keychain",
         quantity: 1,
         unitPriceCents: 1,
         colours: "White, Grey, Yellow, Green, Brown",
@@ -307,13 +307,13 @@ test("uses the trusted Scripture cross price and enforces its physical personali
     }));
     const validBody = await validResponse.json();
     assert.equal(validResponse.status, 200);
-    assert.equal(validBody.items[0].productName, "Personalized Scripture Cross Keychain");
+    assert.equal(validBody.items[0].productName, "Personalized Scripture Dove Keychain");
     assert.equal(validBody.items[0].unitPriceCents, 3000);
     assert.equal(validBody.items[0].personalizationText, "ISAIAH 41:10");
 
     const tooLongResponse = await postOrder(baseUrl, validOrder({
       items: [{
-        productId: "personalized-scripture-cross-keychain",
+        productId: "personalized-scripture-dove-keychain",
         quantity: 1,
         colours: "White, Grey, Yellow, Green, Brown",
         hardware: "Silver",
@@ -322,6 +322,21 @@ test("uses the trusted Scripture cross price and enforces its physical personali
       }]
     }));
     assert.equal(tooLongResponse.status, 400);
+
+    const legacySlugResponse = await postOrder(baseUrl, validOrder({
+      items: [{
+        productId: "personalized-scripture-cross-keychain",
+        quantity: 1,
+        colours: "White, Grey, Yellow, Green, Brown",
+        hardware: "Silver",
+        personalizationType: "name",
+        personalizationText: "ISAIAH 41:10"
+      }]
+    }));
+    const legacySlugBody = await legacySlugResponse.json();
+    assert.equal(legacySlugResponse.status, 200);
+    assert.equal(legacySlugBody.items[0].productName, "Personalized Scripture Dove Keychain");
+    assert.equal(legacySlugBody.items[0].productId, "173");
   });
 });
 

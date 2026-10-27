@@ -58,7 +58,7 @@ test("trusted catalogue has unique active identities and valid local images", ()
 
   assert.equal(new Set(catalogue.map(product => product.id)).size, catalogue.length, "duplicate trusted product ID");
   assert.equal(new Set(catalogue.map(product => product.slug)).size, catalogue.length, "duplicate trusted product slug");
-  assert.equal(activeProducts.length, 95);
+  assert.equal(activeProducts.length, 97);
 
   activeProducts.forEach((product) => {
     assert.ok(product.basePriceCents > 0, `${product.slug} must have a positive trusted price`);
@@ -133,7 +133,9 @@ test("newly reconciled storefront designs use the same trusted server prices", (
     umbrella: 2000,
     "hot-chocolate": 2000,
     pinecone: 2000,
-    squirrel: 2000
+    squirrel: 2000,
+    "frog-keychain": 2500,
+    "personalized-blossom-keychain": 3000
   };
 
   Object.entries(expectedPrices).forEach(([slug, priceCents]) => {
@@ -403,6 +405,64 @@ test("Personalized Scripture Dove Keychain is one trusted Faith product", () => 
   assert.doesNotMatch(etsyPreparation, /cross keychain|personalized cross|beaded cross/i);
   assert.match(etsyPreparation, /up to 12 characters/);
   assert.match(etsyPreparation, /Do not publish it automatically/);
+});
+
+test("released Frog and Personalized Blossom products use one trusted identity each", () => {
+  const catalogue = loadCatalogue();
+  const frogMatches = catalogue.filter(product => product.slug === "frog-keychain");
+  const blossomMatches = catalogue.filter(product => product.slug === "personalized-blossom-keychain");
+  const frog = frogMatches[0];
+  const blossom = blossomMatches[0];
+
+  assert.equal(frogMatches.length, 1);
+  assert.equal(frog?.id, 174);
+  assert.equal(frog?.basePriceCents, 2500);
+  assert.equal(frog?.category, "Pond Friends");
+  assert.deepEqual(Array.from(frog?.collections || []), ["Pond Friends"]);
+  assert.equal(frog?.imageUrl, "images/products/frog-keychain.jpg");
+  assert.equal(frog?.supportsPersonalization, true);
+  assert.equal(frog?.priceApprovalPending, undefined);
+  assert.equal(frog?.releaseStatus, undefined);
+  assert.ok(Array.isArray(frog?.previewPattern) && frog.previewPattern.length > 0);
+
+  assert.equal(blossomMatches.length, 1);
+  assert.equal(blossom?.id, 175);
+  assert.equal(blossom?.basePriceCents, 3000);
+  assert.equal(blossom?.category, "Flower");
+  assert.deepEqual(Array.from(blossom?.collections || []), ["Flower", "Mother's Day"]);
+  assert.equal(blossom?.imageUrl, "images/products/personalized-blossom-keychain-edited-natalie.png");
+  assert.equal(blossom?.originalSourceImageUrl, "images/products/personalized-blossom-keychain-original.jpg");
+  assert.equal(blossom?.imageClassification, "edited-styled-example");
+  assert.match(blossom?.imageEditDisclosure || "", /edited.*NATLIE.*NATALIE/i);
+  assert.equal(blossom?.supportsPersonalization, true);
+  assert.equal(blossom?.priceApprovalPending, undefined);
+  assert.equal(blossom?.releaseStatus, undefined);
+
+  const expectedHashes = {
+    "images/products/frog-keychain.jpg": "d973f0b9d817322f9bd84ecf3f2fda744a1b58551ec933887b3a90e02697f892",
+    "images/products/personalized-blossom-keychain-original.jpg": "fb737aad479a2fb1fa28b04a3cc292376cfdba2d2e0f8f55ebd469395b80dd8f"
+  };
+  Object.entries(expectedHashes).forEach(([relativePath, expectedHash]) => {
+    const image = fs.readFileSync(path.join(projectRoot, relativePath));
+    assert.equal(crypto.createHash("sha256").update(image).digest("hex"), expectedHash);
+  });
+  assert.notEqual(
+    crypto.createHash("sha256").update(fs.readFileSync(path.join(projectRoot, blossom.imageUrl))).digest("hex"),
+    expectedHashes[blossom.originalSourceImageUrl],
+    "the edited NATALIE example must remain distinct from the preserved original"
+  );
+
+  const pondPage = fs.readFileSync(path.join(projectRoot, "pond-friends.html"), "utf8");
+  const flowerPage = fs.readFileSync(path.join(projectRoot, "flowers.html"), "utf8");
+  const mothersDayPage = fs.readFileSync(path.join(projectRoot, "mothers-day-collection.html"), "utf8");
+  const collectionsPage = fs.readFileSync(path.join(projectRoot, "collections.html"), "utf8");
+  const designerSource = fs.readFileSync(path.join(projectRoot, "js", "garden.js"), "utf8");
+  assert.match(pondPage, /data-initial-category="Pond Friends"/);
+  assert.match(collectionsPage, /href="pond-friends\.html"/);
+  assert.match(flowerPage, /personalized-blossom-keychain/);
+  assert.match(mothersDayPage, /data-initial-category="Mother's Day"/);
+  assert.match(designerSource, /label: "Pond Friends"/);
+  assert.doesNotMatch(pondPage, /design=custom-idea|design=butterfly/);
 });
 
 test("review form only clears after a persisted pending review is confirmed", () => {

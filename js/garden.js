@@ -454,6 +454,7 @@
   const designDropdownGroups = [
     { label: "Flower Garden", categories: ["Flower"], collections: ["Flower"], slugs: ["flower"] },
     { label: "Butterfly Garden", categories: ["Butterfly"], collections: ["Butterfly"], slugs: ["natalies-butterfly", "butterfly-with-flowers"] },
+    { label: "Pond Friends", categories: ["Pond Friends"], collections: ["Pond Friends"] },
     { label: "Animal Friends", categories: ["Animals"] },
     { label: "Birds of the Sky", categories: ["Birds"] },
     { label: "Ocean Friends", categories: ["Ocean Animals", "Arctic Ocean Animals"] },
@@ -653,6 +654,7 @@
     if (/flower|rose|daisy|sunflower|bouquet|tulip/.test(value)) return ["Petals", "Centre", "Stem", "Leaves"];
     if (/bird|owl|penguin|chick/.test(value)) return ["Wings", "Beak", "Eyes", "Tail", "Body details"];
     if (/fish|whale|dolphin|shark|lobster|octopus|turtle|ocean/.test(value)) return ["Fins", "Eyes", "Tail", "Body details"];
+    if (/frog/.test(value)) return ["Body", "Arms and legs", "Fingers and toes", "Eyes"];
     if (/dog|puppy|cat|panda|monkey|giraffe|lion|bear|gecko|animal/.test(value)) return ["Eyes", "Ears", "Mouth", "Tail", "Body details"];
     if (/car|truck|vehicle/.test(value)) return ["Wheels", "Windows", "Body details"];
     if (/rocket|space/.test(value)) return ["Window", "Fins", "Flame", "Body details"];

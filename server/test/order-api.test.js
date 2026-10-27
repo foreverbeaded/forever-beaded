@@ -660,6 +660,40 @@ test("uses the trusted Scripture dove price and enforces its physical personaliz
   });
 });
 
+test("uses the provisional trusted Frog and Blossom prices and personalization limits", async () => {
+  await withServer({}, async ({ baseUrl }) => {
+    const response = await postOrder(baseUrl, validOrder({
+      total: 1,
+      items: [
+        {
+          productId: "frog-keychain",
+          quantity: 1,
+          unitPriceCents: 1,
+          colours: "Green, Red, Black",
+          hardware: "Gold",
+          personalizationType: "name",
+          personalizationText: "ALEX"
+        },
+        {
+          productId: "personalized-blossom-keychain",
+          quantity: 1,
+          unitPriceCents: 1,
+          colours: "Pink, Pearl, Gold, Lavender",
+          hardware: "Silver",
+          personalizationType: "name",
+          personalizationText: "NATALIE"
+        }
+      ]
+    }));
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.deepEqual(body.items.map(item => ({ name: item.productName, price: item.unitPriceCents, personalization: item.personalizationText })), [
+      { name: "Frog Keychain", price: 2500, personalization: "ALEX" },
+      { name: "Personalized Blossom Keychain", price: 3000, personalization: "NATALIE" }
+    ]);
+  });
+});
+
 test("stores Pearl exactly through the trusted order flow", async () => {
   await withServer({}, async ({ app, baseUrl }) => {
     const response = await postOrder(baseUrl, validOrder({

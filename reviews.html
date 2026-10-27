@@ -61,7 +61,7 @@
         <label>Email <input id="reviewEmail" type="email" maxlength="80" placeholder="you@example.com" autocomplete="email" required></label>
         <label>Product purchased <select id="reviewProduct" required><option value="">Choose the product you purchased</option></select></label>
         <label>Stars <select id="reviewStars" required><option value="">Choose a rating</option><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select></label>
-        <label>Your review <textarea id="reviewText" maxlength="600" placeholder="Write your honest review here..." required></textarea></label>
+        <label>Your review <textarea id="reviewText" minlength="3" maxlength="600" placeholder="Write your honest review here..." required></textarea></label>
         <label class="review-honeypot" aria-hidden="true">Website <input id="reviewWebsite" tabindex="-1" autocomplete="off"></label>
         <label class="review-consent"><input id="reviewConsent" type="checkbox" required> I agree that my display name, review, rating, and selected product may be shown publicly after review.</label>
         <p class="review-moderation-note">Reviews are submitted for approval before appearing publicly. Your email is used only to verify the review and is never displayed. Photo submissions are not enabled yet.</p>

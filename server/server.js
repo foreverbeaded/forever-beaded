@@ -194,7 +194,10 @@ async function normalizeReviewPayload(db, body = {}) {
   if (!Number.isInteger(stars) || stars < 1 || stars > 5) {
     throw new PublicError(400, "Please choose a rating from 1 to 5 stars.");
   }
-  const text = normalizeMultilineText(body.text, 600, "Review", { required: true, minLength: 10 });
+  const text = normalizeMultilineText(body.text, 600, "Review", { required: true });
+  if (text.length < 3) {
+    throw new PublicError(400, "Please write at least 3 characters in your review.");
+  }
   if ((text.match(/https?:\/\/|www\./gi) || []).length > 1) {
     throw new PublicError(400, "Please remove links from your review.");
   }

@@ -191,6 +191,40 @@ test("validates review input and rejects the honeypot", async () => {
   });
 });
 
+test("accepts trimmed reviews from 3 through 600 characters", async () => {
+  await withServer({}, async ({ baseUrl }) => {
+    const baseReview = {
+      displayName: "Customer",
+      email: "customer@example.com",
+      productSlug: "butterfly",
+      stars: 5,
+      consent: true,
+      website: ""
+    };
+    const cases = [
+      { text: "", status: 400 },
+      { text: "A", status: 400 },
+      { text: "OK", status: 400 },
+      { text: "Wow", status: 201 },
+      { text: "Love it!!", status: 201 },
+      { text: "Beautiful!", status: 201 },
+      { text: "A".repeat(600), status: 201 },
+      { text: "   ", status: 400 }
+    ];
+
+    for (const reviewCase of cases) {
+      const response = await postReview(baseUrl, { ...baseReview, text: reviewCase.text });
+      assert.equal(response.status, reviewCase.status, `unexpected status for ${reviewCase.text.trim().length} characters`);
+      const body = await response.json();
+      if (reviewCase.status === 201) {
+        assert.equal(body.status, "PENDING");
+      } else if (reviewCase.text.trim().length > 0) {
+        assert.match(body.error, /at least 3 characters/i);
+      }
+    }
+  });
+});
+
 test("a failed review database write never returns success", async () => {
   await withServer({
     reviewSaver: async () => {

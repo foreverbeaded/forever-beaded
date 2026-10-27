@@ -1540,10 +1540,25 @@ document.addEventListener("keydown", (event) => {
 const reviewForm = document.getElementById("reviewForm");
 const reviewGrid = document.getElementById("reviewGrid");
 const reviewFormStatus = document.getElementById("reviewFormStatus");
+const reviewTextInput = document.getElementById("reviewText");
+const REVIEW_MIN_LENGTH = 3;
 let approvedReviews = Array.isArray(window.FOREVER_BEADED_APPROVED_REVIEWS)
   ? window.FOREVER_BEADED_APPROVED_REVIEWS
   : [];
 let reviewSubmissionInFlight = false;
+
+if (reviewTextInput) {
+  const validateReviewLength = () => {
+    const textLength = reviewTextInput.value.trim().length;
+    const isTooShort = textLength > 0 && textLength < REVIEW_MIN_LENGTH;
+    reviewTextInput.setCustomValidity(isTooShort ? "Please write at least 3 characters in your review." : "");
+    if (isTooShort) {
+      setReviewStatus("Please write at least 3 characters in your review.", "error");
+    }
+  };
+  reviewTextInput.addEventListener("input", validateReviewLength);
+  reviewTextInput.addEventListener("invalid", validateReviewLength);
+}
 
 function createReviewSubmissionKey() {
   if (window.crypto?.randomUUID) return window.crypto.randomUUID();
@@ -1645,6 +1660,10 @@ if (reviewForm) {
     const stars = Number(document.getElementById("reviewStars")?.value);
     const website = document.getElementById("reviewWebsite")?.value || "";
     const consent = document.getElementById("reviewConsent")?.checked;
+    if (text && text.length < REVIEW_MIN_LENGTH) {
+      setReviewStatus("Please write at least 3 characters in your review.", "error");
+      return;
+    }
     if (!name || !email || !productSlug || !text || !stars || !consent) {
       setReviewStatus("Please complete every required field before submitting.", "error");
       return;

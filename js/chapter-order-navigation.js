@@ -16,6 +16,7 @@
     ["flowers.html", "Flower Garden"],
     ["butterflies.html", "Butterfly Garden"],
     ["animal-friends.html", "Animal Friends"],
+    ["pond-friends.html", "Pond Friends"],
     ["birds.html", "Birds of the Sky"],
     ["ocean-friends.html", "Ocean Friends"],
     ["sandy-beaches.html", "Sandy Beaches"],

@@ -458,6 +458,17 @@ test("released Frog and Personalized Blossom products use one trusted identity e
   const collectionsPage = fs.readFileSync(path.join(projectRoot, "collections.html"), "utf8");
   const designerSource = fs.readFileSync(path.join(projectRoot, "js", "garden.js"), "utf8");
   assert.match(pondPage, /data-initial-category="Pond Friends"/);
+  assert.match(pondPage, /class="page-scroll"/);
+  assert.match(pondPage, /class="animal-page"/);
+  assert.match(pondPage, /class="page-heading"/);
+  assert.match(pondPage, /class="search-wrap"/);
+  assert.match(pondPage, /js\/static-collection-cards\.js/);
+  assert.match(pondPage, /create\.html\?design=frog-keychain#homeDesignBuilder/);
+  assert.match(pondPage, /images\/products\/frog-keychain\.jpg/);
+  assert.match(
+    fs.readFileSync(path.join(projectRoot, "js", "chapter-order-navigation.js"), "utf8"),
+    /\["pond-friends\.html", "Pond Friends"\]/
+  );
   assert.match(collectionsPage, /href="pond-friends\.html"/);
   assert.match(flowerPage, /personalized-blossom-keychain/);
   assert.match(mothersDayPage, /data-initial-category="Mother's Day"/);

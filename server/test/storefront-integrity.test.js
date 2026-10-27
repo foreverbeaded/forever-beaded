@@ -404,3 +404,25 @@ test("Personalized Scripture Dove Keychain is one trusted Faith product", () => 
   assert.match(etsyPreparation, /up to 12 characters/);
   assert.match(etsyPreparation, /Do not publish it automatically/);
 });
+
+test("review form only clears after a persisted pending review is confirmed", () => {
+  const html = fs.readFileSync(path.join(projectRoot, "reviews.html"), "utf8");
+  const appSource = fs.readFileSync(path.join(projectRoot, "js", "app.js"), "utf8");
+  const adminHtml = fs.readFileSync(path.join(projectRoot, "server", "admin-reviews.html"), "utf8");
+
+  assert.match(html, /id="reviewProduct" required/);
+  assert.doesNotMatch(html, /id="reviewPhoto"|type="file"/);
+  assert.match(html, /Photo submissions are not enabled yet/);
+  assert.match(appSource, /submissionKey: reviewForm\.dataset\.submissionKey/);
+  assert.match(appSource, /data\.success !== true \|\| data\.status !== "PENDING" \|\| !data\.reviewId/);
+  assert.match(appSource, /Your message is still here/);
+  assert.match(appSource, /reviewSubmissionInFlight/);
+  assert.ok(
+    appSource.indexOf("data.success !== true") < appSource.indexOf("reviewForm.reset()"),
+    "the form must not reset before persistence is confirmed"
+  );
+  assert.doesNotMatch(appSource, /prepared for approval before it appears publicly/);
+  assert.match(adminHtml, /value="PENDING"/);
+  assert.match(adminHtml, /value="APPROVED"/);
+  assert.match(adminHtml, /value="REJECTED"/);
+});

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forever Beaded Review Moderation</title>
+  <link rel="stylesheet" href="/admin-assets/reviews.css">
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">Forever Beaded Owner Tools</p>
+      <h1>Review Moderation</h1>
+      <p>Approve or reject submitted reviews, and send one review invitation after you have confirmed an order was delivered.</p>
+    </header>
+
+    <form id="accessForm" class="panel">
+      <label for="adminSecret">Admin secret</label>
+      <input id="adminSecret" type="password" autocomplete="current-password" required>
+      <label for="reviewStatus">Review status</label>
+      <select id="reviewStatus">
+        <option value="PENDING">Pending</option>
+        <option value="APPROVED">Approved</option>
+        <option value="REJECTED">Rejected</option>
+      </select>
+      <button type="submit">Load Reviews</button>
+    </form>
+
+    <form id="reminderForm" class="panel">
+      <h2>Send Review Invitation</h2>
+      <label for="orderNumber">Delivered order number</label>
+      <input id="orderNumber" type="text" placeholder="FB-20261026-0001" autocomplete="off" required>
+      <label class="confirmation"><input id="deliveryConfirmed" type="checkbox" required> I have confirmed this order was delivered.</label>
+      <button type="submit">Send One Review Invitation</button>
+    </form>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+    <section id="reviewList" aria-live="polite" aria-label="Review moderation results"></section>
+  </main>
+  <script src="/admin-assets/reviews.js" defer></script>
+</body>
+</html>

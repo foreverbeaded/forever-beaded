@@ -1540,9 +1540,27 @@ document.addEventListener("keydown", (event) => {
 const reviewForm = document.getElementById("reviewForm");
 const reviewGrid = document.getElementById("reviewGrid");
 const reviewFormStatus = document.getElementById("reviewFormStatus");
-const approvedReviews = Array.isArray(window.FOREVER_BEADED_APPROVED_REVIEWS)
+let approvedReviews = Array.isArray(window.FOREVER_BEADED_APPROVED_REVIEWS)
   ? window.FOREVER_BEADED_APPROVED_REVIEWS
   : [];
+let reviewSubmissionInFlight = false;
+
+function createReviewSubmissionKey() {
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+  if (window.crypto?.getRandomValues) {
+    const values = new Uint32Array(4);
+    window.crypto.getRandomValues(values);
+    return Array.from(values, value => value.toString(36)).join("-");
+  }
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+}
+
+function setReviewStatus(message, type = "") {
+  if (!reviewFormStatus) return;
+  reviewFormStatus.textContent = message;
+  reviewFormStatus.classList.toggle("is-error", type === "error");
+  reviewFormStatus.classList.toggle("is-success", type === "success");
+}
 
 function starsText(value) {
   const stars = Math.min(5, Math.max(1, Number(value) || 5));
@@ -1582,19 +1600,95 @@ function renderReviews() {
   }).join("");
 }
 
+function populateReviewProducts() {
+  const select = document.getElementById("reviewProduct");
+  if (!select) return;
+  const products = Array.isArray(window.FOREVER_BEADED_PRODUCTS)
+    ? window.FOREVER_BEADED_PRODUCTS.filter(product => product?.active !== false && product.slug !== "custom-idea")
+    : [];
+  products
+    .slice()
+    .sort((a, b) => String(a.name).localeCompare(String(b.name)))
+    .forEach(product => {
+      const option = document.createElement("option");
+      option.value = product.slug;
+      option.textContent = product.name;
+      select.append(option);
+    });
+}
+
+async function loadApprovedReviews() {
+  if (!reviewGrid) return;
+  try {
+    const apiBaseUrl = getForeverBeadedApiBaseUrl().replace(/\/$/, "");
+    const response = await fetch(`${apiBaseUrl}/api/reviews`, { headers: { Accept: "application/json" } });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "Reviews are temporarily unavailable.");
+    approvedReviews = Array.isArray(data.reviews)
+      ? data.reviews.map(review => ({ ...review, approved: true }))
+      : [];
+    renderReviews();
+  } catch (error) {
+    renderReviews();
+  }
+}
+
 if (reviewForm) {
-  reviewForm.addEventListener("submit", event => {
+  reviewForm.dataset.submissionKey = createReviewSubmissionKey();
+  reviewForm.addEventListener("submit", async event => {
     event.preventDefault();
+    if (reviewSubmissionInFlight) return;
     const name = document.getElementById("reviewName")?.value.trim();
     const email = document.getElementById("reviewEmail")?.value.trim();
     const text = document.getElementById("reviewText")?.value.trim();
+    const productSlug = document.getElementById("reviewProduct")?.value || "";
+    const stars = Number(document.getElementById("reviewStars")?.value);
+    const website = document.getElementById("reviewWebsite")?.value || "";
     const consent = document.getElementById("reviewConsent")?.checked;
-    if (!name || !email || !text || !consent) return;
-    reviewForm.reset();
-    if (reviewFormStatus) {
-      reviewFormStatus.textContent = "Thank you. Your review has been prepared for approval before it appears publicly.";
+    if (!name || !email || !productSlug || !text || !stars || !consent) {
+      setReviewStatus("Please complete every required field before submitting.", "error");
+      return;
     }
-    showForeverBeadedMessage("Thank you. Your review will need approval before it appears publicly.");
+
+    const button = reviewForm.querySelector('button[type="submit"]');
+    const originalButtonText = button?.textContent || "Submit Review for Approval";
+    reviewSubmissionInFlight = true;
+    if (button) button.disabled = true;
+    if (button) button.textContent = "Submitting...";
+    setReviewStatus("Submitting your review...");
+    try {
+      const apiBaseUrl = getForeverBeadedApiBaseUrl().replace(/\/$/, "");
+      const response = await fetch(`${apiBaseUrl}/api/reviews`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          displayName: name,
+          email,
+          productSlug,
+          stars,
+          text,
+          consent,
+          website,
+          submissionKey: reviewForm.dataset.submissionKey
+        })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Your review could not be submitted.");
+      if (data.success !== true || data.status !== "PENDING" || !data.reviewId) {
+        throw new Error("The server did not confirm that your review was saved.");
+      }
+      reviewForm.reset();
+      reviewForm.dataset.submissionKey = createReviewSubmissionKey();
+      setReviewStatus("");
+      showForeverBeadedMessage("Thank you! Your review has been received and is awaiting approval.");
+    } catch (error) {
+      console.warn("Review submission failed:", error.message);
+      setReviewStatus("We couldn’t save your review right now. Your message is still here — please try again.", "error");
+    } finally {
+      reviewSubmissionInFlight = false;
+      if (button) button.disabled = false;
+      if (button) button.textContent = originalButtonText;
+    }
   });
 }
 
@@ -1611,7 +1705,9 @@ if (backToTop) {
   });
 }
 
+populateReviewProducts();
 renderReviews();
+loadApprovedReviews();
 
 
 

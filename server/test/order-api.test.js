@@ -2,8 +2,10 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { randomUUID } = require("node:crypto");
 const test = require("node:test");
 const sharp = require("sharp");
+const sqlite3 = require("sqlite3").verbose();
 const { createApp, dbGet, dbRun } = require("../server");
 const { SEED_PRODUCTS } = require("../catalogue");
 
@@ -21,7 +23,16 @@ async function withServer(options = {}, callback) {
     allowedOrigins: "https://foreverbeaded.github.io,http://localhost,http://127.0.0.1",
     apiRateLimit: options.apiRateLimit || 200,
     orderRateLimit: options.orderRateLimit || 20,
+    reviewRateLimit: options.reviewRateLimit || 20,
     emailSender: options.emailSender,
+    reviewEmailSender: options.reviewEmailSender,
+    reviewNotificationSender: options.reviewNotificationSender || (async () => ({
+      emailSent: true,
+      provider: "test",
+      providerResponse: "accepted",
+      messageId: "review-notification-test"
+    })),
+    reviewSaver: options.reviewSaver,
     referenceUploadPath,
     adminSecret: options.adminSecret || "test-admin-secret"
   });
@@ -46,6 +57,315 @@ async function withServer(options = {}, callback) {
     await new Promise((resolve) => app.locals.db.close(resolve));
   }
 }
+
+async function postReview(baseUrl, payload) {
+  return fetch(`${baseUrl}/api/reviews`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Origin: "https://foreverbeaded.github.io" },
+    body: JSON.stringify({ submissionKey: randomUUID(), ...payload })
+  });
+}
+
+test("review schema migration preserves existing rows and adds notification fields", async () => {
+  const databasePath = tempDbPath();
+  const legacyDb = new sqlite3.Database(databasePath);
+  await dbRun(legacyDb, `CREATE TABLE reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    display_name TEXT NOT NULL,
+    customer_email TEXT NOT NULL,
+    product_id TEXT,
+    product_name TEXT,
+    stars INTEGER NOT NULL,
+    review_text TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING',
+    moderated_at TEXT,
+    moderation_note TEXT
+  )`);
+  await dbRun(legacyDb, `INSERT INTO reviews (
+    created_at, updated_at, display_name, customer_email, product_id, product_name, stars, review_text, status
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')`, [
+    "2026-10-01T00:00:00.000Z", "2026-10-01T00:00:00.000Z", "Existing Customer",
+    "existing@example.com", "1", "Butterfly", 5, "An existing review that must be preserved."
+  ]);
+  await new Promise((resolve, reject) => legacyDb.close(error => error ? reject(error) : resolve()));
+
+  const app = await createApp({
+    databasePath,
+    referenceUploadPath: null,
+    adminSecret: "test-admin-secret",
+    reviewNotificationSender: async () => ({ emailSent: true })
+  });
+  try {
+    const columns = await new Promise((resolve, reject) => {
+      app.locals.db.all("PRAGMA table_info(reviews)", [], (error, rows) => error ? reject(error) : resolve(rows));
+    });
+    const names = new Set(columns.map(column => column.name));
+    assert.ok(names.has("submission_key_hash"));
+    assert.ok(names.has("notification_status"));
+    assert.ok(names.has("notification_error"));
+    const preserved = await dbGet(app.locals.db, "SELECT display_name, status FROM reviews WHERE id = 1");
+    assert.deepEqual(preserved, { display_name: "Existing Customer", status: "PENDING" });
+  } finally {
+    await new Promise(resolve => app.locals.db.close(resolve));
+  }
+});
+
+test("stores reviews as pending and publishes only approved fields", async () => {
+  const notifications = [];
+  await withServer({
+    reviewNotificationSender: async (review) => {
+      notifications.push(review.id);
+      return { emailSent: true, provider: "test", providerResponse: "accepted", messageId: "review-1" };
+    }
+  }, async ({ app, baseUrl }) => {
+    const response = await postReview(baseUrl, {
+      displayName: "Happy Customer",
+      email: "private@example.com",
+      productSlug: "butterfly",
+      stars: 4,
+      text: "The colours were lovely and the keychain was beautifully made.",
+      consent: true,
+      website: ""
+    });
+    const body = await response.json();
+    assert.equal(response.status, 201);
+    assert.equal(body.status, "PENDING");
+
+    const stored = await dbGet(app.locals.db, `SELECT display_name, customer_email, product_name, stars, status,
+      notification_status FROM reviews WHERE id = ?`, [body.reviewId]);
+    assert.deepEqual(stored, {
+      display_name: "Happy Customer",
+      customer_email: "private@example.com",
+      product_name: "Butterfly",
+      stars: 4,
+      status: "PENDING",
+      notification_status: "SENT"
+    });
+    assert.deepEqual(notifications, [body.reviewId]);
+
+    const beforeApproval = await (await fetch(`${baseUrl}/api/reviews`)).json();
+    assert.deepEqual(beforeApproval.reviews, []);
+
+    const pendingResponse = await fetch(`${baseUrl}/api/admin/reviews?status=PENDING`, {
+      headers: { Authorization: "Bearer test-admin-secret" }
+    });
+    const pending = await pendingResponse.json();
+    assert.equal(pending.reviews.length, 1);
+    assert.equal(pending.reviews[0].customer_email, "private@example.com");
+
+    const moderationResponse = await fetch(`${baseUrl}/api/admin/reviews/${body.reviewId}`, {
+      method: "PUT",
+      headers: {
+        Authorization: "Bearer test-admin-secret",
+        "Content-Type": "application/json",
+        Origin: "https://forever-beaded-api.onrender.com"
+      },
+      body: JSON.stringify({ status: "APPROVED" })
+    });
+    assert.equal(moderationResponse.status, 200);
+
+    const publicResponse = await fetch(`${baseUrl}/api/reviews`);
+    const publicBody = await publicResponse.json();
+    assert.equal(publicBody.reviews.length, 1);
+    assert.equal(publicBody.reviews[0].displayName, "Happy Customer");
+    assert.equal(publicBody.reviews[0].product, "Butterfly");
+    assert.equal(Object.hasOwn(publicBody.reviews[0], "customer_email"), false);
+  });
+});
+
+test("validates review input and rejects the honeypot", async () => {
+  await withServer({}, async ({ baseUrl }) => {
+    const baseReview = {
+      displayName: "Customer",
+      email: "customer@example.com",
+      stars: 5,
+      text: "A thoughtful and honest review of this handmade piece.",
+      consent: true
+    };
+    assert.equal((await postReview(baseUrl, { ...baseReview, stars: 6 })).status, 400);
+    assert.equal((await postReview(baseUrl, { ...baseReview, consent: false })).status, 400);
+    assert.equal((await postReview(baseUrl, { ...baseReview, website: "spam.example" })).status, 400);
+    assert.equal((await postReview(baseUrl, { ...baseReview, productSlug: "not-a-product" })).status, 400);
+  });
+});
+
+test("a failed review database write never returns success", async () => {
+  await withServer({
+    reviewSaver: async () => {
+      throw new Error("simulated database failure");
+    }
+  }, async ({ baseUrl }) => {
+    const response = await postReview(baseUrl, {
+      displayName: "Customer",
+      email: "customer@example.com",
+      productSlug: "butterfly",
+      stars: 5,
+      text: "This review must not be acknowledged as saved.",
+      consent: true
+    });
+    const body = await response.json();
+    assert.equal(response.status, 500);
+    assert.notEqual(body.success, true);
+    assert.equal(Object.hasOwn(body, "reviewId"), false);
+  });
+});
+
+test("duplicate review submissions return the persisted pending record once", async () => {
+  const notifications = [];
+  await withServer({
+    reviewNotificationSender: async (review) => {
+      notifications.push(review.id);
+      return { emailSent: true, provider: "test", providerResponse: "accepted", messageId: "dedupe-test" };
+    }
+  }, async ({ app, baseUrl }) => {
+    const payload = {
+      submissionKey: "fixed-review-submission-key-123",
+      displayName: "Retrying Customer",
+      email: "retry@example.com",
+      productSlug: "butterfly",
+      stars: 5,
+      text: "The same saved review should be returned on a safe retry.",
+      consent: true
+    };
+    const first = await postReview(baseUrl, payload);
+    const firstBody = await first.json();
+    const second = await postReview(baseUrl, payload);
+    const secondBody = await second.json();
+    assert.equal(first.status, 201);
+    assert.equal(second.status, 200);
+    assert.equal(secondBody.duplicate, true);
+    assert.equal(secondBody.reviewId, firstBody.reviewId);
+    assert.equal((await dbGet(app.locals.db, "SELECT COUNT(*) AS count FROM reviews")).count, 1);
+    assert.equal(notifications.length, 1);
+  });
+});
+
+test("failed owner notification keeps the review and a retry does not duplicate it", async () => {
+  let attempts = 0;
+  await withServer({
+    reviewNotificationSender: async () => {
+      attempts += 1;
+      return {
+        emailSent: attempts > 1,
+        provider: "test",
+        providerResponse: attempts > 1 ? "accepted" : "temporary failure",
+        messageId: attempts > 1 ? "retry-sent" : null
+      };
+    }
+  }, async ({ app, baseUrl }) => {
+    const payload = {
+      submissionKey: "notification-retry-key-12345",
+      displayName: "Notification Customer",
+      email: "notify@example.com",
+      productSlug: "butterfly",
+      stars: 4,
+      text: "The review remains saved when the owner email is unavailable.",
+      consent: true
+    };
+    const firstBody = await (await postReview(baseUrl, payload)).json();
+    let stored = await dbGet(app.locals.db, "SELECT status, notification_status FROM reviews WHERE id = ?", [firstBody.reviewId]);
+    assert.deepEqual(stored, { status: "PENDING", notification_status: "FAILED" });
+
+    const retryResponse = await postReview(baseUrl, payload);
+    const retryBody = await retryResponse.json();
+    assert.equal(retryResponse.status, 200);
+    assert.equal(retryBody.reviewId, firstBody.reviewId);
+    assert.equal((await dbGet(app.locals.db, "SELECT COUNT(*) AS count FROM reviews")).count, 1);
+    stored = await dbGet(app.locals.db, "SELECT notification_status FROM reviews WHERE id = ?", [firstBody.reviewId]);
+    assert.equal(stored.notification_status, "SENT");
+    assert.equal(attempts, 2);
+  });
+});
+
+test("unauthorized moderation is rejected and rejected reviews remain private", async () => {
+  await withServer({}, async ({ baseUrl }) => {
+    const submitted = await (await postReview(baseUrl, {
+      displayName: "Private Customer",
+      email: "private-customer@example.com",
+      productSlug: "butterfly",
+      stars: 2,
+      text: "This rejected review must never become public.",
+      consent: true
+    })).json();
+    assert.equal((await fetch(`${baseUrl}/api/admin/reviews?status=PENDING`)).status, 401);
+    assert.equal((await fetch(`${baseUrl}/api/admin/reviews/${submitted.reviewId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "REJECTED" })
+    })).status, 401);
+
+    const rejection = await fetch(`${baseUrl}/api/admin/reviews/${submitted.reviewId}`, {
+      method: "PUT",
+      headers: { Authorization: "Bearer test-admin-secret", "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "REJECTED" })
+    });
+    assert.equal(rejection.status, 200);
+    const publicBody = await (await fetch(`${baseUrl}/api/reviews`)).json();
+    assert.deepEqual(publicBody.reviews, []);
+    const rejectedBody = await (await fetch(`${baseUrl}/api/admin/reviews?status=REJECTED`, {
+      headers: { Authorization: "Bearer test-admin-secret" }
+    })).json();
+    assert.equal(rejectedBody.reviews.length, 1);
+    assert.equal(rejectedBody.reviews[0].customer_email, "private-customer@example.com");
+  });
+});
+
+test("manual review requests require delivery confirmation and are sent once", async () => {
+  const sent = [];
+  await withServer({
+    reviewEmailSender: async (order) => {
+      sent.push(order.orderNumber);
+      return { emailSent: true, to: order.customerEmail, provider: "test", providerResponse: "accepted", messageId: "review-test" };
+    }
+  }, async ({ app, baseUrl }) => {
+    const orderResponse = await postOrder(baseUrl, validOrder());
+    const order = await orderResponse.json();
+    const url = `${baseUrl}/api/admin/orders/${order.orderNumber}/review-request`;
+    const headers = { Authorization: "Bearer test-admin-secret", "Content-Type": "application/json" };
+
+    assert.equal((await fetch(url, { method: "POST", headers, body: JSON.stringify({ deliveryConfirmed: false }) })).status, 400);
+    assert.equal((await fetch(url, { method: "POST", headers, body: JSON.stringify({ deliveryConfirmed: true }) })).status, 200);
+    assert.equal((await fetch(url, { method: "POST", headers, body: JSON.stringify({ deliveryConfirmed: true }) })).status, 409);
+    assert.equal(sent.length, 1);
+
+    const event = await dbGet(app.locals.db, "SELECT event_type FROM order_events WHERE event_type = 'REVIEW_REQUEST_SENT'");
+    assert.equal(event.event_type, "REVIEW_REQUEST_SENT");
+  });
+});
+
+test("failed review invitation can be retried and moderation page is available", async () => {
+  let attempt = 0;
+  await withServer({
+    reviewEmailSender: async (order) => {
+      attempt += 1;
+      return {
+        emailSent: attempt > 1,
+        to: order.customerEmail,
+        provider: "test",
+        providerResponse: attempt > 1 ? "accepted" : "temporary failure",
+        messageId: attempt > 1 ? "review-retry" : null
+      };
+    }
+  }, async ({ baseUrl }) => {
+    const page = await fetch(`${baseUrl}/admin/reviews`);
+    assert.equal(page.status, 200);
+    assert.match(await page.text(), /Review Moderation/);
+
+    const orderResponse = await postOrder(baseUrl, validOrder());
+    const order = await orderResponse.json();
+    const url = `${baseUrl}/api/admin/orders/${order.orderNumber}/review-request`;
+    const options = {
+      method: "POST",
+      headers: { Authorization: "Bearer test-admin-secret", "Content-Type": "application/json" },
+      body: JSON.stringify({ deliveryConfirmed: true })
+    };
+    assert.equal((await fetch(url, options)).status, 503);
+    assert.equal((await fetch(url, options)).status, 200);
+    assert.equal(attempt, 2);
+  });
+});
 
 function validOrder(overrides = {}) {
   return {

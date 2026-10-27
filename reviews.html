@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="css/site-butterflies.css?v=gentle-1">
   <link rel="stylesheet" href="css/master-header.css?v=20260731">
 </head>
-<body class="storybook-home storybook-page storybook-page-shell">
+<body class="storybook-home storybook-page storybook-page-shell reviews-page">
   <header class="story-header">
     <a class="story-brand" href="index.html" aria-label="Forever Beaded home">
       <span>Forever Beaded</span>
@@ -41,6 +41,7 @@
         <p class="chapter-kicker">Kind Words</p>
         <h1 id="reviewTitle">Short notes from treasured stories.</h1>
         <p>As Forever Beaded grows, this chapter holds real words from people who ordered, gifted, and kept their pieces.</p>
+        <a class="gold-button review-jump-link" href="#reviewForm">Leave a Review</a>
       </div>
       <div class="review-panels">
         <article><span>Custom colours</span><p>Customers can request colour palettes, names, initials, and design details before payment is confirmed.</p></article>
@@ -58,12 +59,12 @@
       <form class="review-form review-submission-form" id="reviewForm">
         <label>Display name <input id="reviewName" maxlength="40" placeholder="Example: Sarah" autocomplete="name" required></label>
         <label>Email <input id="reviewEmail" type="email" maxlength="80" placeholder="you@example.com" autocomplete="email" required></label>
-        <label>Product purchased <input id="reviewProduct" maxlength="80" placeholder="Example: Butterfly keychain"></label>
-        <label>Stars <select id="reviewStars" required><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select></label>
+        <label>Product purchased <select id="reviewProduct" required><option value="">Choose the product you purchased</option></select></label>
+        <label>Stars <select id="reviewStars" required><option value="">Choose a rating</option><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select></label>
         <label>Your review <textarea id="reviewText" maxlength="600" placeholder="Write your honest review here..." required></textarea></label>
-        <label>Optional photo <input id="reviewPhoto" type="file" accept="image/*"></label>
-        <label class="review-consent"><input id="reviewConsent" type="checkbox" required> I agree that my display name, review, rating, product name, and approved photo may be shown publicly after review.</label>
-        <p class="review-moderation-note">Reviews are submitted for approval before appearing publicly. Your email is used only to verify the review and will not be displayed.</p>
+        <label class="review-honeypot" aria-hidden="true">Website <input id="reviewWebsite" tabindex="-1" autocomplete="off"></label>
+        <label class="review-consent"><input id="reviewConsent" type="checkbox" required> I agree that my display name, review, rating, and selected product may be shown publicly after review.</label>
+        <p class="review-moderation-note">Reviews are submitted for approval before appearing publicly. Your email is used only to verify the review and is never displayed. Photo submissions are not enabled yet.</p>
         <button class="gold-button" type="submit">Submit Review for Approval</button>
         <p class="review-form-status" id="reviewFormStatus" role="status" aria-live="polite"></p>
       </form>
@@ -72,13 +73,14 @@
   </main>
 
   <aside class="cart-panel story-cart" id="cartPanel"><button class="close-btn" id="closeCart" type="button">Close</button><h2>Your Cart</h2><div id="cartItems"></div><h3>Total: <span id="cartTotal">$0 CAD</span></h3><p class="cart-payment-note">Payment is by Canadian e-transfer only. Details will be confirmed by email after your order is reviewed.</p><button id="clearCart" type="button">Clear Cart</button><button id="buyNowBtn" class="checkout-btn" type="button">Order by E-transfer</button></aside>
-  <div class="fb-modal story-modal" id="fbModal" aria-hidden="true"><div class="fb-modal-card"><h2 id="fbModalTitle">Forever Beaded</h2><p id="fbModalMessage"></p><button id="fbModalOk" class="primary-btn" type="button">OK</button></div></div>
+  <div class="fb-modal story-modal" id="fbModal" role="dialog" aria-modal="true" aria-labelledby="fbModalTitle" aria-describedby="fbModalMessage" aria-hidden="true"><div class="fb-modal-card"><h2 id="fbModalTitle">Forever Beaded</h2><p id="fbModalMessage"></p><button id="fbModalOk" class="primary-btn" type="button">OK</button></div></div>
 <footer class="storybook-footer"><p class="chapter-kicker">The End... for now</p><h2>Forever Beaded</h2><p>Handmade treasures with a story, crafted by Gladlyn.</p><nav aria-label="Footer links"><a href="https://www.instagram.com/foreverbeaded1" target="_blank" rel="noopener noreferrer">Instagram</a><a href="https://www.tiktok.com/@foreverbeaded1" target="_blank" rel="noopener noreferrer">TikTok</a><a href="https://foreverbeadedbyglad.etsy.com" target="_blank" rel="noopener noreferrer">Shop on Etsy</a><a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=foreverbeaded1@gmail.com&amp;su=Forever%20Beaded%20Inquiry" target="_blank" rel="noopener noreferrer">Email</a></nav></footer>
   <button id="backToTop" class="back-to-top" type="button" aria-label="Back to top">Up</button>
   <script src="js/book.js?v=butterfly-refine-20260711"></script>
   <script src="js/butterflies.js?v=butterfly-refine-20260711"></script>
 <script src="js/garden.js?v=final-polish-20260716"></script>
-  <script src="js/app.js"></script>
+  <script src="js/product-catalogue.js?v=review-products-20261027"></script>
+  <script src="js/app.js?v=reviews-api-20261027"></script>
   <script src="js/site-butterflies.js?v=homepage-book-only-20260731"></script>
   <script src="js/master-header.js?v=accessories-nav-20260913"></script>
 </body>

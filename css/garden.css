@@ -3751,6 +3751,46 @@ body.intro-active .scroll-monarch-layer {
   line-height: 1.6;
 }
 
+.review-form-status.is-error {
+  color: #ffd0d0;
+  font-weight: 800;
+}
+
+.review-form-status.is-success {
+  color: #fff3bd;
+  font-weight: 800;
+}
+
+.review-submission-form button[disabled] {
+  cursor: wait;
+  opacity: .72;
+}
+
+.reviews-page .fb-modal-card,
+.reviews-page .fb-modal-card p {
+  color: #2d1d32;
+}
+
+.reviews-page .fb-modal-card h2 {
+  color: #4d285f;
+}
+
+.review-jump-link {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 12px;
+  text-decoration: none;
+}
+
+.review-honeypot {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+}
+
 .review-grid {
   align-items: stretch;
 }

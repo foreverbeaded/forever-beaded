@@ -14,6 +14,10 @@ const { SEED_PRODUCTS, getSeedProduct } = require("./catalogue");
 
 const PAYMENT_STATUSES = new Set(["AWAITING_PAYMENT", "RECEIVED", "VERIFIED", "REFUNDED", "CANCELLED"]);
 const ORDER_STATUSES = new Set(["NEW", "IN_PROGRESS", "READY", "SHIPPED", "COMPLETED", "CANCELLED"]);
+const REVIEW_STATUSES = new Set(["PENDING", "APPROVED", "REJECTED"]);
+const REQUIRED_ADMIN_ORIGINS = [
+  "https://forever-beaded-api.onrender.com"
+];
 const DEFAULT_ALLOWED_ORIGINS = [
   "https://foreverbeaded.ca",
   "https://www.foreverbeaded.ca",
@@ -178,6 +182,48 @@ function normalizeEmail(value) {
   const email = normalizeText(value, 254, "Email", { required: true }).toLowerCase();
   if (!validator.isEmail(email)) throw new PublicError(400, "Please enter a valid email address.");
   return email;
+}
+
+async function normalizeReviewPayload(db, body = {}) {
+  if (normalizeText(body.website || body.company || body.honeypot, 200, "Honeypot")) {
+    throw new PublicError(400, "Review could not be submitted.");
+  }
+  if (body.consent !== true) throw new PublicError(400, "Please agree to the review consent statement.");
+
+  const stars = Number(body.stars);
+  if (!Number.isInteger(stars) || stars < 1 || stars > 5) {
+    throw new PublicError(400, "Please choose a rating from 1 to 5 stars.");
+  }
+  const text = normalizeMultilineText(body.text, 600, "Review", { required: true, minLength: 10 });
+  if ((text.match(/https?:\/\/|www\./gi) || []).length > 1) {
+    throw new PublicError(400, "Please remove links from your review.");
+  }
+
+  const productKey = normalizeText(body.productId || body.productSlug, 100, "Product", { required: true });
+  const product = await getTrustedProduct(db, productKey);
+  if (!product) throw new PublicError(400, "Please choose an available product.");
+  const submissionKey = normalizeText(body.submissionKey, 100, "Submission key", { required: true });
+  if (!/^[A-Za-z0-9_-]{16,100}$/.test(submissionKey)) {
+    throw new PublicError(400, "Please refresh the page and try submitting again.");
+  }
+
+  const review = {
+    displayName: normalizeText(body.displayName || body.name, 40, "Display name", { required: true }),
+    email: normalizeEmail(body.email),
+    productId: String(product.id),
+    productName: product.name,
+    stars,
+    text,
+    submissionKeyHash: hashUploadToken(submissionKey)
+  };
+  review.payloadHash = crypto.createHash("sha256").update(JSON.stringify({
+    displayName: review.displayName,
+    email: review.email,
+    productId: review.productId,
+    stars: review.stars,
+    text: review.text
+  })).digest("hex");
+  return review;
 }
 
 function normalizePostalCode(value) {
@@ -516,7 +562,8 @@ function serializeOrderItem(item) {
 
 function getAllowedOrigins(value) {
   const configured = String(value || "").split(",").map((origin) => origin.trim()).filter(Boolean);
-  return configured.length ? configured : DEFAULT_ALLOWED_ORIGINS;
+  const storefrontOrigins = configured.length ? configured : DEFAULT_ALLOWED_ORIGINS;
+  return [...new Set([...storefrontOrigins, ...REQUIRED_ADMIN_ORIGINS])];
 }
 
 function isOriginAllowed(origin, allowedOrigins) {
@@ -688,6 +735,84 @@ async function migrateSchema(db) {
     line_total_cents INTEGER NOT NULL,
     FOREIGN KEY(order_id) REFERENCES orders(id) ON DELETE CASCADE
   )`);
+
+  await dbRun(db, `CREATE TABLE IF NOT EXISTS reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    display_name TEXT NOT NULL,
+    customer_email TEXT NOT NULL,
+    product_id TEXT,
+    product_name TEXT,
+    stars INTEGER NOT NULL CHECK(stars BETWEEN 1 AND 5),
+    review_text TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING' CHECK(status IN ('PENDING','APPROVED','REJECTED')),
+    moderated_at TEXT,
+    moderation_note TEXT,
+    submission_key_hash TEXT UNIQUE,
+    payload_hash TEXT,
+    notification_status TEXT NOT NULL DEFAULT 'PENDING',
+    notification_attempted_at TEXT,
+    notification_sent_at TEXT,
+    notification_message_id TEXT,
+    notification_error TEXT
+  )`);
+  await dbRun(db, "CREATE INDEX IF NOT EXISTS idx_reviews_status_created ON reviews(status, created_at DESC)");
+
+  const reviewColumns = await new Promise((resolve, reject) => {
+    db.all("PRAGMA table_info(reviews)", [], (error, rows) => {
+      if (error) reject(error);
+      else resolve(rows || []);
+    });
+  });
+  const existingReviewColumns = new Set(reviewColumns.map((column) => column.name));
+  for (const [name, definition] of [
+    ["submission_key_hash", "TEXT"],
+    ["payload_hash", "TEXT"],
+    ["notification_status", "TEXT NOT NULL DEFAULT 'PENDING'"],
+    ["notification_attempted_at", "TEXT"],
+    ["notification_sent_at", "TEXT"],
+    ["notification_message_id", "TEXT"],
+    ["notification_error", "TEXT"]
+  ]) {
+    if (!existingReviewColumns.has(name)) {
+      await dbRun(db, `ALTER TABLE reviews ADD COLUMN ${name} ${definition}`);
+    }
+  }
+  await dbRun(db, "CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_submission_key ON reviews(submission_key_hash) WHERE submission_key_hash IS NOT NULL");
+
+  await dbRun(db, `CREATE TABLE IF NOT EXISTS review_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL UNIQUE,
+    created_at TEXT NOT NULL,
+    sent_at TEXT,
+    recipient_email TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING',
+    attempt_count INTEGER NOT NULL DEFAULT 0,
+    last_attempted_at TEXT,
+    message_id TEXT,
+    last_error TEXT,
+    FOREIGN KEY(order_id) REFERENCES orders(id) ON DELETE CASCADE
+  )`);
+
+  const requestColumns = await new Promise((resolve, reject) => {
+    db.all("PRAGMA table_info(review_requests)", [], (error, rows) => {
+      if (error) reject(error);
+      else resolve(rows || []);
+    });
+  });
+  const existingRequestColumns = new Set(requestColumns.map((column) => column.name));
+  for (const [name, definition] of [
+    ["status", "TEXT NOT NULL DEFAULT 'PENDING'"],
+    ["attempt_count", "INTEGER NOT NULL DEFAULT 0"],
+    ["last_attempted_at", "TEXT"],
+    ["message_id", "TEXT"],
+    ["last_error", "TEXT"]
+  ]) {
+    if (!existingRequestColumns.has(name)) {
+      await dbRun(db, `ALTER TABLE review_requests ADD COLUMN ${name} ${definition}`);
+    }
+  }
 
   const itemColumns = await new Promise((resolve, reject) => {
     db.all("PRAGMA table_info(order_items)", [], (error, rows) => {
@@ -1047,12 +1172,159 @@ function buildCustomerConfirmationMessage(order, saved, etransferEmail, emailSen
     "",
     "Include your order number in the e-Transfer message.",
     "",
-    "We'll begin creating your handmade treasure after payment has been received and verified."
+    "We'll begin creating your handmade treasure after payment has been received and verified.",
+    "",
+    "When your treasure arrives, you're warmly invited to leave an honest review:",
+    "https://foreverbeaded.ca/reviews.html"
   ];
   if (emailSent) {
     lines.push("", "A confirmation email has been sent to your inbox.");
   }
   return lines.join("\n");
+}
+
+function buildReviewRequestMessage(order) {
+  return `Thank you so much for supporting Forever Beaded!
+
+I hope you're loving your handmade creation.
+
+If you have a moment, I'd really appreciate an honest review on my website. Your feedback helps my small business grow and helps other customers discover Forever Beaded.
+
+Leave a review:
+https://foreverbeaded.ca/reviews.html
+
+Thank you for supporting handmade!
+
+Forever Beaded
+Small Beads, Big Joy!
+
+Order: ${order.orderNumber}`;
+}
+
+async function sendReviewRequestEmail(order) {
+  const config = getEmailConfig();
+  if (!config.configured) {
+    return {
+      emailSent: false,
+      to: order.customerEmail,
+      provider: "smtp",
+      providerResponse: `Missing email environment variables: ${config.missing.join(", ")}`,
+      messageId: null
+    };
+  }
+  try {
+    const result = await sendSmtpMail(config, {
+      from: config.from,
+      to: order.customerEmail,
+      subject: `How are you enjoying your Forever Beaded treasure?`,
+      text: buildReviewRequestMessage(order)
+    });
+    return {
+      emailSent: true,
+      to: order.customerEmail,
+      provider: "smtp",
+      providerResponse: result.providerResponse,
+      messageId: result.messageId
+    };
+  } catch (error) {
+    return {
+      emailSent: false,
+      to: order.customerEmail,
+      provider: "smtp",
+      providerResponse: error.message,
+      messageId: null
+    };
+  }
+}
+
+function buildReviewNotificationMessage(review) {
+  const adminBaseUrl = String(process.env.PUBLIC_API_BASE_URL || "https://forever-beaded-api.onrender.com").replace(/\/$/, "");
+  return `A new customer review is waiting for approval.
+
+Product: ${escapeEmailText(review.productName)}
+Rating: ${review.stars} out of 5 stars
+Customer display name: ${escapeEmailText(review.displayName)}
+Review reference ID: ${review.id}
+Submitted: ${review.createdAt}
+
+Review:
+${escapeEmailText(review.text)}
+
+Moderate this review:
+${adminBaseUrl}/admin/reviews
+
+The customer email remains private and is available only in the authenticated moderation dashboard.`;
+}
+
+async function sendReviewNotificationEmail(review) {
+  const config = getEmailConfig();
+  const to = config.configured ? config.to : getOrderNotificationEmail();
+  if (!config.configured) {
+    return {
+      emailSent: false,
+      to,
+      provider: "smtp",
+      providerResponse: `Missing email environment variables: ${config.missing.join(", ")}`,
+      messageId: null
+    };
+  }
+  try {
+    const result = await sendSmtpMail(config, {
+      from: config.from,
+      to,
+      subject: "Forever Beaded — New Review Awaiting Approval",
+      text: buildReviewNotificationMessage(review)
+    });
+    return {
+      emailSent: true,
+      to,
+      provider: "smtp",
+      providerResponse: result.providerResponse,
+      messageId: result.messageId
+    };
+  } catch (error) {
+    return {
+      emailSent: false,
+      to,
+      provider: "smtp",
+      providerResponse: error.message,
+      messageId: null
+    };
+  }
+}
+
+async function recordReviewNotificationResult(db, reviewId, result) {
+  const now = new Date().toISOString();
+  const status = result.emailSent ? "SENT" : "FAILED";
+  await dbRun(db, `UPDATE reviews SET
+    updated_at = ?, notification_status = ?, notification_attempted_at = ?, notification_sent_at = ?,
+    notification_message_id = ?, notification_error = ?
+    WHERE id = ?`, [
+    now,
+    status,
+    now,
+    result.emailSent ? now : null,
+    result.messageId || null,
+    result.emailSent ? null : String(result.providerResponse || "Notification failed.").trim().slice(0, 500),
+    reviewId
+  ]);
+  return status;
+}
+
+async function notifyOwnerOfReview(db, review, sender) {
+  let result;
+  try {
+    result = await sender(review);
+  } catch (error) {
+    result = { emailSent: false, providerResponse: error.message, messageId: null };
+  }
+  try {
+    const status = await recordReviewNotificationResult(db, review.id, result);
+    return { status, result };
+  } catch (error) {
+    console.error("Could not record review notification status:", error.message);
+    return { status: result.emailSent ? "SENT" : "FAILED", result };
+  }
 }
 
 function writeConfirmationEmail(order, saved, etransferEmail, outboxDir = process.env.EMAIL_OUTBOX_PATH || getDataPath("email-outbox")) {
@@ -1159,6 +1431,46 @@ function rejectUnsupportedOrderMethod(req, res) {
   return res.status(405).json({ error: "Method is not allowed." });
 }
 
+async function createPendingReview(db, review) {
+  const now = new Date().toISOString();
+  try {
+    const result = await dbRun(db, `INSERT INTO reviews (
+      created_at, updated_at, display_name, customer_email, product_id, product_name, stars, review_text,
+      status, submission_key_hash, payload_hash, notification_status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, 'PENDING')`, [
+      now, now, review.displayName, review.email, review.productId, review.productName, review.stars, review.text,
+      review.submissionKeyHash, review.payloadHash
+    ]);
+    return {
+      id: result.lastID,
+      createdAt: now,
+      ...review,
+      notificationStatus: "PENDING",
+      duplicate: false
+    };
+  } catch (error) {
+    if (error?.code !== "SQLITE_CONSTRAINT") throw error;
+    const existing = await dbGet(db, `SELECT id, created_at, display_name, customer_email, product_id, product_name,
+      stars, review_text, payload_hash, notification_status
+      FROM reviews WHERE submission_key_hash = ?`, [review.submissionKeyHash]);
+    if (!existing || existing.payload_hash !== review.payloadHash) {
+      throw new PublicError(409, "This review submission changed while it was being retried. Please refresh and try again.");
+    }
+    return {
+      id: existing.id,
+      createdAt: existing.created_at,
+      displayName: existing.display_name,
+      email: existing.customer_email,
+      productId: existing.product_id,
+      productName: existing.product_name,
+      stars: existing.stars,
+      text: existing.review_text,
+      notificationStatus: existing.notification_status,
+      duplicate: true
+    };
+  }
+}
+
 async function createApp(options = {}) {
   readEnvFile(path.join(__dirname, ".env"));
   const app = express();
@@ -1169,6 +1481,7 @@ async function createApp(options = {}) {
   const allowedOrigins = getAllowedOrigins(options.allowedOrigins || process.env.ALLOWED_ORIGINS);
   const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: options.apiRateLimit || 100, standardHeaders: true, legacyHeaders: false });
   const orderLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: options.orderRateLimit || 40, standardHeaders: true, legacyHeaders: false });
+  const reviewLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: options.reviewRateLimit || 5, standardHeaders: true, legacyHeaders: false });
 
   app.disable("x-powered-by");
   if (options.trustProxy != null) {
@@ -1208,11 +1521,21 @@ async function createApp(options = {}) {
   app.get("/admin/custom-designs", (req, res) => {
     res.sendFile(path.join(__dirname, "admin-custom-design.html"));
   });
+  app.get("/admin/reviews", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    res.sendFile(path.join(__dirname, "admin-reviews.html"));
+  });
   app.get("/admin-assets/custom-design.css", (req, res) => {
     res.type("text/css").sendFile(path.join(__dirname, "admin-custom-design.css"));
   });
   app.get("/admin-assets/custom-design.js", (req, res) => {
     res.type("application/javascript").sendFile(path.join(__dirname, "admin-custom-design.js"));
+  });
+  app.get("/admin-assets/reviews.css", (req, res) => {
+    res.type("text/css").sendFile(path.join(__dirname, "admin-reviews.css"));
+  });
+  app.get("/admin-assets/reviews.js", (req, res) => {
+    res.type("application/javascript").sendFile(path.join(__dirname, "admin-reviews.js"));
   });
 
   app.use("/api", apiLimiter);
@@ -1249,6 +1572,56 @@ async function createApp(options = {}) {
             sortOrder: row.sort_order
           };
         })
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/reviews", async (req, res, next) => {
+    try {
+      const rows = await new Promise((resolve, reject) => {
+        db.all(`SELECT id, created_at, display_name, product_name, stars, review_text
+          FROM reviews
+          WHERE status = 'APPROVED'
+          ORDER BY created_at DESC, id DESC
+          LIMIT 100`, [], (error, result) => {
+          if (error) reject(error);
+          else resolve(result || []);
+        });
+      });
+      res.json({
+        success: true,
+        reviews: rows.map((row) => ({
+          id: row.id,
+          createdAt: row.created_at,
+          displayName: row.display_name,
+          product: row.product_name || "",
+          stars: row.stars,
+          text: row.review_text
+        }))
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/reviews", reviewLimiter, async (req, res, next) => {
+    try {
+      const review = await normalizeReviewPayload(db, req.body || {});
+      const saveReview = options.reviewSaver || createPendingReview;
+      const saved = await saveReview(db, review);
+      if (saved.notificationStatus !== "SENT") {
+        const sender = options.reviewNotificationSender || sendReviewNotificationEmail;
+        const notification = await notifyOwnerOfReview(db, saved, sender);
+        saved.notificationStatus = notification.status;
+      }
+      res.status(saved.duplicate ? 200 : 201).json({
+        success: true,
+        reviewId: saved.id,
+        status: "PENDING",
+        duplicate: saved.duplicate,
+        message: "Thank you! Your review has been received and is awaiting approval."
       });
     } catch (error) {
       next(error);
@@ -1419,8 +1792,121 @@ async function createApp(options = {}) {
   app.all("/api/orders", rejectUnsupportedOrderMethod);
 
   app.use("/api/admin", (req, res, next) => requireAdminAuth(req, res, next, options.adminSecret));
+  app.use("/api/admin", (req, res, next) => {
+    res.set("Cache-Control", "private, no-store");
+    next();
+  });
   app.get("/api/admin/health", (req, res) => {
     res.json({ ok: true, admin: true });
+  });
+  app.get("/api/admin/reviews", async (req, res, next) => {
+    try {
+      const requestedStatus = normalizeText(req.query.status || "PENDING", 20, "Review status").toUpperCase();
+      if (!REVIEW_STATUSES.has(requestedStatus)) throw new PublicError(400, "Review status is invalid.");
+      const rows = await new Promise((resolve, reject) => {
+        db.all(`SELECT id, created_at, updated_at, display_name, customer_email, product_id, product_name,
+          stars, review_text, status, moderated_at, moderation_note, notification_status,
+          notification_attempted_at, notification_sent_at, notification_message_id, notification_error
+          FROM reviews WHERE status = ? ORDER BY created_at ASC, id ASC`, [requestedStatus], (error, result) => {
+          if (error) reject(error);
+          else resolve(result || []);
+        });
+      });
+      res.json({ success: true, reviews: rows });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.put("/api/admin/reviews/:reviewId", async (req, res, next) => {
+    try {
+      const reviewId = Number.parseInt(req.params.reviewId, 10);
+      if (!Number.isSafeInteger(reviewId) || reviewId < 1) throw new PublicError(400, "Review is invalid.");
+      const status = normalizeText(req.body?.status, 20, "Review status", { required: true }).toUpperCase();
+      if (!REVIEW_STATUSES.has(status) || status === "PENDING") {
+        throw new PublicError(400, "Choose APPROVED or REJECTED.");
+      }
+      const note = normalizeText(req.body?.moderationNote, 300, "Moderation note");
+      const now = new Date().toISOString();
+      const result = await dbRun(db, `UPDATE reviews
+        SET updated_at = ?, status = ?, moderated_at = ?, moderation_note = ?
+        WHERE id = ?`, [now, status, now, note, reviewId]);
+      if (!result.changes) throw new PublicError(404, "Review was not found.");
+      res.json({ success: true, reviewId, status });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/admin/reviews/:reviewId/notification", async (req, res, next) => {
+    try {
+      const reviewId = Number.parseInt(req.params.reviewId, 10);
+      if (!Number.isSafeInteger(reviewId) || reviewId < 1) throw new PublicError(400, "Review is invalid.");
+      const row = await dbGet(db, `SELECT id, created_at, display_name, customer_email, product_id, product_name,
+        stars, review_text, notification_status FROM reviews WHERE id = ?`, [reviewId]);
+      if (!row) throw new PublicError(404, "Review was not found.");
+      if (row.notification_status === "SENT") {
+        throw new PublicError(409, "The owner notification was already sent for this review.");
+      }
+      const review = {
+        id: row.id,
+        createdAt: row.created_at,
+        displayName: row.display_name,
+        email: row.customer_email,
+        productId: row.product_id,
+        productName: row.product_name,
+        stars: row.stars,
+        text: row.review_text
+      };
+      const sender = options.reviewNotificationSender || sendReviewNotificationEmail;
+      const notification = await notifyOwnerOfReview(db, review, sender);
+      if (notification.status !== "SENT") {
+        throw new PublicError(503, "The notification was not sent. Check the email configuration and try again.");
+      }
+      res.json({ success: true, reviewId, notificationStatus: "SENT" });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/admin/orders/:orderNumber/review-request", async (req, res, next) => {
+    try {
+      if (req.body?.deliveryConfirmed !== true) {
+        throw new PublicError(400, "Confirm delivery before sending a review request.");
+      }
+      const orderNumber = normalizeText(req.params.orderNumber, 40, "Order number", { required: true });
+      const order = await getOrderWithItems(db, orderNumber);
+      if (order.orderStatus === "CANCELLED") throw new PublicError(400, "A cancelled order cannot receive a review request.");
+      const now = new Date().toISOString();
+      let request = await dbGet(db, "SELECT id, status FROM review_requests WHERE order_id = ?", [order.orderId]);
+      if (request?.status === "SENT") {
+        throw new PublicError(409, "A review request was already sent for this order.");
+      }
+      if (!request) {
+        const inserted = await dbRun(db, `INSERT INTO review_requests (
+          order_id, created_at, sent_at, recipient_email, status, attempt_count
+        ) VALUES (?, ?, ?, ?, 'PENDING', 0)`, [order.orderId, now, now, order.customerEmail]);
+        request = { id: inserted.lastID, status: "PENDING" };
+      }
+      await dbRun(db, `UPDATE review_requests SET status = 'PENDING', attempt_count = attempt_count + 1,
+        last_attempted_at = ?, last_error = NULL WHERE id = ?`, [now, request.id]);
+      const emailResult = options.reviewEmailSender
+        ? await options.reviewEmailSender(order)
+        : await sendReviewRequestEmail(order);
+      if (!emailResult.emailSent) {
+        await dbRun(db, `UPDATE review_requests SET status = 'FAILED', last_error = ?, message_id = NULL
+          WHERE id = ?`, [String(emailResult.providerResponse || "Email delivery failed.").slice(0, 500), request.id]);
+        throw new PublicError(503, "The review request was not sent. Check the email configuration and try again.");
+      }
+      await dbRun(db, `UPDATE review_requests SET status = 'SENT', sent_at = ?, message_id = ?, last_error = NULL
+        WHERE id = ?`, [now, emailResult.messageId || null, request.id]);
+      await dbRun(db, "INSERT INTO order_events(order_id, created_at, event_type, details) VALUES (?, ?, ?, ?)", [
+        order.orderId, now, "REVIEW_REQUEST_SENT", JSON.stringify({ recipient: order.customerEmail })
+      ]);
+      res.json({ success: true, orderNumber, sentAt: now });
+    } catch (error) {
+      next(error);
+    }
   });
   app.get("/api/admin/orders/:orderNumber/reference-image", async (req, res, next) => {
     try {

@@ -40,6 +40,7 @@
   };
 
   const moderateReview = async (reviewId, newStatus, note, card) => {
+    const previousStatus = card.dataset.reviewStatus;
     const buttons = card.querySelectorAll("button");
     buttons.forEach(button => { button.disabled = true; });
     try {
@@ -49,8 +50,16 @@
         body: JSON.stringify({ status: newStatus, moderationNote: note })
       });
       card.remove();
-      setStatus(`Review ${newStatus === "APPROVED" ? "approved" : "rejected"}.`);
-      if (!reviewList.children.length) setStatus(`No ${currentReviewStatus().toLowerCase()} reviews.`);
+      let message;
+      if (previousStatus === "APPROVED" && newStatus === "REJECTED") {
+        message = "Review removed from the website and preserved under Rejected.";
+      } else {
+        message = `Review ${newStatus === "APPROVED" ? "approved" : "rejected"}.`;
+      }
+      if (!reviewList.children.length) {
+        message += ` No ${currentReviewStatus().toLowerCase()} reviews remain.`;
+      }
+      setStatus(message);
     } catch (error) {
       setStatus(error.message, true);
       buttons.forEach(button => { button.disabled = false; });
@@ -65,6 +74,7 @@
     reviews.forEach(review => {
       const card = document.createElement("article");
       card.className = "review-card";
+      card.dataset.reviewStatus = review.status;
       const heading = document.createElement("h2");
       heading.textContent = `${review.display_name} - ${review.stars} star${review.stars === 1 ? "" : "s"}`;
       const meta = document.createElement("p");
@@ -112,6 +122,22 @@
         reject.addEventListener("click", () => moderateReview(review.id, "REJECTED", note.value, card));
         actions.append(approve, reject);
         card.append(note, actions);
+      } else if (review.status === "APPROVED") {
+        const actions = document.createElement("div");
+        actions.className = "review-actions";
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "reject";
+        remove.textContent = "Remove from Website";
+        remove.setAttribute("aria-label", `Remove ${review.display_name}'s review from the website`);
+        remove.addEventListener("click", () => {
+          const confirmed = window.confirm(
+            "Remove this approved review from the public website? The private review record will be preserved under Rejected."
+          );
+          if (confirmed) moderateReview(review.id, "REJECTED", "", card);
+        });
+        actions.append(remove);
+        card.append(actions);
       }
       reviewList.append(card);
     });

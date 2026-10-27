@@ -346,6 +346,44 @@ test("unauthorized moderation is rejected and rejected reviews remain private", 
   });
 });
 
+test("an approved review can be removed publicly without deleting its private record", async () => {
+  await withServer({}, async ({ baseUrl }) => {
+    const submitted = await (await postReview(baseUrl, {
+      displayName: "Owner Test Review",
+      email: "owner-test@example.com",
+      productSlug: "butterfly",
+      stars: 5,
+      text: "Temporary approved review fixture.",
+      consent: true
+    })).json();
+    const headers = { Authorization: "Bearer test-admin-secret", "Content-Type": "application/json" };
+
+    const approval = await fetch(`${baseUrl}/api/admin/reviews/${submitted.reviewId}`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({ status: "APPROVED" })
+    });
+    assert.equal(approval.status, 200);
+    assert.equal((await (await fetch(`${baseUrl}/api/reviews`)).json()).reviews.length, 1);
+
+    const removal = await fetch(`${baseUrl}/api/admin/reviews/${submitted.reviewId}`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({ status: "REJECTED" })
+    });
+    assert.equal(removal.status, 200);
+    assert.deepEqual((await (await fetch(`${baseUrl}/api/reviews`)).json()).reviews, []);
+
+    const rejected = await (await fetch(`${baseUrl}/api/admin/reviews?status=REJECTED`, {
+      headers: { Authorization: "Bearer test-admin-secret" }
+    })).json();
+    assert.equal(rejected.reviews.length, 1);
+    assert.equal(rejected.reviews[0].id, submitted.reviewId);
+    assert.equal(rejected.reviews[0].status, "REJECTED");
+    assert.equal(rejected.reviews[0].review_text, "Temporary approved review fixture.");
+  });
+});
+
 test("manual review requests require delivery confirmation and are sent once", async () => {
   const sent = [];
   await withServer({

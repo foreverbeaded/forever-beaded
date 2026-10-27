@@ -480,6 +480,7 @@ test("review form only clears after a persisted pending review is confirmed", ()
   const html = fs.readFileSync(path.join(projectRoot, "reviews.html"), "utf8");
   const appSource = fs.readFileSync(path.join(projectRoot, "js", "app.js"), "utf8");
   const adminHtml = fs.readFileSync(path.join(projectRoot, "server", "admin-reviews.html"), "utf8");
+  const adminSource = fs.readFileSync(path.join(projectRoot, "server", "admin-reviews.js"), "utf8");
 
   assert.match(html, /id="reviewProduct" required/);
   assert.match(html, /id="reviewText" minlength="3" maxlength="600"/);
@@ -512,4 +513,7 @@ test("review form only clears after a persisted pending review is confirmed", ()
   assert.match(adminHtml, /value="PENDING"/);
   assert.match(adminHtml, /value="APPROVED"/);
   assert.match(adminHtml, /value="REJECTED"/);
+  assert.match(adminSource, /Remove from Website/);
+  assert.match(adminSource, /window\.confirm/);
+  assert.match(adminSource, /moderateReview\(review\.id, "REJECTED", "", card\)/);
 });

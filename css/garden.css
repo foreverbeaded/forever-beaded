@@ -3813,6 +3813,20 @@ body.intro-active .scroll-monarch-layer {
   margin-top: 10px;
 }
 
+.review-load-state {
+  grid-column: 1 / -1;
+  width: min(620px, 100%);
+  justify-self: center;
+  text-align: center;
+}
+
+.review-load-state p { margin: 0; }
+
+.review-retry-button {
+  margin-top: 16px;
+  min-height: 44px;
+}
+
 .review-product,
 .review-date {
   color: rgba(255, 245, 223, .72);

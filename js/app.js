@@ -1216,7 +1216,10 @@ function escapeHtml(value) {
 }
 
 const getForeverBeadedApiBaseUrl = () => {
-  const configured = window.FOREVER_BEADED_API_BASE_URL || "http://127.0.0.1:3000";
+  const isLocalDevelopment = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+  const configured = window.FOREVER_BEADED_API_BASE_URL || (isLocalDevelopment
+    ? "http://127.0.0.1:3000"
+    : "https://forever-beaded-api.onrender.com");
   return configured.replace(/^http:\/\/localhost:3000\/?$/i, "http://127.0.0.1:3000");
 };
 
@@ -1546,6 +1549,7 @@ let approvedReviews = Array.isArray(window.FOREVER_BEADED_APPROVED_REVIEWS)
   ? window.FOREVER_BEADED_APPROVED_REVIEWS
   : [];
 let reviewSubmissionInFlight = false;
+let reviewLoadInFlight = false;
 
 if (reviewTextInput) {
   const validateReviewLength = () => {
@@ -1589,11 +1593,40 @@ function formatReviewDate(value) {
   return date.toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric" });
 }
 
+function filterPublicApprovedReviews(reviews) {
+  const filter = window.FOREVER_BEADED_REVIEW_PUBLIC?.filterApprovedReviews;
+  if (typeof filter === "function") return filter(reviews);
+  return Array.isArray(reviews)
+    ? reviews.filter(review => review && review.approved === true)
+    : [];
+}
+
+function renderReviewLoadState(message, { retry = false, loading = false } = {}) {
+  if (!reviewGrid) return;
+  const card = document.createElement("article");
+  card.className = "review-card review-load-state";
+  card.setAttribute("role", loading ? "status" : "alert");
+
+  const text = document.createElement("p");
+  text.textContent = message;
+  card.append(text);
+
+  if (retry) {
+    const button = document.createElement("button");
+    button.className = "gold-button review-retry-button";
+    button.type = "button";
+    button.textContent = "Try Again";
+    button.addEventListener("click", () => loadApprovedReviews());
+    card.append(button);
+  }
+  reviewGrid.replaceChildren(card);
+}
+
 function renderReviews() {
   if (!reviewGrid) return;
-  const publicReviews = approvedReviews.filter(review => review && review.approved === true);
+  const publicReviews = filterPublicApprovedReviews(approvedReviews);
   if (!publicReviews.length) {
-    reviewGrid.replaceChildren();
+    renderReviewLoadState("Approved customer reviews will appear here as this chapter grows.");
     return;
   }
 
@@ -1633,18 +1666,26 @@ function populateReviewProducts() {
 }
 
 async function loadApprovedReviews() {
-  if (!reviewGrid) return;
+  if (!reviewGrid || reviewLoadInFlight) return;
+  reviewLoadInFlight = true;
+  if (!filterPublicApprovedReviews(approvedReviews).length) {
+    renderReviewLoadState("Loading approved customer reviews...", { loading: true });
+  }
   try {
     const apiBaseUrl = getForeverBeadedApiBaseUrl().replace(/\/$/, "");
-    const response = await fetch(`${apiBaseUrl}/api/reviews`, { headers: { Accept: "application/json" } });
+    const response = await fetch(`${apiBaseUrl}/api/reviews`, {
+      cache: "no-store",
+      headers: { Accept: "application/json" }
+    });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || "Reviews are temporarily unavailable.");
-    approvedReviews = Array.isArray(data.reviews)
-      ? data.reviews.map(review => ({ ...review, approved: true }))
-      : [];
+    approvedReviews = filterPublicApprovedReviews(data.reviews).map(review => ({ ...review, approved: true }));
     renderReviews();
   } catch (error) {
-    renderReviews();
+    console.warn("Approved reviews could not be loaded:", error.message);
+    renderReviewLoadState("We couldn’t load approved reviews right now. Please try again.", { retry: true });
+  } finally {
+    reviewLoadInFlight = false;
   }
 }
 
@@ -1725,7 +1766,6 @@ if (backToTop) {
 }
 
 populateReviewProducts();
-renderReviews();
 loadApprovedReviews();
 
 

@@ -485,6 +485,19 @@ test("review form only clears after a persisted pending review is confirmed", ()
   assert.match(html, /id="reviewText" minlength="3" maxlength="600"/);
   assert.doesNotMatch(html, /id="reviewPhoto"|type="file"/);
   assert.match(html, /Photo submissions are not enabled yet/);
+  assert.ok(
+    html.indexOf("js/review-public.js") < html.indexOf("js/app.js"),
+    "review API configuration must load before app.js"
+  );
+  assert.ok(
+    html.indexOf("js/master-header.js") < html.indexOf("js/app.js"),
+    "master-header.js must configure the production API before app.js"
+  );
+  assert.match(appSource, /https:\/\/forever-beaded-api\.onrender\.com/);
+  assert.match(appSource, /Loading approved customer reviews/);
+  assert.match(appSource, /We couldn’t load approved reviews right now\. Please try again\./);
+  assert.match(appSource, /review-retry-button/);
+  assert.match(appSource, /cache: "no-store"/);
   assert.match(appSource, /submissionKey: reviewForm\.dataset\.submissionKey/);
   assert.match(appSource, /data\.success !== true \|\| data\.status !== "PENDING" \|\| !data\.reviewId/);
   assert.match(appSource, /Your message is still here/);

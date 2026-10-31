@@ -89,6 +89,12 @@ test("review schema migration preserves existing rows and adds notification fiel
     "2026-10-01T00:00:00.000Z", "2026-10-01T00:00:00.000Z", "Existing Customer",
     "existing@example.com", "1", "Butterfly", 5, "An existing review that must be preserved."
   ]);
+  await dbRun(legacyDb, `INSERT INTO reviews (
+    created_at, updated_at, display_name, customer_email, product_id, product_name, stars, review_text, status
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'APPROVED')`, [
+    "2026-10-02T00:00:00.000Z", "2026-10-02T00:00:00.000Z", "Approved Existing Customer",
+    "approved-existing@example.com", "3", "Butterfly", 5, "An approved existing review awaiting separate permission."
+  ]);
   await new Promise((resolve, reject) => legacyDb.close(error => error ? reject(error) : resolve()));
 
   const app = await createApp({
@@ -105,8 +111,20 @@ test("review schema migration preserves existing rows and adds notification fiel
     assert.ok(names.has("submission_key_hash"));
     assert.ok(names.has("notification_status"));
     assert.ok(names.has("notification_error"));
-    const preserved = await dbGet(app.locals.db, "SELECT display_name, status FROM reviews WHERE id = 1");
-    assert.deepEqual(preserved, { display_name: "Existing Customer", status: "PENDING" });
+    assert.ok(names.has("marketing_permission_status"));
+    assert.ok(names.has("marketing_permission_source"));
+    assert.ok(names.has("marketing_permission_note"));
+    assert.ok(names.has("marketing_permission_updated_at"));
+    const preserved = await dbGet(app.locals.db, "SELECT display_name, status, marketing_permission_status FROM reviews WHERE id = 1");
+    assert.deepEqual(preserved, {
+      display_name: "Existing Customer",
+      status: "PENDING",
+      marketing_permission_status: "NOT_REQUESTED"
+    });
+    const queueTable = await dbGet(app.locals.db, "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'etsy_testimonial_queue'");
+    assert.deepEqual(queueTable, { name: "etsy_testimonial_queue" });
+    const backfilled = await dbGet(app.locals.db, "SELECT preparation_status FROM etsy_testimonial_queue WHERE review_id = 2");
+    assert.deepEqual(backfilled, { preparation_status: "AWAITING_PERMISSION" });
   } finally {
     await new Promise(resolve => app.locals.db.close(resolve));
   }
@@ -212,12 +230,178 @@ test("stores reviews as pending and publishes only approved fields", async () =>
     });
     assert.equal(moderationResponse.status, 200);
 
+    const prepared = await dbGet(app.locals.db, `SELECT preparation_status FROM etsy_testimonial_queue
+      WHERE review_id = ?`, [body.reviewId]);
+    assert.deepEqual(prepared, { preparation_status: "AWAITING_PERMISSION" });
+
     const publicResponse = await fetch(`${baseUrl}/api/reviews`);
     const publicBody = await publicResponse.json();
     assert.equal(publicBody.reviews.length, 1);
     assert.equal(publicBody.reviews[0].displayName, "Happy Customer");
     assert.equal(publicBody.reviews[0].product, "Butterfly");
     assert.equal(Object.hasOwn(publicBody.reviews[0], "customer_email"), false);
+  });
+});
+
+test("synchronizes approved testimonials, exports permitted copy, and flags later changes", async () => {
+  await withServer({}, async ({ app, baseUrl }) => {
+    const permitted = await (await postReview(baseUrl, {
+      displayName: "Exact Display Name",
+      email: "private-permitted@example.com",
+      productSlug: "butterfly",
+      stars: 5,
+      text: "Exact customer wording, preserved as written!",
+      consent: true
+    })).json();
+    const notPermitted = await (await postReview(baseUrl, {
+      displayName: "Website Only Customer",
+      email: "private-website-only@example.com",
+      productSlug: "turtle",
+      stars: 4,
+      text: "Approved for the website, but not for external marketing.",
+      consent: true
+    })).json();
+    const rejected = await (await postReview(baseUrl, {
+      displayName: "Rejected Customer",
+      email: "private-rejected@example.com",
+      productSlug: "rocket",
+      stars: 3,
+      text: "This rejected review must never be exported.",
+      consent: true
+    })).json();
+    const adminHeaders = { Authorization: "Bearer test-admin-secret", "Content-Type": "application/json" };
+
+    for (const reviewId of [permitted.reviewId, notPermitted.reviewId]) {
+      const approval = await fetch(`${baseUrl}/api/admin/reviews/${reviewId}`, {
+        method: "PUT",
+        headers: adminHeaders,
+        body: JSON.stringify({ status: "APPROVED" })
+      });
+      assert.equal(approval.status, 200);
+    }
+    assert.equal((await fetch(`${baseUrl}/api/admin/reviews/${rejected.reviewId}`, {
+      method: "PUT",
+      headers: adminHeaders,
+      body: JSON.stringify({ status: "REJECTED" })
+    })).status, 200);
+
+    assert.equal((await fetch(`${baseUrl}/api/admin/reviews/${permitted.reviewId}/marketing-permission`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ permissionStatus: "GRANTED", permissionSource: "EMAIL" })
+    })).status, 401);
+    const permissionResponse = await fetch(`${baseUrl}/api/admin/reviews/${permitted.reviewId}/marketing-permission`, {
+      method: "PUT",
+      headers: adminHeaders,
+      body: JSON.stringify({
+        permissionStatus: "GRANTED",
+        permissionSource: "EMAIL",
+        permissionNote: "Written permission recorded privately."
+      })
+    });
+    assert.equal(permissionResponse.status, 200);
+
+    const queueBeforeExport = await (await fetch(`${baseUrl}/api/admin/reviews/testimonials`, {
+      headers: { Authorization: "Bearer test-admin-secret" }
+    })).json();
+    const permittedReady = queueBeforeExport.testimonials.find(item => item.reviewId === permitted.reviewId);
+    const awaitingPermission = queueBeforeExport.testimonials.find(item => item.reviewId === notPermitted.reviewId);
+    assert.equal(permittedReady.preparationStatus, "READY");
+    assert.equal(awaitingPermission.preparationStatus, "AWAITING_PERMISSION");
+    assert.equal(Object.hasOwn(permittedReady, "customer_email"), false);
+    assert.equal(Object.hasOwn(permittedReady, "stars"), false);
+
+    const rejectedPermission = await fetch(`${baseUrl}/api/admin/reviews/${rejected.reviewId}/marketing-permission`, {
+      method: "PUT",
+      headers: adminHeaders,
+      body: JSON.stringify({ permissionStatus: "GRANTED", permissionSource: "EMAIL" })
+    });
+    assert.equal(rejectedPermission.status, 409);
+    assert.equal((await fetch(`${baseUrl}/api/admin/reviews/testimonials`)).status, 401);
+    assert.equal((await fetch(`${baseUrl}/api/admin/reviews/testimonials/export`)).status, 401);
+
+    const exportResponse = await fetch(`${baseUrl}/api/admin/reviews/testimonials/export`, {
+      headers: { Authorization: "Bearer test-admin-secret" }
+    });
+    assert.equal(exportResponse.status, 200);
+    assert.match(exportResponse.headers.get("content-disposition"), /attachment; filename="forever-beaded-testimonials-/);
+    const exported = await exportResponse.json();
+    assert.equal(exported.sourceLabel, "Forever Beaded customer feedback — website purchase");
+    assert.equal(exported.testimonials.length, 1);
+    assert.deepEqual(exported.testimonials[0], {
+      reviewReferenceId: permitted.reviewId,
+      displayName: "Exact Display Name",
+      product: "Butterfly",
+      feedback: "Exact customer wording, preserved as written!",
+      reviewDate: exported.testimonials[0].reviewDate,
+      sourceLabel: "Forever Beaded customer feedback — website purchase",
+      permission: {
+        status: "GRANTED",
+        source: "EMAIL",
+        recordedAt: exported.testimonials[0].permission.recordedAt
+      }
+    });
+    const serialized = JSON.stringify(exported);
+    assert.doesNotMatch(serialized, /private-permitted|private-website-only|private-rejected|customer_email/i);
+    assert.equal(Object.hasOwn(exported.testimonials[0], "stars"), false);
+    assert.equal((await dbGet(app.locals.db, "SELECT marketing_permission_status FROM reviews WHERE id = ?", [notPermitted.reviewId])).marketing_permission_status, "NOT_REQUESTED");
+
+    let queueRecord = await dbGet(app.locals.db, `SELECT preparation_status, last_exported_at,
+      needs_external_action FROM etsy_testimonial_queue WHERE review_id = ?`, [permitted.reviewId]);
+    assert.equal(queueRecord.preparation_status, "EXPORTED");
+    assert.ok(queueRecord.last_exported_at);
+    assert.equal(queueRecord.needs_external_action, 0);
+
+    await new Promise(resolve => setTimeout(resolve, 5));
+    await dbRun(app.locals.db, "UPDATE reviews SET review_text = ?, updated_at = ? WHERE id = ?", [
+      "Corrected customer wording that requires external correction.", new Date().toISOString(), permitted.reviewId
+    ]);
+    const changedQueue = await (await fetch(`${baseUrl}/api/admin/reviews/testimonials`, {
+      headers: { Authorization: "Bearer test-admin-secret" }
+    })).json();
+    const changed = changedQueue.testimonials.find(item => item.reviewId === permitted.reviewId);
+    assert.equal(changed.preparationStatus, "ACTION_REQUIRED");
+    assert.equal(changed.actionRequired, true);
+    assert.match(changed.actionReason, /changed after export/i);
+    const blockedExport = await (await fetch(`${baseUrl}/api/admin/reviews/testimonials/export`, {
+      headers: { Authorization: "Bearer test-admin-secret" }
+    })).json();
+    assert.deepEqual(blockedExport.testimonials, []);
+
+    const correctionResolved = await fetch(`${baseUrl}/api/admin/reviews/${permitted.reviewId}/testimonial-action-resolved`, {
+      method: "POST",
+      headers: { Authorization: "Bearer test-admin-secret" }
+    });
+    assert.equal(correctionResolved.status, 200);
+    assert.equal((await correctionResolved.json()).preparationStatus, "EXPORTED");
+
+    await new Promise(resolve => setTimeout(resolve, 5));
+    const revocation = await fetch(`${baseUrl}/api/admin/reviews/${permitted.reviewId}/marketing-permission`, {
+      method: "PUT",
+      headers: adminHeaders,
+      body: JSON.stringify({ permissionStatus: "REVOKED", permissionSource: "EMAIL" })
+    });
+    assert.equal(revocation.status, 200);
+    queueRecord = await dbGet(app.locals.db, `SELECT preparation_status, needs_external_action,
+      action_required_reason FROM etsy_testimonial_queue WHERE review_id = ?`, [permitted.reviewId]);
+    assert.equal(queueRecord.preparation_status, "ACTION_REQUIRED");
+    assert.equal(queueRecord.needs_external_action, 1);
+    assert.match(queueRecord.action_required_reason, /permission is no longer granted/i);
+    const afterRevocation = await (await fetch(`${baseUrl}/api/admin/reviews/testimonials/export`, {
+      headers: { Authorization: "Bearer test-admin-secret" }
+    })).json();
+    assert.deepEqual(afterRevocation.testimonials, []);
+
+    const removalResolved = await fetch(`${baseUrl}/api/admin/reviews/${permitted.reviewId}/testimonial-action-resolved`, {
+      method: "POST",
+      headers: { Authorization: "Bearer test-admin-secret" }
+    });
+    assert.equal(removalResolved.status, 200);
+    assert.equal((await removalResolved.json()).preparationStatus, "EXCLUDED");
+    const finalQueue = await (await fetch(`${baseUrl}/api/admin/reviews/testimonials`, {
+      headers: { Authorization: "Bearer test-admin-secret" }
+    })).json();
+    assert.equal(finalQueue.testimonials.find(item => item.reviewId === permitted.reviewId).preparationStatus, "EXCLUDED");
   });
 });
 

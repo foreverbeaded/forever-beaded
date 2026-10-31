@@ -34,6 +34,16 @@
       <button type="submit">Send One Review Invitation</button>
     </form>
 
+    <section class="panel" aria-labelledby="testimonialPreparationTitle">
+      <h2 id="testimonialPreparationTitle">Etsy Testimonial Preparation</h2>
+      <p>Private preparation only. Website feedback is never presented as an Etsy review, Etsy rating, or verified Etsy purchase.</p>
+      <div class="review-actions">
+        <button id="refreshTestimonials" type="button" class="secondary">Refresh Preparation Queue</button>
+        <button id="exportTestimonials" type="button">Export Permitted Testimonials</button>
+      </div>
+      <div id="testimonialList" aria-live="polite" aria-label="Etsy testimonial preparation queue"></div>
+    </section>
+
     <p id="status" class="status" role="status" aria-live="polite"></p>
     <section id="reviewList" aria-live="polite" aria-label="Review moderation results"></section>
   </main>

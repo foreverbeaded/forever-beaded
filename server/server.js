@@ -15,6 +15,10 @@ const { SEED_PRODUCTS, getSeedProduct } = require("./catalogue");
 const PAYMENT_STATUSES = new Set(["AWAITING_PAYMENT", "RECEIVED", "VERIFIED", "REFUNDED", "CANCELLED"]);
 const ORDER_STATUSES = new Set(["NEW", "IN_PROGRESS", "READY", "SHIPPED", "COMPLETED", "CANCELLED"]);
 const REVIEW_STATUSES = new Set(["PENDING", "APPROVED", "REJECTED"]);
+const MARKETING_PERMISSION_STATUSES = new Set(["NOT_REQUESTED", "REQUESTED", "GRANTED", "DECLINED", "REVOKED"]);
+const MARKETING_PERMISSION_SOURCES = new Set(["EMAIL", "WEBSITE_FORM", "ETSY_MESSAGE", "WRITTEN_OTHER"]);
+const ETSY_TESTIMONIAL_STATUSES = new Set(["AWAITING_PERMISSION", "READY", "EXPORTED", "EXCLUDED", "ACTION_REQUIRED"]);
+const WEBSITE_TESTIMONIAL_SOURCE_LABEL = "Forever Beaded customer feedback — website purchase";
 const REQUIRED_ADMIN_ORIGINS = [
   "https://forever-beaded-api.onrender.com"
 ];
@@ -153,6 +157,89 @@ function dbGet(db, sql, params = []) {
       else resolve(row);
     });
   });
+}
+
+function dbAll(db, sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (error, rows) => {
+      if (error) reject(error);
+      else resolve(rows || []);
+    });
+  });
+}
+
+function testimonialFingerprint(review) {
+  return crypto.createHash("sha256").update(JSON.stringify({
+    displayName: review.display_name,
+    productName: review.product_name,
+    reviewText: review.review_text
+  })).digest("hex");
+}
+
+async function syncEtsyTestimonialQueue(db, reviewId) {
+  const review = await dbGet(db, `SELECT id, status, updated_at, display_name, product_name, review_text,
+    marketing_permission_status FROM reviews WHERE id = ?`, [reviewId]);
+  if (!review) return null;
+  const existing = await dbGet(db, `SELECT review_id, preparation_status, last_exported_at,
+    exported_fingerprint, needs_external_action, action_required_reason, action_resolved_at
+    FROM etsy_testimonial_queue WHERE review_id = ?`, [reviewId]);
+  const fingerprint = testimonialFingerprint(review);
+  const approved = review.status === "APPROVED";
+  const permission = review.marketing_permission_status || "NOT_REQUESTED";
+  const permitted = permission === "GRANTED";
+  let needsExternalAction = Boolean(existing?.needs_external_action);
+  let actionReason = existing?.action_required_reason || null;
+
+  const exportChangeIsUnresolved = existing?.last_exported_at && (
+    !existing.action_resolved_at || review.updated_at > existing.action_resolved_at
+  );
+  if (exportChangeIsUnresolved && existing.exported_fingerprint && existing.exported_fingerprint !== fingerprint) {
+    needsExternalAction = true;
+    actionReason = "Customer-approved testimonial wording, display name, or product changed after export. Correct or remove prior external use.";
+  }
+  if (exportChangeIsUnresolved && !approved) {
+    needsExternalAction = true;
+    actionReason = "The website review was removed or rejected after export. Remove prior external use.";
+  } else if (exportChangeIsUnresolved && !permitted) {
+    needsExternalAction = true;
+    actionReason = "External marketing permission is no longer granted. Remove prior external use.";
+  }
+
+  let preparationStatus;
+  if (needsExternalAction) {
+    preparationStatus = "ACTION_REQUIRED";
+  } else if (!approved || ["DECLINED", "REVOKED"].includes(permission)) {
+    preparationStatus = "EXCLUDED";
+  } else if (!permitted) {
+    preparationStatus = "AWAITING_PERMISSION";
+  } else if (existing?.last_exported_at) {
+    preparationStatus = "EXPORTED";
+  } else {
+    preparationStatus = "READY";
+  }
+  if (!ETSY_TESTIMONIAL_STATUSES.has(preparationStatus)) throw new Error("Invalid Etsy testimonial preparation state.");
+
+  const now = new Date().toISOString();
+  await dbRun(db, `INSERT INTO etsy_testimonial_queue (
+    review_id, preparation_status, last_synced_at, last_exported_at, exported_fingerprint,
+    needs_external_action, action_required_reason
+  ) VALUES (?, ?, ?, ?, ?, ?, ?)
+  ON CONFLICT(review_id) DO UPDATE SET
+    preparation_status = excluded.preparation_status,
+    last_synced_at = excluded.last_synced_at,
+    needs_external_action = excluded.needs_external_action,
+    action_required_reason = excluded.action_required_reason`, [
+    reviewId, preparationStatus, now, existing?.last_exported_at || null,
+    existing?.exported_fingerprint || null, needsExternalAction ? 1 : 0, actionReason
+  ]);
+  return { preparationStatus, needsExternalAction, actionReason, fingerprint };
+}
+
+async function syncAllEtsyTestimonials(db) {
+  const reviews = await dbAll(db, `SELECT reviews.id FROM reviews
+    LEFT JOIN etsy_testimonial_queue ON etsy_testimonial_queue.review_id = reviews.id
+    WHERE reviews.status = 'APPROVED' OR etsy_testimonial_queue.review_id IS NOT NULL`);
+  for (const review of reviews) await syncEtsyTestimonialQueue(db, review.id);
 }
 
 function normalizeText(value, maxLength, field, { required = false } = {}) {
@@ -782,7 +869,11 @@ async function migrateSchema(db) {
     notification_attempted_at TEXT,
     notification_sent_at TEXT,
     notification_message_id TEXT,
-    notification_error TEXT
+    notification_error TEXT,
+    marketing_permission_status TEXT NOT NULL DEFAULT 'NOT_REQUESTED',
+    marketing_permission_source TEXT,
+    marketing_permission_note TEXT,
+    marketing_permission_updated_at TEXT
   )`);
   await dbRun(db, "CREATE INDEX IF NOT EXISTS idx_reviews_status_created ON reviews(status, created_at DESC)");
 
@@ -800,13 +891,30 @@ async function migrateSchema(db) {
     ["notification_attempted_at", "TEXT"],
     ["notification_sent_at", "TEXT"],
     ["notification_message_id", "TEXT"],
-    ["notification_error", "TEXT"]
+    ["notification_error", "TEXT"],
+    ["marketing_permission_status", "TEXT NOT NULL DEFAULT 'NOT_REQUESTED'"],
+    ["marketing_permission_source", "TEXT"],
+    ["marketing_permission_note", "TEXT"],
+    ["marketing_permission_updated_at", "TEXT"]
   ]) {
     if (!existingReviewColumns.has(name)) {
       await dbRun(db, `ALTER TABLE reviews ADD COLUMN ${name} ${definition}`);
     }
   }
   await dbRun(db, "CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_submission_key ON reviews(submission_key_hash) WHERE submission_key_hash IS NOT NULL");
+
+  await dbRun(db, `CREATE TABLE IF NOT EXISTS etsy_testimonial_queue (
+    review_id INTEGER PRIMARY KEY,
+    preparation_status TEXT NOT NULL DEFAULT 'AWAITING_PERMISSION',
+    last_synced_at TEXT NOT NULL,
+    last_exported_at TEXT,
+    exported_fingerprint TEXT,
+    needs_external_action INTEGER NOT NULL DEFAULT 0,
+    action_required_reason TEXT,
+    action_resolved_at TEXT,
+    FOREIGN KEY(review_id) REFERENCES reviews(id) ON DELETE CASCADE
+  )`);
+  await dbRun(db, "CREATE INDEX IF NOT EXISTS idx_etsy_testimonial_status ON etsy_testimonial_queue(preparation_status, last_synced_at DESC)");
 
   await dbRun(db, `CREATE TABLE IF NOT EXISTS review_requests (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1544,6 +1652,7 @@ async function createApp(options = {}) {
   const db = options.db || createDatabase(options.databasePath || process.env.DATABASE_PATH || path.join(__dirname, "data", "orders.db"));
   const referenceUploadPath = getReferenceUploadPath(options);
   await migrateSchema(db);
+  await syncAllEtsyTestimonials(db);
 
   const allowedOrigins = getAllowedOrigins(options.allowedOrigins || process.env.ALLOWED_ORIGINS);
   const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: options.apiRateLimit || 100, standardHeaders: true, legacyHeaders: false });
@@ -1873,7 +1982,9 @@ async function createApp(options = {}) {
       const rows = await new Promise((resolve, reject) => {
         db.all(`SELECT id, created_at, updated_at, display_name, customer_email, product_id, product_name,
           stars, review_text, status, moderated_at, moderation_note, notification_status,
-          notification_attempted_at, notification_sent_at, notification_message_id, notification_error
+          notification_attempted_at, notification_sent_at, notification_message_id, notification_error,
+          marketing_permission_status, marketing_permission_source, marketing_permission_note,
+          marketing_permission_updated_at
           FROM reviews WHERE status = ? ORDER BY created_at ASC, id ASC`, [requestedStatus], (error, result) => {
           if (error) reject(error);
           else resolve(result || []);
@@ -1899,7 +2010,135 @@ async function createApp(options = {}) {
         SET updated_at = ?, status = ?, moderated_at = ?, moderation_note = ?
         WHERE id = ?`, [now, status, now, note, reviewId]);
       if (!result.changes) throw new PublicError(404, "Review was not found.");
+      await syncEtsyTestimonialQueue(db, reviewId);
       res.json({ success: true, reviewId, status });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.put("/api/admin/reviews/:reviewId/marketing-permission", async (req, res, next) => {
+    try {
+      const reviewId = Number.parseInt(req.params.reviewId, 10);
+      if (!Number.isSafeInteger(reviewId) || reviewId < 1) throw new PublicError(400, "Review is invalid.");
+      const permissionStatus = normalizeText(req.body?.permissionStatus, 30, "Permission status", { required: true }).toUpperCase();
+      if (!MARKETING_PERMISSION_STATUSES.has(permissionStatus)) {
+        throw new PublicError(400, "Marketing permission status is invalid.");
+      }
+      const permissionSource = normalizeText(req.body?.permissionSource, 30, "Permission source").toUpperCase();
+      if (permissionSource && !MARKETING_PERMISSION_SOURCES.has(permissionSource)) {
+        throw new PublicError(400, "Marketing permission source is invalid.");
+      }
+      if (permissionStatus === "GRANTED" && !permissionSource) {
+        throw new PublicError(400, "Record how the customer granted permission.");
+      }
+      const permissionNote = normalizeText(req.body?.permissionNote, 300, "Permission note");
+      const review = await dbGet(db, "SELECT id, status FROM reviews WHERE id = ?", [reviewId]);
+      if (!review) throw new PublicError(404, "Review was not found.");
+      if (permissionStatus === "GRANTED" && review.status !== "APPROVED") {
+        throw new PublicError(409, "Only an approved website review can be cleared for external testimonial use.");
+      }
+      const now = new Date().toISOString();
+      await dbRun(db, `UPDATE reviews SET updated_at = ?, marketing_permission_status = ?,
+        marketing_permission_source = ?, marketing_permission_note = ?, marketing_permission_updated_at = ?
+        WHERE id = ?`, [now, permissionStatus, permissionSource || null, permissionNote || null, now, reviewId]);
+      await syncEtsyTestimonialQueue(db, reviewId);
+      res.json({ success: true, reviewId, permissionStatus, permissionSource: permissionSource || null });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/admin/reviews/testimonials/export", async (req, res, next) => {
+    try {
+      await syncAllEtsyTestimonials(db);
+      const rows = await dbAll(db, `SELECT reviews.id, reviews.created_at, reviews.display_name,
+        reviews.product_name, reviews.review_text, reviews.marketing_permission_source,
+        reviews.marketing_permission_updated_at
+        FROM reviews JOIN etsy_testimonial_queue ON etsy_testimonial_queue.review_id = reviews.id
+        WHERE reviews.status = 'APPROVED' AND reviews.marketing_permission_status = 'GRANTED'
+          AND etsy_testimonial_queue.preparation_status IN ('READY', 'EXPORTED')
+          AND etsy_testimonial_queue.needs_external_action = 0
+        ORDER BY reviews.created_at ASC, reviews.id ASC`);
+      const exportedAt = new Date().toISOString();
+      for (const row of rows) {
+        await dbRun(db, `UPDATE etsy_testimonial_queue SET preparation_status = 'EXPORTED',
+          last_synced_at = ?, last_exported_at = ?, exported_fingerprint = ?,
+          needs_external_action = 0, action_required_reason = NULL
+          WHERE review_id = ?`, [exportedAt, exportedAt, testimonialFingerprint(row), row.id]);
+      }
+      res.set("Content-Disposition", `attachment; filename="forever-beaded-testimonials-${new Date().toISOString().slice(0, 10)}.json"`);
+      res.json({
+        generatedAt: exportedAt,
+        sourceLabel: WEBSITE_TESTIMONIAL_SOURCE_LABEL,
+        testimonials: rows.map((row) => ({
+          reviewReferenceId: row.id,
+          displayName: row.display_name,
+          product: row.product_name,
+          feedback: row.review_text,
+          reviewDate: row.created_at,
+          sourceLabel: WEBSITE_TESTIMONIAL_SOURCE_LABEL,
+          permission: {
+            status: "GRANTED",
+            source: row.marketing_permission_source,
+            recordedAt: row.marketing_permission_updated_at
+          }
+        }))
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/admin/reviews/testimonials", async (req, res, next) => {
+    try {
+      await syncAllEtsyTestimonials(db);
+      const rows = await dbAll(db, `SELECT reviews.id, reviews.display_name, reviews.product_name,
+        reviews.review_text, reviews.status AS website_status, reviews.marketing_permission_status,
+        etsy_testimonial_queue.preparation_status, etsy_testimonial_queue.last_exported_at,
+        etsy_testimonial_queue.needs_external_action, etsy_testimonial_queue.action_required_reason
+        FROM reviews JOIN etsy_testimonial_queue ON etsy_testimonial_queue.review_id = reviews.id
+        ORDER BY CASE etsy_testimonial_queue.preparation_status
+          WHEN 'ACTION_REQUIRED' THEN 0 WHEN 'READY' THEN 1 WHEN 'AWAITING_PERMISSION' THEN 2
+          WHEN 'EXPORTED' THEN 3 ELSE 4 END, reviews.created_at ASC, reviews.id ASC`);
+      res.json({
+        success: true,
+        sourceLabel: WEBSITE_TESTIMONIAL_SOURCE_LABEL,
+        testimonials: rows.map((row) => ({
+          reviewId: row.id,
+          displayName: row.display_name,
+          product: row.product_name,
+          feedback: row.review_text,
+          websiteStatus: row.website_status,
+          permissionStatus: row.marketing_permission_status,
+          preparationStatus: row.preparation_status,
+          lastExportedAt: row.last_exported_at,
+          actionRequired: Boolean(row.needs_external_action),
+          actionReason: row.action_required_reason
+        }))
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/admin/reviews/:reviewId/testimonial-action-resolved", async (req, res, next) => {
+    try {
+      const reviewId = Number.parseInt(req.params.reviewId, 10);
+      if (!Number.isSafeInteger(reviewId) || reviewId < 1) throw new PublicError(400, "Review is invalid.");
+      const review = await dbGet(db, `SELECT id, status, display_name, product_name, review_text,
+        marketing_permission_status FROM reviews WHERE id = ?`, [reviewId]);
+      if (!review) throw new PublicError(404, "Review was not found.");
+      const queue = await dbGet(db, "SELECT last_exported_at FROM etsy_testimonial_queue WHERE review_id = ?", [reviewId]);
+      if (!queue?.last_exported_at) throw new PublicError(409, "This testimonial has no prior export to resolve.");
+      const eligible = review.status === "APPROVED" && review.marketing_permission_status === "GRANTED";
+      const now = new Date().toISOString();
+      await dbRun(db, `UPDATE etsy_testimonial_queue SET preparation_status = ?, last_synced_at = ?,
+        exported_fingerprint = ?, needs_external_action = 0, action_required_reason = NULL,
+        action_resolved_at = ? WHERE review_id = ?`, [
+        eligible ? "EXPORTED" : "EXCLUDED", now, eligible ? testimonialFingerprint(review) : null, now, reviewId
+      ]);
+      res.json({ success: true, reviewId, preparationStatus: eligible ? "EXPORTED" : "EXCLUDED" });
     } catch (error) {
       next(error);
     }

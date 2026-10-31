@@ -9,9 +9,10 @@ body { margin: 0; min-height: 100vh; background: #1d1022; }
 main { width: min(820px, calc(100% - 32px)); margin: 0 auto; padding: 40px 0 64px; }
 header { margin-bottom: 24px; }
 .eyebrow { margin: 0 0 8px; color: #dfb95d; font-size: .78rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
-h1, h2 { margin: 0; color: #fff8e8; font-family: Georgia, serif; overflow-wrap: anywhere; }
+h1, h2, h3 { margin: 0; color: #fff8e8; font-family: Georgia, serif; overflow-wrap: anywhere; }
 h1 { font-size: clamp(2rem, 7vw, 3.4rem); }
 h2 { font-size: 1.35rem; }
+h3 { font-size: 1.12rem; }
 header p:last-child, .review-meta { color: #eadfdc; line-height: 1.6; }
 .panel, .review-card { display: grid; gap: 12px; margin-top: 18px; padding: 20px; border: 1px solid rgba(223,185,93,.55); border-radius: 8px; background: #321b39; }
 label { color: #f2d38b; font-weight: 800; }
@@ -32,9 +33,19 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .review-notification.needs-attention { color: #ffcb7d; font-weight: 800; }
 .review-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .review-actions button { flex: 1 1 160px; }
+.permission-panel { display: grid; gap: 10px; margin: 8px 0 0; border: 1px solid rgba(223,185,93,.45); padding: 14px; }
+.permission-panel legend { padding: 0 6px; color: #f2d38b; font-weight: 800; }
+.testimonial-card { display: grid; gap: 10px; padding: 16px 0; border-top: 1px solid rgba(223,185,93,.35); }
+.testimonial-card:first-child { margin-top: 4px; }
+.testimonial-states { display: grid; grid-template-columns: minmax(130px, auto) 1fr; gap: 6px 12px; margin: 0; }
+.testimonial-states dt { color: #f2d38b; font-weight: 800; }
+.testimonial-states dd { margin: 0; color: #fff8e8; }
+.testimonial-warning { margin: 0; border-left: 4px solid #ffcb7d; padding: 10px 12px; background: rgba(255,203,125,.1); color: #fff0d5; line-height: 1.5; }
 @media (max-width: 520px) {
   main { width: min(100% - 20px, 820px); padding-top: 20px; }
   .panel, .review-card { padding: 15px; }
   .review-actions { flex-direction: column; }
   .review-actions button { flex: 0 0 auto; width: 100%; }
+  .testimonial-states { grid-template-columns: 1fr; gap: 2px; }
+  .testimonial-states dd { margin-bottom: 8px; }
 }

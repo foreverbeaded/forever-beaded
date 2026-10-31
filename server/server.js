@@ -375,7 +375,38 @@ function smtpConnect(config) {
   });
 }
 
-async function sendSmtpMail(config, { from, to, subject, text }) {
+function buildSmtpMessage({ from, to, subject, text, html, messageId, boundary }) {
+  const textBody = String(text || "").replace(/\r\n?/g, "\n").replace(/\n/g, "\r\n");
+  const htmlBody = String(html || "").replace(/\r\n?/g, "\n").replace(/\n/g, "\r\n");
+  const headers = [
+    `From: Forever Beaded <${from}>`,
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    `Message-ID: ${messageId}`,
+    "MIME-Version: 1.0"
+  ];
+  if (!html) {
+    return [...headers, "Content-Type: text/plain; charset=utf-8", "", textBody].join("\r\n");
+  }
+  return [
+    ...headers,
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    "",
+    `--${boundary}`,
+    "Content-Type: text/plain; charset=utf-8",
+    "Content-Transfer-Encoding: 8bit",
+    "",
+    textBody,
+    `--${boundary}`,
+    "Content-Type: text/html; charset=utf-8",
+    "Content-Transfer-Encoding: 8bit",
+    "",
+    htmlBody,
+    `--${boundary}--`
+  ].join("\r\n");
+}
+
+async function sendSmtpMail(config, { from, to, subject, text, html }) {
   console.info(`[email] SMTP connection: connecting to ${config.host}:${config.port}`);
   let socket = await smtpConnect(config);
   console.info("[email] SMTP connection: connected");
@@ -394,16 +425,9 @@ async function sendSmtpMail(config, { from, to, subject, text }) {
     await smtpCommand(socket, `RCPT TO:<${to}>`, [250, 251]);
     await smtpCommand(socket, "DATA", [354]);
     const messageId = `<${Date.now()}.${Math.random().toString(16).slice(2)}@forever-beaded.local>`;
-    const headers = [
-      `From: Forever Beaded <${from}>`,
-      `To: ${to}`,
-      `Subject: ${subject}`,
-      `Message-ID: ${messageId}`,
-      "MIME-Version: 1.0",
-      "Content-Type: text/plain; charset=utf-8",
-      ""
-    ].join("\r\n");
-    socket.write(`${headers}\r\n${text.replace(/^\./gm, "..")}\r\n.\r\n`);
+    const boundary = `forever-beaded-${crypto.randomBytes(12).toString("hex")}`;
+    const message = buildSmtpMessage({ from, to, subject, text, html, messageId, boundary });
+    socket.write(`${message.replace(/^\./gm, "..")}\r\n.\r\n`);
     const providerResponse = await smtpRead(socket);
     const code = Number(providerResponse.slice(0, 3));
     if (code !== 250) throw new Error(`SMTP DATA failed: ${providerResponse.trim()}`);
@@ -1240,8 +1264,9 @@ async function sendReviewRequestEmail(order) {
   }
 }
 
+const REVIEW_MODERATION_URL = "https://forever-beaded-api.onrender.com/admin/reviews";
+
 function buildReviewNotificationMessage(review) {
-  const adminBaseUrl = String(process.env.PUBLIC_API_BASE_URL || "https://forever-beaded-api.onrender.com").replace(/\/$/, "");
   return `A new customer review is waiting for approval.
 
 Product: ${escapeEmailText(review.productName)}
@@ -1254,9 +1279,48 @@ Review:
 ${escapeEmailText(review.text)}
 
 Moderate this review:
-${adminBaseUrl}/admin/reviews
+${REVIEW_MODERATION_URL}
 
 The customer email remains private and is available only in the authenticated moderation dashboard.`;
+}
+
+function buildReviewNotificationHtml(review) {
+  const reviewText = escapeXml(review.text).replace(/\n/g, "<br>");
+  return `<!doctype html>
+<html lang="en">
+<body style="margin:0;padding:0;background:#f7f2f8;color:#221425;font-family:Arial,sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f7f2f8;">
+    <tr><td align="center" style="padding:24px 12px;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:620px;background:#ffffff;border:1px solid #e1d2e5;border-radius:8px;">
+        <tr><td style="padding:28px;">
+          <h1 style="margin:0 0 18px;color:#6b2c75;font-family:Georgia,serif;font-size:26px;line-height:1.25;">New Review Awaiting Approval</h1>
+          <p style="margin:0 0 8px;"><strong>Product:</strong> ${escapeXml(review.productName)}</p>
+          <p style="margin:0 0 8px;"><strong>Rating:</strong> ${escapeXml(review.stars)} out of 5 stars</p>
+          <p style="margin:0 0 8px;"><strong>Customer display name:</strong> ${escapeXml(review.displayName)}</p>
+          <p style="margin:0 0 8px;"><strong>Review reference ID:</strong> ${escapeXml(review.id)}</p>
+          <p style="margin:0 0 18px;"><strong>Submitted:</strong> ${escapeXml(review.createdAt)}</p>
+          <p style="margin:0 0 8px;"><strong>Review:</strong></p>
+          <p style="margin:0 0 24px;line-height:1.6;">${reviewText}</p>
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+            <tr><td bgcolor="#6b2c75" style="border-radius:6px;">
+              <a href="${REVIEW_MODERATION_URL}" style="display:inline-block;padding:14px 22px;color:#ffffff;text-decoration:none;font-weight:700;font-size:16px;">Review &amp; Approve</a>
+            </td></tr>
+          </table>
+          <p style="margin:24px 0 0;color:#5f5361;font-size:13px;line-height:1.5;">The customer email remains private and is available only after owner authentication in the moderation dashboard.</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+function buildReviewNotificationEmail(review) {
+  return {
+    subject: "Forever Beaded — New Review Awaiting Approval",
+    text: buildReviewNotificationMessage(review),
+    html: buildReviewNotificationHtml(review)
+  };
 }
 
 async function sendReviewNotificationEmail(review) {
@@ -1272,11 +1336,11 @@ async function sendReviewNotificationEmail(review) {
     };
   }
   try {
+    const message = buildReviewNotificationEmail(review);
     const result = await sendSmtpMail(config, {
       from: config.from,
       to,
-      subject: "Forever Beaded — New Review Awaiting Approval",
-      text: buildReviewNotificationMessage(review)
+      ...message
     });
     return {
       emailSent: true,
@@ -2140,6 +2204,8 @@ module.exports = {
   createOrder,
   migrateSchema,
   normalizeOrderPayload,
+  buildReviewNotificationEmail,
+  buildSmtpMessage,
   dbGet,
   dbRun
 };

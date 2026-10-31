@@ -6,7 +6,7 @@ const { randomUUID } = require("node:crypto");
 const test = require("node:test");
 const sharp = require("sharp");
 const sqlite3 = require("sqlite3").verbose();
-const { createApp, dbGet, dbRun } = require("../server");
+const { buildReviewNotificationEmail, buildSmtpMessage, createApp, dbGet, dbRun } = require("../server");
 const { SEED_PRODUCTS } = require("../catalogue");
 
 function tempDbPath() {
@@ -110,6 +110,52 @@ test("review schema migration preserves existing rows and adds notification fiel
   } finally {
     await new Promise(resolve => app.locals.db.close(resolve));
   }
+});
+
+test("review notification email is multipart, mobile-linkable, and private", () => {
+  const review = {
+    id: 42,
+    createdAt: "2026-10-31T12:00:00.000Z",
+    productName: "Personalized Blossom Keychain",
+    stars: 5,
+    displayName: "Kind Customer",
+    text: "Beautiful work!\nThank you.",
+    email: "private-customer@example.com"
+  };
+  const notification = buildReviewNotificationEmail(review);
+  const dashboardUrl = "https://forever-beaded-api.onrender.com/admin/reviews";
+  const raw = buildSmtpMessage({
+    from: "owner@example.com",
+    to: "owner@example.com",
+    subject: notification.subject,
+    text: notification.text,
+    html: notification.html,
+    messageId: "<review-test@forever-beaded.local>",
+    boundary: "review-test-boundary"
+  });
+
+  assert.match(raw, /Content-Type: multipart\/alternative; boundary="review-test-boundary"/);
+  assert.match(raw, /Content-Type: text\/plain; charset=utf-8/);
+  assert.match(raw, /Content-Type: text\/html; charset=utf-8/);
+  assert.match(notification.text, new RegExp(`${dashboardUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "m"));
+  assert.match(notification.html, new RegExp(`href="${dashboardUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
+  assert.match(notification.html, />Review &amp; Approve<\/a>/);
+  assert.match(notification.text, /Personalized Blossom Keychain/);
+  assert.match(notification.html, /Beautiful work!<br>Thank you\./);
+  assert.doesNotMatch(raw, /private-customer@example\.com/);
+  assert.doesNotMatch(raw, /ADMIN_SECRET|Bearer |token=/i);
+  assert.doesNotMatch(raw, /(?<!\r)\n/);
+
+  const plain = buildSmtpMessage({
+    from: "owner@example.com",
+    to: "customer@example.com",
+    subject: "Existing plain-text email",
+    text: "First line\nSecond line",
+    messageId: "<plain-test@forever-beaded.local>"
+  });
+  assert.match(plain, /Content-Type: text\/plain; charset=utf-8/);
+  assert.doesNotMatch(plain, /multipart\/alternative|text\/html/);
+  assert.match(plain, /First line\r\nSecond line/);
 });
 
 test("stores reviews as pending and publishes only approved fields", async () => {

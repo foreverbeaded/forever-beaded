@@ -249,23 +249,41 @@ body.storybook-home img {
 .intro-brand-type {
   position: relative;
   z-index: 1;
-  min-height: 1.1em;
+  width: min(88vw, 760px);
+  min-height: 1.48em;
   margin: 0;
-  padding: 0 22px;
+  padding: .04em 22px .1em;
   overflow: visible;
   color: transparent;
   background: none;
-  font-family: "Segoe Script", "Lucida Handwriting", "URW Chancery L", cursive;
-  font-size: clamp(3.15rem, 8.8vw, 7.4rem);
-  font-weight: 700;
-  line-height: .95;
-  letter-spacing: .025em;
+  font-family: "Great Vibes", "Segoe Script", "Lucida Handwriting", "URW Chancery L", cursive;
+  font-size: 6.25rem;
+  font-weight: 400;
+  line-height: .72;
+  letter-spacing: 0;
   text-align: center;
-  white-space: nowrap;
+  white-space: normal;
   text-shadow: none;
   opacity: 0;
   transform: translateY(12px);
   transition: opacity .7s ease, transform .7s ease;
+}
+
+.intro-brand-type::after {
+  content: "Forever\A Beaded";
+  position: absolute;
+  inset: 50% 0 auto;
+  color: transparent;
+  background: linear-gradient(105deg, #76400c 0%, #c78620 16%, #f7d876 36%, #fff3b2 49%, #e4ad3a 63%, #9b570f 82%, #efc85e 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-stroke: .35px rgba(102, 52, 5, .38);
+  white-space: pre;
+  opacity: 0;
+  filter: drop-shadow(0 3px 2px rgba(45, 22, 4, .92)) drop-shadow(0 0 7px rgba(255, 215, 112, .62));
+  transform: translateY(-50%) scale(.985);
+  transition: opacity .45s ease, transform .65s cubic-bezier(.2,.75,.25,1);
 }
 
 .intro-title-magic {
@@ -316,7 +334,12 @@ body.storybook-home img {
   animation: magicLetterWrite .46s ease forwards;
 }
 
-.magic-letter-space { width: .26em; }
+.magic-letter-space {
+  display: block;
+  width: 100%;
+  height: 0;
+  line-height: 0;
+}
 
 .writing-spark {
   position: absolute;
@@ -336,6 +359,17 @@ body.storybook-home img {
 
 .opening-scene.title-magic-complete .intro-brand-type {
   animation: completedTitleShimmer 2.8s ease-in-out both;
+}
+
+.opening-scene.title-magic-complete .intro-brand-type::after {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+  animation: completedTitleShimmer 2.8s ease-in-out both;
+}
+
+.opening-scene.title-magic-complete .intro-brand-type .magic-letter {
+  opacity: 0;
+  transition: opacity .35s ease;
 }
 
 .opening-scene.title-magic-complete .intro-title-aura {
@@ -385,9 +419,10 @@ body.storybook-home img {
   }
 
   .intro-brand-type {
-    max-width: calc(100% - 28px);
+    width: calc(100% - 28px);
+    max-width: 440px;
     padding: 0 14px;
-    font-size: clamp(2.2rem, 10.5vw, 3.55rem);
+    font-size: 3.5rem;
   }
 
   .intro-brand-tagline {
@@ -401,10 +436,17 @@ body.storybook-home img {
 
 @media (max-width: 460px) {
   .intro-brand-type {
-    width: calc(100% - 48px);
+    width: min(calc(100vw - 48px), 440px);
     max-width: none;
     padding-inline: 8px;
-    font-size: clamp(1.9rem, 8.8vw, 2.4rem);
+    font-size: 3rem;
+  }
+}
+
+@media (max-width: 340px) {
+  .intro-brand-type {
+    width: calc(100vw - 32px);
+    font-size: 2.65rem;
   }
 }
 

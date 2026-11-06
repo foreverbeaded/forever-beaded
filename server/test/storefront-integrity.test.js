@@ -614,6 +614,7 @@ test("Christmas draft uses one trusted identity for every supplied standalone de
   );
 
   const monthlyPage = fs.readFileSync(path.join(projectRoot, "monthly-exclusive.html"), "utf8");
+  const homepage = fs.readFileSync(path.join(projectRoot, "index.html"), "utf8");
   assert.match(monthlyPage, /design=autumn-tree/);
   assert.match(monthlyPage, /October Exclusive/);
   assert.match(monthlyPage, /Glow-in-the-Dark Christmas Ornament/);
@@ -627,6 +628,13 @@ test("Christmas draft uses one trusted identity for every supplied standalone de
     monthlyPage.indexOf('id="novemberExclusiveTitle"') < monthlyPage.indexOf("design=autumn-tree"),
     "November's ornament must be featured before the historical October exclusive"
   );
+  assert.match(homepage, /class="hero-feature august-exclusive-feature"[\s\S]*November Exclusive/);
+  assert.match(homepage, /images\/christmas-collection\/products\/glow-in-the-dark-christmas-ornament\.jpg/);
+  assert.match(homepage, /Glow-in-the-Dark Christmas Ornament/);
+  assert.match(homepage, /\$35 CAD/);
+  assert.match(homepage, /Naturally glowing beads charge through exposure to light, with no batteries or LEDs/);
+  assert.match(homepage, /href="monthly-exclusive\.html\?v=november-2026" class="text-link">Explore the November Exclusive/);
+  assert.doesNotMatch(homepage, /images\/october-collection\/autumn-tree\.jpg|Visit the October Exclusive/);
 
   const etsyDraft = fs.readFileSync(path.join(projectRoot, "etsy", "christmas-collection-2026-draft.md"), "utf8");
   expected.forEach(item => assert.match(etsyDraft, new RegExp(`FB-${item.id}-`)));

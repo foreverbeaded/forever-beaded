@@ -475,8 +475,8 @@ const NEXT_COLLECTION_CHAPTERS = {
   "Tiny Garden Friends": { label: "Back to School", category: "Back to School" },
   "Back to School": { label: "Faith", category: "Faith" },
   Faith: { label: "Sports", category: "Sports" },
-  Sports: { label: "Monthly Exclusive", href: "monthly-exclusive.html?v=october-2026" },
-  "Monthly Exclusives": { label: "Create Your Own", href: "create.html?design=autumn-tree#homeDesignBuilder" }
+  Sports: { label: "Monthly Exclusive", href: "monthly-exclusive.html?v=november-2026" },
+  "Monthly Exclusives": { label: "Create Your Own", href: "create.html?design=glow-in-the-dark-christmas-ornament#homeDesignBuilder" }
 };
 
 
@@ -492,7 +492,7 @@ const COLLECTION_WORLD_COPY = {
   "Back to School": { title: "The Creative Classroom", description: "A cosy classroom filled with pencils, books, beads, and bright ideas." },
   Faith: { title: "The Peaceful Bible Garden", description: "A quiet chapter of faith, warm light, and meaningful handmade keepsakes." },
   Sports: { title: "The Sports Field", description: "A lively field for favourite teams, games, and sporty treasures." },
-  "Monthly Exclusives": { title: "October's Autumn Tree", description: "Discover October's colourful handmade exclusive treasure." }
+  "Monthly Exclusives": { title: "November's Glow-in-the-Dark Ornament", description: "Discover November's naturally glowing handmade Christmas ornament." }
 };
 
 function updateCollectionWorldCopy() {

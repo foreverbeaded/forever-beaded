@@ -566,7 +566,13 @@ test("Christmas draft uses one trusted identity for every supplied standalone de
   assert.match(christmasPage, /id="productGrid"/);
   assert.match(christmasPage, /js\/static-collection-cards\.js/);
   assert.doesNotMatch(christmasPage, /design=custom-idea|design=butterfly/);
+  assert.match(christmasPage, /images\/christmas-collection\/christmas-scenic-background\.png/);
+  assert.doesNotMatch(christmasPage, /images\/christmas-collection\/collection-overview\.jpg/);
   assert.match(collectionsPage, /href="christmas-collection\.html"/);
+  assert.match(collectionsPage, /hotspot--christmas[\s\S]*christmas-scenic-background\.png[\s\S]*Christmas Collection/);
+  assert.match(collectionsPage, /hotspot--monthly-exclusive[\s\S]*monthly-exclusive\.html\?v=november-2026[\s\S]*glow-in-the-dark-christmas-ornament\.jpg/);
+  assert.doesNotMatch(collectionsPage, /monthly-exclusive\.html\?v=october-2026/);
+  assert.equal(fs.existsSync(path.join(projectRoot, "images", "christmas-collection", "christmas-scenic-background.png")), true);
   assert.match(designerSource, /label: "Christmas Collection"/);
 
   const dynamicChristmasSurfaces = ["shop.html", "gallery.html", "my-favourites.html", "create.html", "reviews.html"];
@@ -613,6 +619,14 @@ test("Christmas draft uses one trusted identity for every supplied standalone de
   assert.match(monthlyPage, /Glow-in-the-Dark Christmas Ornament/);
   assert.match(monthlyPage, /\$35 CAD/);
   assert.match(monthlyPage, /design=glow-in-the-dark-christmas-ornament/);
+  assert.match(monthlyPage, /Naturally glowing beads charge through exposure to light/);
+  assert.match(monthlyPage, /No batteries or LEDs/);
+  assert.match(monthlyPage, /Previous Exclusives/);
+  assert.match(monthlyPage, /\.\.\/images\/christmas-collection\/christmas-scenic-background\.png/);
+  assert.ok(
+    monthlyPage.indexOf('id="novemberExclusiveTitle"') < monthlyPage.indexOf("design=autumn-tree"),
+    "November's ornament must be featured before the historical October exclusive"
+  );
 
   const etsyDraft = fs.readFileSync(path.join(projectRoot, "etsy", "christmas-collection-2026-draft.md"), "utf8");
   expected.forEach(item => assert.match(etsyDraft, new RegExp(`FB-${item.id}-`)));

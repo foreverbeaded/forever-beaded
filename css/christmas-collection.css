@@ -65,7 +65,13 @@ body.hero-christmas {
   background: #54151b;
   box-shadow: 0 24px 58px rgba(14, 9, 7, .45);
 }
-.collection-overview img { display: block; width: 100%; height: auto; }
+.collection-overview img {
+  display: block;
+  width: 100%;
+  height: clamp(230px, 42vw, 480px);
+  object-fit: cover;
+  object-position: center 56%;
+}
 .november-exclusive-preview {
   display: grid;
   grid-template-columns: minmax(240px, 420px) minmax(0, 1fr);
@@ -172,6 +178,7 @@ body.hero-christmas {
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 @media (max-width: 760px) {
   .hero-christmas .page-scroll { padding-top: 92px; }
+  .collection-overview img { height: clamp(220px, 66vw, 320px); }
   .hero-christmas .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .hero-christmas .product-card { aspect-ratio: 1 / 1 !important; border-width: 3px; }
   .hero-christmas .product-name, .hero-christmas .product-price { left: 7px; right: 7px; }

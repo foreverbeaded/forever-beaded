@@ -36,6 +36,20 @@
       .product-card img{padding:6px 6px 70px!important}
     }
   </style>
+  <style>
+    body.scenic-exclusive{--scenic-desktop:url("../images/christmas-collection/christmas-scenic-background.png");--scenic-tablet-landscape:var(--scenic-desktop);--scenic-tablet-portrait:var(--scenic-desktop);--scenic-phone-portrait:var(--scenic-desktop);--scenic-position:50% 56%}
+    .current-exclusive{display:grid;grid-template-columns:minmax(260px,430px) minmax(0,1fr);gap:clamp(22px,4vw,56px);align-items:center;width:min(1040px,100%);margin:0 auto 34px;padding:clamp(16px,2.7vw,30px);border:1px solid rgba(244,196,126,.7);border-radius:8px;background:rgba(25,17,13,.94);box-shadow:0 22px 55px rgba(0,0,0,.62)}
+    .current-exclusive[hidden]{display:none}
+    .current-exclusive img{display:block;width:100%;max-height:560px;object-fit:contain;border-radius:6px;background:#090d0b}
+    .current-exclusive__kicker{margin:0 0 8px;color:#f4c982;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+    .current-exclusive h2{margin:0 0 14px;color:#fff8ef;font-family:"Cormorant Garamond",Georgia,serif;font-size:clamp(34px,4.8vw,58px);font-weight:600;line-height:.96;letter-spacing:0}
+    .current-exclusive p{color:#ebded1;font-size:17px;line-height:1.6}
+    .current-exclusive__price{display:block;margin-top:14px;color:#f4c982;font-size:20px}
+    .current-exclusive__link{display:inline-flex;align-items:center;justify-content:center;min-height:46px;margin-top:20px;padding:0 22px;border:1px solid #f4c982;border-radius:6px;background:#f4c982;color:#27170d;font-weight:800;text-decoration:none}
+    .current-exclusive__link:hover,.current-exclusive__link:focus-visible{background:#ffe0a6;outline:3px solid rgba(255,224,166,.3);outline-offset:3px}
+    .previous-exclusives{margin:38px 0 6px;color:#fff8ef;font-family:"Cormorant Garamond",Georgia,serif;font-size:clamp(30px,4vw,44px);font-weight:600;letter-spacing:0;text-align:center}
+    @media(max-width:760px){.current-exclusive{grid-template-columns:1fr}.current-exclusive img{max-height:480px}.current-exclusive h2{font-size:clamp(34px,10vw,48px)}}
+  </style>
 </head>
 <body class="scenic-page scenic-exclusive">
   <header class="story-header">
@@ -45,18 +59,28 @@
   </header>
   <div class="page-scroll">
     <main class="exclusive-page" aria-label="Monthly Exclusive products">
-      <div class="page-heading"><p class="eyebrow">Forever Beaded Collection</p><h1>Monthly Exclusive</h1><p class="page-description">A special spotlight world for limited seasonal treasures, with previous exclusives preserved.</p></div>
+      <div class="page-heading"><p class="eyebrow">Forever Beaded Collection</p><h1>Monthly Exclusive</h1><p class="page-description">November's glowing ornament is in the spotlight, with previous exclusives preserved below.</p></div>
+      <section class="current-exclusive" data-exclusive-search-item aria-labelledby="novemberExclusiveTitle">
+        <img src="images/christmas-collection/products/glow-in-the-dark-christmas-ornament.jpg" alt="Glow-in-the-Dark Christmas Ornament shown in daylight and glowing in darkness">
+        <div>
+          <p class="current-exclusive__kicker">November Exclusive — 2026</p>
+          <h2 id="novemberExclusiveTitle">Glow-in-the-Dark Christmas Ornament</h2>
+          <p>Naturally glowing beads charge through exposure to light, then glow beautifully in darker surroundings. No batteries or LEDs are used. The approved comparison image shows the same ornament in daytime and glowing conditions.</p>
+          <strong class="current-exclusive__price">$35 CAD</strong>
+          <a class="current-exclusive__link" href="create.html?design=glow-in-the-dark-christmas-ornament#homeDesignBuilder">Create yours</a>
+        </div>
+      </section>
       <div class="world-search-row"><label class="sr-only" for="productSearch">Search Monthly Exclusive products</label><input id="productSearch" autocomplete="off" placeholder="Search this treasure world..." type="search"><button class="tiny-link-btn" id="clearShopFilters" type="button">Clear</button></div>
+      <h2 class="previous-exclusives">Previous Exclusives</h2>
       <div class="product-grid" id="productGrid">
-        <article class="product-card"><a class="product-card-link" href="create.html?design=autumn-tree#homeDesignBuilder"><span class="exclusive-label">October Exclusive</span><img src="images/october-collection/autumn-tree.jpg" alt="Forever Beaded Autumn Tree keychain"><span class="product-name">Autumn Tree</span><span class="product-price">$25 CAD</span></a></article>
-        <article class="product-card"><a class="product-card-link" href="create.html?design=glow-in-the-dark-christmas-ornament#homeDesignBuilder"><span class="exclusive-label">November Exclusive — 2026</span><img src="images/christmas-collection/products/glow-in-the-dark-christmas-ornament.jpg" alt="Glow-in-the-Dark Christmas Ornament in daylight and glowing conditions"><span class="product-name">Glow-in-the-Dark Christmas Ornament</span><span class="product-price">$35 CAD</span></a></article>
+        <article class="product-card" data-exclusive-search-item><a class="product-card-link" href="create.html?design=autumn-tree#homeDesignBuilder"><span class="exclusive-label">October Exclusive</span><img src="images/october-collection/autumn-tree.jpg" alt="Forever Beaded Autumn Tree keychain"><span class="product-name">Autumn Tree</span><span class="product-price">$25 CAD</span></a></article>
       </div>
       <p class="product-empty" id="productEmpty" hidden>No monthly treasure found</p>
     </main>
   </div>
   <section class="chapter-navigation" aria-label="Next chapter"><a class="chapter-navigation__link" href="create.html"><span>Next Chapter</span><strong>Create Your Own Treasure</strong></a><span class="chapter-navigation__ornament" aria-hidden="true">&#9825;</span></section>
   <script>
-    history.scrollRestoration="manual";window.addEventListener("load",()=>window.scrollTo(0,0),{once:true});(()=>{const input=document.getElementById("productSearch"),clear=document.getElementById("clearShopFilters"),cards=Array.from(document.querySelectorAll(".product-card")),empty=document.getElementById("productEmpty");function filter(){const query=input.value.trim().toLowerCase();let visible=0;cards.forEach(card=>{const match=!query||card.textContent.toLowerCase().includes(query);card.hidden=!match;if(match)visible+=1});empty.hidden=visible!==0}input.addEventListener("input",filter);clear.addEventListener("click",()=>{input.value="";filter();input.focus()})})();
+    history.scrollRestoration="manual";window.addEventListener("load",()=>window.scrollTo(0,0),{once:true});(()=>{const input=document.getElementById("productSearch"),clear=document.getElementById("clearShopFilters"),items=Array.from(document.querySelectorAll("[data-exclusive-search-item]")),empty=document.getElementById("productEmpty");function filter(){const query=input.value.trim().toLowerCase();let visible=0;items.forEach(item=>{const match=!query||item.textContent.toLowerCase().includes(query);item.hidden=!match;if(match)visible+=1});empty.hidden=visible!==0}input.addEventListener("input",filter);clear.addEventListener("click",()=>{input.value="";filter();input.focus()})})();
   </script>
   <script src="js/chapter-order-navigation.js?v=fall-merge-20261002"></script>
   <script src="js/master-header.js?v=accessories-nav-20260913"></script>

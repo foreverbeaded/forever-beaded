@@ -95,6 +95,22 @@ test("dynamic storefront rendering is sourced from the trusted catalogue", () =>
   assert.doesNotMatch(appSource, /CREATE_DESIGN_SLUG_ALIASES/);
 });
 
+test("homepage monarch uses one accessible, self-cleaning appearance cycle", () => {
+  const bookSource = fs.readFileSync(path.join(projectRoot, "js", "book.js"), "utf8");
+  const gardenSource = fs.readFileSync(path.join(projectRoot, "css", "garden.css"), "utf8");
+
+  assert.match(bookSource, /restMinMs:\s*5000/);
+  assert.match(bookSource, /restMaxMs:\s*8000/);
+  assert.match(bookSource, /returnMinMs:\s*20000/);
+  assert.match(bookSource, /returnMaxMs:\s*40000/);
+  assert.match(bookSource, /document\.addEventListener\("visibilitychange"/);
+  assert.match(bookSource, /prefers-reduced-motion:\s*reduce/);
+  assert.match(bookSource, /controller\.butterfly\?\.remove\(\)/);
+  assert.match(bookSource, /if \(document\.hidden \|\| motionQuery\.matches \|\| controller\.butterfly\) return/);
+  assert.match(bookSource, /"\.product-card",\s*\n\s*"\.hero-feature", "\.cart-panel", "\.fb-modal", "\.story-header"/);
+  assert.match(gardenSource, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.hero-butterfly-layer[\s\S]*display:\s*none\s*!important/);
+});
+
 test("newly reconciled storefront designs use the same trusted server prices", () => {
   const { getSeedProduct } = require("../catalogue");
   const expectedPrices = {

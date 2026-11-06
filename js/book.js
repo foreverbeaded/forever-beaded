@@ -5,9 +5,19 @@ const state = {
   completed: false,
   exclusiveStarted: false,
   exclusiveObserverStarted: false,
+  exclusiveButterflyController: null,
   butterflyScene: null,
   audio: null
 };
+
+const EXCLUSIVE_BUTTERFLY_TIMING = Object.freeze({
+  approachMs: 4400,
+  restMinMs: 5000,
+  restMaxMs: 8000,
+  departureMs: 3400,
+  returnMinMs: 20000,
+  returnMaxMs: 40000
+});
 
 const butterflyPlans = [
   {
@@ -1239,67 +1249,75 @@ function startExclusiveDiscovery() {
   if (!hero) return;
 
   state.exclusiveStarted = true;
-  const butterfly = document.createElement("span");
-  butterfly.className = "svg-monarch exclusive-discovery-butterfly";
-  butterfly.innerHTML = monarchMarkup();
   const layer = document.createElement("div");
   layer.className = "hero-butterfly-layer";
   layer.setAttribute("aria-hidden", "true");
-  layer.appendChild(butterfly);
   hero.appendChild(layer);
 
-  const getTargets = () => {
-    const heroRect = hero.getBoundingClientRect();
-    const rect = feature.getBoundingClientRect();
-    const targetRect = {
-      left: rect.left - heroRect.left, right: rect.right - heroRect.left,
-      top: rect.top - heroRect.top, width: rect.width, height: rect.height
-    };
-    const image = feature.querySelector("img");
-    const imageRect = image?.getBoundingClientRect() || targetRect;
-    const useRightSide = targetRect.right + 150 < heroRect.width;
-    const side = useRightSide ? 1 : -1;
-    const edgeX = useRightSide ? targetRect.right : targetRect.left;
-    const center = {
-      x: clamp(edgeX + (side * 94), 78, heroRect.width - 78),
-      y: clamp(targetRect.top + (targetRect.height * .36), 96, heroRect.height - 96)
-    };
-    const hover = {
-      x: clamp(edgeX + (side * 82), 74, heroRect.width - 74),
-      y: clamp(targetRect.top + (targetRect.height * .22), 90, heroRect.height - 90)
-    };
-    // Let the butterfly straddle the card border instead of covering the
-    // right-aligned desktop copy. Its inner wing still visibly rests on-card.
-    const landingX = clamp(targetRect.right + 20, 54, heroRect.width - 24);
-    const copyRects = [...feature.querySelectorAll("h2, p, .text-link")].map((element) => {
-      const copyRect = element.getBoundingClientRect();
-      return {
-        left: copyRect.left - heroRect.left,
-        right: copyRect.right - heroRect.left,
-        top: copyRect.top - heroRect.top,
-        bottom: copyRect.bottom - heroRect.top
-      };
-    });
-    const landingCandidates = [.16, .34, .5, .66, .82].map((ratio) => ({
-      x: landingX,
-      y: clamp(targetRect.top + (targetRect.height * ratio), 54, heroRect.height - 54)
-    }));
-    const overlapScore = (candidate) => copyRects.reduce((score, copyRect) => {
-      const overlapWidth = Math.max(0, Math.min(candidate.x + 46, copyRect.right) - Math.max(candidate.x - 46, copyRect.left));
-      const overlapHeight = Math.max(0, Math.min(candidate.y + 44, copyRect.bottom) - Math.max(candidate.y - 44, copyRect.top));
-      return score + (overlapWidth * overlapHeight);
-    }, 0);
-    // Choose a responsive card-edge perch with the least overlap rather than
-    // assuming the desktop and stacked mobile copy occupy the same area.
-    const land = landingCandidates.reduce((best, candidate) =>
-      overlapScore(candidate) < overlapScore(best) ? candidate : best
-    );
-    return { targetRect, center, hover, land };
+  const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const controller = {
+    animationFrame: 0,
+    butterfly: null,
+    cycleId: 0,
+    timer: 0
   };
+  state.exclusiveButterflyController = controller;
 
-  const start = { x: window.innerWidth * .16, y: Math.max(110, window.innerHeight * .18) };
-  const started = Date.now();
-  const duration = 15000;
+  const randomBetween = (minimum, maximum) => minimum + (Math.random() * (maximum - minimum));
+  const protectedSelector = [
+    "a", "button", "input", "select", "textarea", "form",
+    "[role='button']", "[role='navigation']", ".product-card",
+    ".hero-feature", ".cart-panel", ".fb-modal", ".story-header"
+  ].join(",");
+
+  const getSafeTarget = () => {
+    const heroRect = hero.getBoundingClientRect();
+    const marginX = Math.min(72, Math.max(48, heroRect.width * .13));
+    const marginY = Math.min(56, Math.max(44, heroRect.height * .08));
+    if (heroRect.width < marginX * 2 || heroRect.height < marginY * 2) return null;
+
+    const obstacles = [...document.querySelectorAll(protectedSelector)]
+      .filter((element) => element !== hero && element !== layer)
+      .map((element) => element.getBoundingClientRect())
+      .filter((rect) => rect.width > 0 && rect.height > 0 &&
+        rect.right > heroRect.left && rect.left < heroRect.right &&
+        rect.bottom > heroRect.top && rect.top < heroRect.bottom)
+      .map((rect) => ({
+        left: rect.left - heroRect.left - 8,
+        right: rect.right - heroRect.left + 8,
+        top: rect.top - heroRect.top - 8,
+        bottom: rect.bottom - heroRect.top + 8
+      }));
+    const xRatios = [.1, .9, .18, .82, .5];
+    const yRatios = [0, .16, .34, .52, .7, .86, 1];
+    const visibleTop = clamp(-heroRect.top + marginY, marginY, heroRect.height - marginY);
+    const visibleBottom = clamp(
+      -heroRect.top + window.innerHeight - marginY,
+      visibleTop,
+      heroRect.height - marginY
+    );
+    const candidates = [];
+
+    xRatios.forEach((xRatio) => yRatios.forEach((yRatio) => {
+      const point = {
+        x: clamp(heroRect.width * xRatio, marginX, heroRect.width - marginX),
+        y: clamp(
+          visibleTop + ((visibleBottom - visibleTop) * yRatio),
+          visibleTop,
+          visibleBottom
+        )
+      };
+      const bounds = { left: point.x - 44, right: point.x + 44, top: point.y - 42, bottom: point.y + 42 };
+      const blocked = obstacles.some((rect) =>
+        bounds.right > rect.left && bounds.left < rect.right &&
+        bounds.bottom > rect.top && bounds.top < rect.bottom
+      );
+      if (!blocked) candidates.push(point);
+    }));
+
+    if (!candidates.length) return null;
+    return candidates[Math.floor(Math.random() * candidates.length)];
+  };
 
   function point(a, b, c, d, t) {
     const mt = 1 - t;
@@ -1309,67 +1327,164 @@ function startExclusiveDiscovery() {
     };
   }
 
-  function animate() {
-    const raw = clamp((Date.now() - started) / duration, 0, 1);
-    const { targetRect, center, hover, land } = getTargets();
-    const c1 = { x: window.innerWidth * .28, y: window.innerHeight * .24 };
-    const c2 = { x: Math.max(120, center.x - (window.innerWidth * .24)), y: Math.min(window.innerHeight - 110, center.y + 150) };
-    let pos;
-    let bank;
-    let scale;
-    let resting = false;
+  const clearTimer = () => {
+    if (!controller.timer) return;
+    window.clearTimeout(controller.timer);
+    controller.timer = 0;
+  };
 
-    if (raw < .3) {
-      const t = easeInOut(raw / .3);
-      pos = point(start, c1, c2, center, t);
-      pos.x += Math.sin(t * Math.PI * 5.2) * 28;
-      pos.y += Math.sin(t * Math.PI * 3.4) * 18;
-      bank = Math.sin(t * Math.PI * 3.4) * 16;
-      scale = .74 + Math.sin(t * Math.PI) * .2;
-    } else if (raw < .5) {
-      const t = (raw - .3) / .2;
-      const angle = (t * Math.PI * 2) - Math.PI * .15;
-      pos = {
-        x: center.x + Math.cos(angle) * Math.min(24, targetRect.width * .08),
-        y: center.y + Math.sin(angle) * Math.min(48, targetRect.height * .16)
-      };
-      bank = Math.sin(angle) * 18;
-      scale = .9 + Math.sin(t * Math.PI) * .08;
-    } else if (raw < .62) {
-      const t = easeInOut((raw - .5) / .12);
-      pos = point(center, { x: center.x + 64, y: center.y - 72 }, { x: hover.x + 34, y: hover.y + 22 }, hover, t);
-      bank = Math.sin(t * Math.PI * 2) * 10;
-      scale = .86;
-    } else if (raw < .72) {
-      const t = easeInOut((raw - .62) / .1);
-      pos = point(hover, { x: hover.x + 30, y: hover.y - 34 }, { x: land.x + 22, y: land.y - 28 }, land, t);
-      bank = 6 - (t * 12);
-      scale = .82 - (t * .08);
-      feature.classList.add("treasure-found");
-      resting = t > .72;
-    } else {
-      const t = (raw - .72) / .28;
-      pos = {
-        x: land.x + (Math.sin(t * Math.PI * 2) * 2),
-        y: land.y + (Math.sin(t * Math.PI * 3) * 1.6)
-      };
-      bank = -4 + (Math.sin(t * Math.PI * 2) * 2);
-      scale = .74;
-      resting = true;
+  const removeCurrentButterfly = () => {
+    controller.cycleId += 1;
+    if (controller.animationFrame) window.cancelAnimationFrame(controller.animationFrame);
+    controller.animationFrame = 0;
+    controller.butterfly?.remove();
+    controller.butterfly = null;
+  };
+
+  const scheduleNextAppearance = (delay = randomBetween(
+    EXCLUSIVE_BUTTERFLY_TIMING.returnMinMs,
+    EXCLUSIVE_BUTTERFLY_TIMING.returnMaxMs
+  )) => {
+    clearTimer();
+    if (document.hidden || motionQuery.matches) return;
+    controller.timer = window.setTimeout(() => {
+      controller.timer = 0;
+      startAppearance();
+    }, delay);
+  };
+
+  function startAppearance() {
+    if (document.hidden || motionQuery.matches || controller.butterfly) return;
+    const land = getSafeTarget();
+    if (!land) {
+      scheduleNextAppearance(randomBetween(2500, 5000));
+      return;
     }
 
-    const bob = resting ? 0 : Math.sin(raw * Math.PI * 9) * 8;
-    butterfly.classList.add("is-flying");
-    butterfly.classList.toggle("is-resting", resting);
-    butterfly.style.opacity = String(raw < .06 ? raw / .06 : 1);
-    butterfly.style.transform = `translate3d(${pos.x}px, ${pos.y + bob}px, 0) translate(-50%, -50%) rotate(${bank}deg) scale(${scale})`;
+    const heroRect = hero.getBoundingClientRect();
+    const fromLeft = Math.random() < .5;
+    const start = {
+      x: fromLeft ? -76 : heroRect.width + 76,
+      y: clamp(land.y + randomBetween(-130, 130), 48, heroRect.height - 48)
+    };
+    const exit = {
+      x: fromLeft ? heroRect.width + 84 : -84,
+      y: clamp(land.y + randomBetween(-180, -70), 42, heroRect.height - 42)
+    };
+    const restDuration = randomBetween(
+      EXCLUSIVE_BUTTERFLY_TIMING.restMinMs,
+      EXCLUSIVE_BUTTERFLY_TIMING.restMaxMs
+    );
+    const totalDuration = EXCLUSIVE_BUTTERFLY_TIMING.approachMs + restDuration +
+      EXCLUSIVE_BUTTERFLY_TIMING.departureMs;
+    const startedAt = performance.now();
+    const cycleId = ++controller.cycleId;
+    const butterfly = document.createElement("span");
+    butterfly.className = "svg-monarch exclusive-discovery-butterfly is-flying";
+    butterfly.innerHTML = monarchMarkup();
+    layer.appendChild(butterfly);
+    controller.butterfly = butterfly;
 
-    if (raw < 1) {
-      window.requestAnimationFrame(animate);
-    }
+    const approachControl1 = {
+      x: start.x + ((land.x - start.x) * .35),
+      y: start.y + randomBetween(-80, 80)
+    };
+    const approachControl2 = {
+      x: land.x - (fromLeft ? 90 : -90),
+      y: land.y + randomBetween(-90, 90)
+    };
+    const departureControl1 = {
+      x: land.x + (fromLeft ? 80 : -80),
+      y: land.y - 70
+    };
+    const departureControl2 = {
+      x: exit.x - (fromLeft ? 130 : -130),
+      y: exit.y + 60
+    };
+
+    const animate = (now) => {
+      if (cycleId !== controller.cycleId || document.hidden || motionQuery.matches) return;
+      const elapsed = now - startedAt;
+      let pos = land;
+      let bank = 0;
+      let scale = .76;
+      let opacity = 1;
+      let resting = false;
+
+      if (elapsed < EXCLUSIVE_BUTTERFLY_TIMING.approachMs) {
+        const raw = clamp(elapsed / EXCLUSIVE_BUTTERFLY_TIMING.approachMs, 0, 1);
+        const t = easeInOut(raw);
+        pos = point(start, approachControl1, approachControl2, land, t);
+        pos.x += Math.sin(t * Math.PI * 4.5) * 14;
+        pos.y += Math.sin(t * Math.PI * 5.5) * 10;
+        bank = Math.sin(t * Math.PI * 3.5) * 14;
+        scale = .7 + (Math.sin(t * Math.PI) * .12);
+        opacity = clamp(raw / .14, 0, 1);
+      } else if (elapsed < EXCLUSIVE_BUTTERFLY_TIMING.approachMs + restDuration) {
+        const restElapsed = elapsed - EXCLUSIVE_BUTTERFLY_TIMING.approachMs;
+        pos = {
+          x: land.x + (Math.sin(restElapsed / 850) * 1.8),
+          y: land.y + (Math.sin(restElapsed / 1050) * 1.4)
+        };
+        bank = -3 + (Math.sin(restElapsed / 1200) * 1.5);
+        resting = true;
+      } else {
+        const departureElapsed = elapsed - EXCLUSIVE_BUTTERFLY_TIMING.approachMs - restDuration;
+        const raw = clamp(departureElapsed / EXCLUSIVE_BUTTERFLY_TIMING.departureMs, 0, 1);
+        const t = easeInOut(raw);
+        pos = point(land, departureControl1, departureControl2, exit, t);
+        pos.x += Math.sin(t * Math.PI * 4) * 12;
+        pos.y += Math.sin(t * Math.PI * 5) * 9;
+        bank = (fromLeft ? 1 : -1) * (8 + (t * 12));
+        scale = .76 - (t * .12);
+        opacity = clamp((1 - raw) / .18, 0, 1);
+      }
+
+      butterfly.classList.toggle("is-resting", resting);
+      butterfly.style.opacity = String(opacity);
+      butterfly.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0) translate(-50%, -50%) rotate(${bank}deg) scale(${scale})`;
+
+      if (elapsed < totalDuration) {
+        controller.animationFrame = window.requestAnimationFrame(animate);
+        return;
+      }
+
+      butterfly.remove();
+      controller.butterfly = null;
+      controller.animationFrame = 0;
+      scheduleNextAppearance();
+    };
+
+    feature.classList.add("treasure-found");
+    controller.animationFrame = window.requestAnimationFrame(animate);
   }
 
-  window.requestAnimationFrame(animate);
+  const handleVisibilityChange = () => {
+    clearTimer();
+    removeCurrentButterfly();
+    if (!document.hidden && !motionQuery.matches) scheduleNextAppearance();
+  };
+  const handleMotionChange = () => {
+    clearTimer();
+    removeCurrentButterfly();
+    if (!motionQuery.matches && !document.hidden) scheduleNextAppearance();
+  };
+  const destroy = () => {
+    clearTimer();
+    removeCurrentButterfly();
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+    if (motionQuery.removeEventListener) motionQuery.removeEventListener("change", handleMotionChange);
+    else motionQuery.removeListener?.(handleMotionChange);
+    layer.remove();
+    state.exclusiveButterflyController = null;
+  };
+
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+  if (motionQuery.addEventListener) motionQuery.addEventListener("change", handleMotionChange);
+  else motionQuery.addListener?.(handleMotionChange);
+  window.addEventListener("pagehide", destroy, { once: true });
+
+  if (!motionQuery.matches && !document.hidden) startAppearance();
 }
 
 function startCinematicIntro() {

@@ -656,6 +656,13 @@ body.ambient-nature-active .ambient-nature-layer {
     brightness(1.18);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .hero-butterfly-layer,
+  .svg-monarch.exclusive-discovery-butterfly {
+    display: none !important;
+  }
+}
+
 .hero-feature img {
   width: 100%;
   aspect-ratio: 1;

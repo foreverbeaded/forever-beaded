@@ -12,7 +12,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="October Autumn Tree Monthly Exclusive at Forever Beaded">
+  <meta name="description" content="Forever Beaded Monthly Exclusives, including October's Autumn Tree and November's Glow-in-the-Dark Christmas Ornament">
   <title>Monthly Exclusive | Forever Beaded</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -45,17 +45,18 @@
   </header>
   <div class="page-scroll">
     <main class="exclusive-page" aria-label="Monthly Exclusive products">
-      <div class="page-heading"><p class="eyebrow">Forever Beaded Collection</p><h1>Monthly Exclusive</h1><p class="page-description">A special spotlight world reserved for this month's rarest handmade treasure.</p></div>
+      <div class="page-heading"><p class="eyebrow">Forever Beaded Collection</p><h1>Monthly Exclusive</h1><p class="page-description">A special spotlight world for limited seasonal treasures, with previous exclusives preserved.</p></div>
       <div class="world-search-row"><label class="sr-only" for="productSearch">Search Monthly Exclusive products</label><input id="productSearch" autocomplete="off" placeholder="Search this treasure world..." type="search"><button class="tiny-link-btn" id="clearShopFilters" type="button">Clear</button></div>
       <div class="product-grid" id="productGrid">
         <article class="product-card"><a class="product-card-link" href="create.html?design=autumn-tree#homeDesignBuilder"><span class="exclusive-label">October Exclusive</span><img src="images/october-collection/autumn-tree.jpg" alt="Forever Beaded Autumn Tree keychain"><span class="product-name">Autumn Tree</span><span class="product-price">$25 CAD</span></a></article>
+        <article class="product-card"><a class="product-card-link" href="create.html?design=glow-in-the-dark-christmas-ornament#homeDesignBuilder"><span class="exclusive-label">November Exclusive — 2026</span><img src="images/christmas-collection/products/glow-in-the-dark-christmas-ornament.jpg" alt="Glow-in-the-Dark Christmas Ornament in daylight and glowing conditions"><span class="product-name">Glow-in-the-Dark Christmas Ornament</span><span class="product-price">$35 CAD</span></a></article>
       </div>
       <p class="product-empty" id="productEmpty" hidden>No monthly treasure found</p>
     </main>
   </div>
   <section class="chapter-navigation" aria-label="Next chapter"><a class="chapter-navigation__link" href="create.html"><span>Next Chapter</span><strong>Create Your Own Treasure</strong></a><span class="chapter-navigation__ornament" aria-hidden="true">&#9825;</span></section>
   <script>
-    history.scrollRestoration="manual";window.addEventListener("load",()=>window.scrollTo(0,0),{once:true});(()=>{const input=document.getElementById("productSearch"),clear=document.getElementById("clearShopFilters"),card=document.querySelector(".product-card"),empty=document.getElementById("productEmpty");function filter(){const match=!input.value.trim()||card.textContent.toLowerCase().includes(input.value.trim().toLowerCase());card.hidden=!match;empty.hidden=match}input.addEventListener("input",filter);clear.addEventListener("click",()=>{input.value="";filter();input.focus()})})();
+    history.scrollRestoration="manual";window.addEventListener("load",()=>window.scrollTo(0,0),{once:true});(()=>{const input=document.getElementById("productSearch"),clear=document.getElementById("clearShopFilters"),cards=Array.from(document.querySelectorAll(".product-card")),empty=document.getElementById("productEmpty");function filter(){const query=input.value.trim().toLowerCase();let visible=0;cards.forEach(card=>{const match=!query||card.textContent.toLowerCase().includes(query);card.hidden=!match;if(match)visible+=1});empty.hidden=visible!==0}input.addEventListener("input",filter);clear.addEventListener("click",()=>{input.value="";filter();input.focus()})})();
   </script>
   <script src="js/chapter-order-navigation.js?v=fall-merge-20261002"></script>
   <script src="js/master-header.js?v=accessories-nav-20260913"></script>

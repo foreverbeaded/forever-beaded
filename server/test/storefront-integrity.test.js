@@ -58,7 +58,7 @@ test("trusted catalogue has unique active identities and valid local images", ()
 
   assert.equal(new Set(catalogue.map(product => product.id)).size, catalogue.length, "duplicate trusted product ID");
   assert.equal(new Set(catalogue.map(product => product.slug)).size, catalogue.length, "duplicate trusted product slug");
-  assert.equal(activeProducts.length, 97);
+  assert.equal(activeProducts.length, 117);
 
   activeProducts.forEach((product) => {
     assert.ok(product.basePriceCents > 0, `${product.slug} must have a positive trusted price`);
@@ -135,7 +135,27 @@ test("newly reconciled storefront designs use the same trusted server prices", (
     pinecone: 2000,
     squirrel: 2000,
     "frog-keychain": 2500,
-    "personalized-blossom-keychain": 3000
+    "personalized-blossom-keychain": 3000,
+    "christmas-star": 2000,
+    poinsettia: 2500,
+    "christmas-truck": 2500,
+    "christmas-teddy-bear": 2000,
+    "christmas-polar-bear": 2000,
+    "gingerbread-girl": 2000,
+    "christmas-wreath": 2000,
+    "christmas-candy-cane": 2000,
+    "christmas-present": 2000,
+    "christmas-stocking": 2000,
+    "christmas-tree": 2000,
+    "christmas-snowflake": 2000,
+    "gingerbread-man": 2000,
+    "christmas-angel": 2000,
+    "christmas-snowman": 2000,
+    "christmas-reindeer": 2000,
+    "christmas-elf": 2000,
+    "glow-in-the-dark-christmas-ornament": 3500,
+    "mrs-claus": 2000,
+    "christmas-santa": 2000
   };
 
   Object.entries(expectedPrices).forEach(([slug, priceCents]) => {
@@ -474,6 +494,129 @@ test("released Frog and Personalized Blossom products use one trusted identity e
   assert.match(mothersDayPage, /data-initial-category="Mother's Day"/);
   assert.match(designerSource, /label: "Pond Friends"/);
   assert.doesNotMatch(pondPage, /design=custom-idea|design=butterfly/);
+});
+
+test("Christmas draft uses one trusted identity for every supplied standalone design", () => {
+  const catalogue = loadCatalogue();
+  const expected = [
+    { id: 176, slug: "christmas-star", name: "Star", price: 2000, image: "star.jpg", source: "1-Photo-1.jpg" },
+    { id: 177, slug: "poinsettia", name: "Poinsettia", price: 2500, image: "poinsettia.jpg", source: "2-Photo-2.jpg" },
+    { id: 178, slug: "christmas-truck", name: "Christmas Truck", price: 2500, image: "christmas-truck.jpg", source: "3-Photo-3.jpg" },
+    { id: 179, slug: "christmas-teddy-bear", name: "Teddy Bear", price: 2000, image: "teddy-bear.jpg", source: "4-Photo-4.jpg" },
+    { id: 180, slug: "christmas-polar-bear", name: "Polar Bear", price: 2000, image: "polar-bear.jpg", source: "5-Photo-5.jpg" },
+    { id: 181, slug: "gingerbread-girl", name: "Gingerbread Girl", price: 2000, image: "gingerbread-girl.jpg", source: "6-Photo-6.jpg" },
+    { id: 182, slug: "christmas-wreath", name: "Wreath", price: 2000, image: "wreath.jpg", source: "7-Photo-7.jpg" },
+    { id: 183, slug: "christmas-candy-cane", name: "Candy Cane", price: 2000, image: "candy-cane.jpg", source: "8-Photo-8.jpg" },
+    { id: 184, slug: "christmas-present", name: "Present", price: 2000, image: "present.jpg", source: "9-Photo-9.jpg" },
+    { id: 185, slug: "christmas-stocking", name: "Christmas Stocking", price: 2000, image: "christmas-stocking.jpg", source: "batch-2/1-Photo-1.jpg" },
+    { id: 186, slug: "christmas-tree", name: "Christmas Tree", price: 2000, image: "christmas-tree.jpg", source: "batch-2/2-Photo-2.jpg" },
+    { id: 187, slug: "christmas-snowflake", name: "Snowflake", price: 2000, image: "snowflake.jpg", source: "batch-2/3-Photo-3.jpg" },
+    { id: 188, slug: "gingerbread-man", name: "Gingerbread Man", price: 2000, image: "gingerbread-man.jpg", source: "batch-2/4-Photo-4.jpg" },
+    { id: 189, slug: "christmas-angel", name: "Angel", price: 2000, image: "angel.jpg", source: "batch-2/5-Photo-5.jpg" },
+    { id: 190, slug: "christmas-snowman", name: "Snowman", price: 2000, image: "snowman.jpg", source: "batch-2/7-Photo-7.jpg" },
+    { id: 191, slug: "christmas-reindeer", name: "Reindeer", price: 2000, image: "reindeer.jpg", source: "batch-2/8-Photo-8.jpg" },
+    { id: 192, slug: "christmas-elf", name: "Elf", price: 2000, image: "elf.jpg", source: "batch-2/10-Photo-10.jpg" },
+    { id: 194, slug: "mrs-claus", name: "Mrs. Claus", price: 2000, image: "mrs-claus.jpg", source: "batch-3/1-Photo-1.jpg" },
+    { id: 195, slug: "christmas-santa", name: "Santa", price: 2000, image: "santa.jpg", source: "batch-3/2-Photo-2.jpg" }
+  ];
+
+  expected.forEach((item) => {
+    const matches = catalogue.filter(product => product.slug === item.slug);
+    const product = matches[0];
+    assert.equal(matches.length, 1, `${item.slug} must have one trusted identity`);
+    assert.equal(product?.id, item.id);
+    assert.equal(product?.name, item.name);
+    assert.equal(product?.basePriceCents, item.price);
+    assert.equal(product?.category, "Christmas Collection");
+    assert.deepEqual(Array.from(product?.collections || []), ["Christmas Collection"]);
+    assert.equal(product?.supportsPersonalization, false);
+    assert.equal(product?.imageClassification, "styled-marketing-photo");
+    assert.equal(product?.imageUrl, `images/christmas-collection/products/${item.image}`);
+    assert.equal(product?.originalSourceImageUrl, `images/christmas-collection/originals/${item.source}`);
+
+    const storefrontImage = fs.readFileSync(path.join(projectRoot, product.imageUrl));
+    const preservedSource = fs.readFileSync(path.join(projectRoot, product.originalSourceImageUrl));
+    assert.equal(
+      crypto.createHash("sha256").update(storefrontImage).digest("hex"),
+      crypto.createHash("sha256").update(preservedSource).digest("hex"),
+      `${item.slug} storefront image must remain byte-for-byte identical to its preserved source`
+    );
+  });
+
+  const christmasPage = fs.readFileSync(path.join(projectRoot, "christmas-collection.html"), "utf8");
+  const collectionsPage = fs.readFileSync(path.join(projectRoot, "collections.html"), "utf8");
+  const designerSource = fs.readFileSync(path.join(projectRoot, "js", "garden.js"), "utf8");
+  assert.equal(extractStaticProductCards().filter(card => card.file === "christmas-collection.html").length, 20);
+  assert.match(christmasPage, /id="productGrid"/);
+  assert.match(christmasPage, /js\/static-collection-cards\.js/);
+  assert.doesNotMatch(christmasPage, /design=custom-idea|design=butterfly/);
+  assert.match(collectionsPage, /href="christmas-collection\.html"/);
+  assert.match(designerSource, /label: "Christmas Collection"/);
+
+  const dynamicChristmasSurfaces = ["shop.html", "gallery.html", "my-favourites.html", "create.html", "reviews.html"];
+  dynamicChristmasSurfaces.forEach((file) => {
+    const html = fs.readFileSync(path.join(projectRoot, file), "utf8");
+    assert.match(html, /js\/product-catalogue\.js\?v=christmas-release-20261106/, `${file} must load the released catalogue`);
+  });
+  assert.match(fs.readFileSync(path.join(projectRoot, "shop.html"), "utf8"), /id="productSearch"[\s\S]*id="productGrid"/);
+  assert.match(fs.readFileSync(path.join(projectRoot, "gallery.html"), "utf8"), /id="galleryGrid"/);
+  assert.match(fs.readFileSync(path.join(projectRoot, "my-favourites.html"), "utf8"), /data-initial-category="My Favourites"/);
+  assert.match(fs.readFileSync(path.join(projectRoot, "create.html"), "utf8"), /js\/garden\.js/);
+
+  const existingPenguin = catalogue.find(product => product.id === 15);
+  assert.equal(existingPenguin?.slug, "penguin");
+  assert.equal(existingPenguin?.name, "Penguin");
+  assert.equal((existingPenguin?.collections || []).includes("Christmas Collection"), false);
+  assert.equal(catalogue.some(product => product.slug === "christmas-penguin"), false);
+  const christmasTree = catalogue.find(product => product.slug === "christmas-tree");
+  assert.deepEqual(Array.from(christmasTree?.additionalImageUrls || []), ["images/christmas-collection/products/christmas-tree-example-2.jpg"]);
+  assert.deepEqual(Array.from(christmasTree?.additionalOriginalSourceImageUrls || []), ["images/christmas-collection/originals/batch-2/6-Photo-6.jpg"]);
+  assert.equal(
+    crypto.createHash("sha256").update(fs.readFileSync(path.join(projectRoot, christmasTree.additionalImageUrls[0]))).digest("hex"),
+    crypto.createHash("sha256").update(fs.readFileSync(path.join(projectRoot, christmasTree.additionalOriginalSourceImageUrls[0]))).digest("hex")
+  );
+
+  const ornament = catalogue.find(product => product.slug === "glow-in-the-dark-christmas-ornament");
+  assert.equal(ornament?.id, 193);
+  assert.equal(ornament?.basePriceCents, 3500);
+  assert.equal(ornament?.active, true);
+  assert.equal(ornament?.priceApprovalPending, undefined);
+  assert.equal(ornament?.releaseStatus, undefined);
+  assert.deepEqual(Array.from(ornament?.collections || []), ["Christmas Collection", "Monthly Exclusives"]);
+  assert.match(ornament?.description || "", /no batteries or LEDs/i);
+  assert.match(ornament?.description || "", /exposure to light/i);
+  assert.equal(catalogue.filter(product => product.collections?.includes("Christmas Collection") && product.active !== false).length, 20);
+  assert.equal(
+    crypto.createHash("sha256").update(fs.readFileSync(path.join(projectRoot, ornament.imageUrl))).digest("hex"),
+    crypto.createHash("sha256").update(fs.readFileSync(path.join(projectRoot, ornament.originalSourceImageUrl))).digest("hex")
+  );
+
+  const monthlyPage = fs.readFileSync(path.join(projectRoot, "monthly-exclusive.html"), "utf8");
+  assert.match(monthlyPage, /design=autumn-tree/);
+  assert.match(monthlyPage, /October Exclusive/);
+  assert.match(monthlyPage, /Glow-in-the-Dark Christmas Ornament/);
+  assert.match(monthlyPage, /\$35 CAD/);
+  assert.match(monthlyPage, /design=glow-in-the-dark-christmas-ornament/);
+
+  const etsyDraft = fs.readFileSync(path.join(projectRoot, "etsy", "christmas-collection-2026-draft.md"), "utf8");
+  expected.forEach(item => assert.match(etsyDraft, new RegExp(`FB-${item.id}-`)));
+  assert.match(etsyDraft, /FB-193-GLOW-IN-THE-DARK-CHRISTMAS-ORNAMENT/);
+  assert.match(etsyDraft, /Approved price: `\$35 CAD`/);
+  assert.match(etsyDraft, /no batteries, LEDs or electronic components/i);
+  assert.match(etsyDraft, /Exposure to light charges the naturally glowing beads/i);
+  assert.match(etsyDraft, /Christmas Penguin[\s\S]*Do not reuse existing Penguin ID 15/i);
+  assert.match(etsyDraft, /live status unverified/i);
+  assert.match(etsyDraft, /plastic pony beads/);
+  assert.match(etsyDraft, /Hardware colour[\s\S]*Silver[\s\S]*Gold/);
+  const tagLines = etsyDraft.split(/\r?\n/).filter(line => line.startsWith("- Tags:"));
+  assert.equal(tagLines.length, 21, "all 20 Christmas designs and the ornament need Etsy tags");
+  tagLines.forEach((line) => {
+    const tags = Array.from(line.matchAll(/`([^`]+)`/g), match => match[1]);
+    assert.equal(tags.length, 13, `expected 13 Etsy tags in: ${line}`);
+    tags.forEach(tag => assert.ok(tag.length <= 20, `Etsy tag exceeds 20 characters: ${tag}`));
+  });
+  assert.match(etsyDraft, /Do not publish/i);
+  assert.match(etsyDraft, /genuine unedited original photograph/i);
 });
 
 test("review form only clears after a persisted pending review is confirmed", () => {

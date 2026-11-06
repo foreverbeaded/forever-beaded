@@ -58,6 +58,10 @@
   });
 
   search?.addEventListener("input", filterCards);
+  document.getElementById("productSearchForm")?.addEventListener("submit", event => {
+    event.preventDefault();
+    filterCards();
+  });
   clear?.addEventListener("click", () => {
     if (search) search.value = "";
     filterCards();

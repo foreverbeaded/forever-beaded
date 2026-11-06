@@ -467,6 +467,7 @@
     { label: "Back to School", categories: ["Back to School"] },
     { label: "Faith Collection", categories: ["Faith"] },
     { label: "Sweet Treats", categories: ["Sweet Treats"] },
+    { label: "Christmas Collection", categories: ["Christmas Collection"], collections: ["Christmas Collection"] },
     { label: "Monthly Exclusive", categories: ["Monthly Exclusives"] },
     { label: "Valentine's Collection", categories: ["Valentine's"], collections: ["Valentine's"] },
     { label: "Accessories & Bracelets", categories: ["Accessories"] },

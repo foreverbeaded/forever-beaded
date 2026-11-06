@@ -996,6 +996,34 @@ test("uses the provisional trusted Frog and Blossom prices and personalization l
   });
 });
 
+test("uses the trusted November ornament price instead of the browser total", async () => {
+  await withServer({}, async ({ baseUrl }) => {
+    const response = await postOrder(baseUrl, validOrder({
+      total: 1,
+      items: [{
+        productId: "glow-in-the-dark-christmas-ornament",
+        quantity: 2,
+        unitPriceCents: 1,
+        colours: "Green, Blue, Pink, Yellow, Pearl"
+      }]
+    }));
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(body.total, 7500);
+    assert.deepEqual(body.items.map(item => ({
+      id: item.productId,
+      name: item.productName,
+      unitPriceCents: item.unitPriceCents,
+      lineTotalCents: item.lineTotalCents
+    })), [{
+      id: "193",
+      name: "Glow-in-the-Dark Christmas Ornament",
+      unitPriceCents: 3500,
+      lineTotalCents: 7000
+    }]);
+  });
+});
+
 test("stores Pearl exactly through the trusted order flow", async () => {
   await withServer({}, async ({ app, baseUrl }) => {
     const response = await postOrder(baseUrl, validOrder({

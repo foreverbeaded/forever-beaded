@@ -620,10 +620,13 @@ test("Christmas draft uses one trusted identity for every supplied standalone de
   assert.match(monthlyPage, /Glow-in-the-Dark Christmas Ornament/);
   assert.match(monthlyPage, /\$35 CAD/);
   assert.match(monthlyPage, /design=glow-in-the-dark-christmas-ornament/);
-  assert.match(monthlyPage, /Naturally glowing beads charge through exposure to light/);
-  assert.match(monthlyPage, /No batteries or LEDs/);
+  assert.match(monthlyPage, /Naturally glowing beads charge in the light/);
+  assert.match(monthlyPage, /no batteries or LEDs/i);
   assert.match(monthlyPage, /Previous Exclusives/);
   assert.match(monthlyPage, /\.\.\/images\/christmas-collection\/christmas-scenic-background\.png/);
+  assert.match(monthlyPage, /class="monthly-exclusive-card" data-exclusive-search-item data-product-id="193"/);
+  assert.equal((monthlyPage.match(/class="monthly-exclusive-card"/g) || []).length, 2);
+  assert.doesNotMatch(monthlyPage, /monthly-exclusive-autumn-background|class="current-exclusive"/);
   assert.ok(
     monthlyPage.indexOf('id="novemberExclusiveTitle"') < monthlyPage.indexOf("design=autumn-tree"),
     "November's ornament must be featured before the historical October exclusive"

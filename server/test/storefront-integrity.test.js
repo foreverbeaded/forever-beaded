@@ -95,6 +95,26 @@ test("dynamic storefront rendering is sourced from the trusted catalogue", () =>
   assert.doesNotMatch(appSource, /CREATE_DESIGN_SLUG_ALIASES/);
 });
 
+test("Create Your Own Treasure keeps trusted product previews and payment drafts aligned", () => {
+  const catalogue = loadCatalogue();
+  const apple = catalogue.find(product => product.slug === "apple");
+  const loveHeart = catalogue.find(product => product.slug === "personalized-love-heart-keychain");
+  const gardenSource = fs.readFileSync(path.join(projectRoot, "js", "garden.js"), "utf8");
+
+  assert.equal(apple?.id, 140);
+  assert.equal(apple?.imageUrl, "images/back-to-school/apple.jpeg");
+  assert.ok(Array.isArray(apple?.previewPattern) && apple.previewPattern.length > 0);
+  assert.notDeepEqual(apple.previewPattern, loveHeart?.previewPattern, "Apple must not reuse the Heart preview");
+  assert.match(gardenSource, /productCatalogue\.find\(product => String\(product\.id\) === numericId\)/);
+  assert.match(gardenSource, /Design reference — colours may vary from your selection\./);
+  assert.doesNotMatch(gardenSource, /<rect class="preview-bead-shape" data-preview-part="Main Colour" x="166"/);
+  assert.match(gardenSource, /https:\/\/mail\.google\.com\/mail\/\?view=cm&fs=1&to=/);
+  assert.match(gardenSource, /id="openDefaultPaymentEmail"/);
+  assert.match(gardenSource, /id="copyPaymentConfirmationDetails"/);
+  assert.match(gardenSource, /Nothing is sent automatically\./);
+  assert.doesNotMatch(gardenSource, /payment confirmation (?:email )?(?:was |has been )?sent/i);
+});
+
 test("homepage monarch uses one accessible, self-cleaning appearance cycle", () => {
   const bookSource = fs.readFileSync(path.join(projectRoot, "js", "book.js"), "utf8");
   const gardenSource = fs.readFileSync(path.join(projectRoot, "css", "garden.css"), "utf8");
@@ -566,8 +586,13 @@ test("Christmas draft uses one trusted identity for every supplied standalone de
   assert.match(christmasPage, /id="productGrid"/);
   assert.match(christmasPage, /js\/static-collection-cards\.js/);
   assert.doesNotMatch(christmasPage, /design=custom-idea|design=butterfly/);
-  assert.match(christmasPage, /images\/christmas-collection\/christmas-scenic-background\.png/);
   assert.doesNotMatch(christmasPage, /images\/christmas-collection\/collection-overview\.jpg/);
+  assert.doesNotMatch(christmasPage, /collection-overview|november-exclusive-preview/);
+  const christmasStyles = fs.readFileSync(path.join(projectRoot, "css", "christmas-collection.css"), "utf8");
+  assert.match(christmasStyles, /body\.hero-christmas::before/);
+  assert.match(christmasStyles, /position:\s*fixed/);
+  assert.match(christmasStyles, /background-size:\s*cover/);
+  assert.match(christmasStyles, /christmas-scenic-background\.png/);
   assert.match(collectionsPage, /href="christmas-collection\.html"/);
   assert.match(collectionsPage, /hotspot--christmas[\s\S]*christmas-scenic-background\.png[\s\S]*Christmas Collection/);
   assert.match(collectionsPage, /hotspot--monthly-exclusive[\s\S]*monthly-exclusive\.html\?v=november-2026[\s\S]*glow-in-the-dark-christmas-ornament\.jpg/);

@@ -425,6 +425,7 @@
     const pattern = product?.previewPattern;
     preview.className = "home-preview-beads";
     preview.removeAttribute("data-placeholder");
+    preview.dataset.design = product?.slug || "custom-idea";
 
     if (isCustomProduct(product)) {
       renderColourSwatches(preview, colours);
@@ -848,15 +849,46 @@
         <path class="preview-cord" d="M296 82 C296 48 320 34 346 34"/>
         <circle cx="328" cy="52" r="28" fill="none" stroke="#c9a653" stroke-width="12"/>
         <g aria-hidden="true">${animalBeads}</g>`;
+    } else if (Array.isArray(product?.previewPattern) && product.previewPattern.length) {
+      const points = product.previewPattern;
+      const xs = points.map(point => point.x);
+      const ys = points.map(point => point.y);
+      const minX = Math.min(...xs);
+      const maxX = Math.max(...xs);
+      const minY = Math.min(...ys);
+      const maxY = Math.max(...ys);
+      const spacing = Math.min(28, 320 / Math.max(1, maxX - minX), 300 / Math.max(1, maxY - minY));
+      const width = (maxX - minX) * spacing;
+      const height = (maxY - minY) * spacing;
+      const startX = 296 - width / 2;
+      const startY = 112 + (300 - height) / 2;
+      const partColours = (selections?.partSelections || [])
+        .filter(selection => !isNoColour(selection.colour))
+        .map(selection => normalizeColour(selection.colour));
+      const palette = [mainHex, ...partColours, accentHex];
+      const designBeads = points.map(point => {
+        const code = String(point.c || "a").charAt(0).toLowerCase();
+        const colourIndex = Math.max(0, code.charCodeAt(0) - 97);
+        return bead(
+          startX + (point.x - minX) * spacing,
+          startY + (point.y - minY) * spacing,
+          Math.max(7, spacing * .42),
+          Math.max(6, spacing * .36),
+          palette[colourIndex % palette.length] || mainHex,
+          `data-preview-part="${code === "a" ? "Main Colour" : "Design details"}"`
+        );
+      }).join("");
+      artwork = `
+        <path class="preview-cord" d="M296 82 C296 48 320 34 346 34"/>
+        <circle cx="328" cy="52" r="28" fill="none" stroke="#c9a653" stroke-width="12"/>
+        <g aria-hidden="true">${designBeads}</g>`;
     } else {
-      const parts = (selections?.partSelections || []).filter(({ colour }) => !isNoColour(colour));
-      artwork = `<path class="preview-cord" d="M296 82 C296 48 320 34 346 34"/><circle cx="328" cy="52" r="28" fill="none" stroke="#c9a653" stroke-width="12"/><rect class="preview-bead-shape" data-preview-part="Main Colour" x="166" y="116" width="260" height="290" rx="112" fill="${mainHex}"/>`;
-      parts.forEach((selection, index) => {
-        const columns = [224, 296, 368];
-        const rows = [178, 244, 310, 366];
-        artwork += bead(columns[index % 3], rows[Math.floor(index / 3) % 4], 25, 22, normalizeColour(selection.colour), `data-preview-part="${selection.part}"`);
-      });
-      artwork += `<path class="preview-highlight" d="M206 165 Q296 119 386 165"/>${bead(296,376,22,19,accentHex,'data-preview-part="Accent Colour"')}`;
+      const referenceUrl = product?.previewImageUrl || product?.referenceImageUrl || product?.imageUrl || "";
+      preview.classList.add("design-reference-preview");
+      preview.innerHTML = referenceUrl
+        ? `<img src="${escapeHtml(referenceUrl)}" alt="${escapeHtml(product?.name || "Selected design")} design reference"><p class="custom-preview-caption">Design reference — colours may vary from your selection.</p>`
+        : `<p class="custom-preview-caption">${escapeHtml(product?.name || "Selected design")} preview unavailable. Your selected design and options will still be included with the order.</p>`;
+      return;
     }
 
     const personalization = document.getElementById("homePersonalizationText")?.value.trim() || "";
@@ -1732,6 +1764,7 @@
       "Thank you."
     ].join("\n");
     const paymentMailtoUrl = `mailto:${etransferEmail}?subject=${encodeURIComponent(paymentSubject)}&body=${encodeURIComponent(paymentBody)}`;
+    const paymentGmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(etransferEmail)}&su=${encodeURIComponent(paymentSubject)}&body=${encodeURIComponent(paymentBody)}`;
     const { overlay, panel } = createSuccessOverlay();
 
     panel.innerHTML = `
@@ -1765,7 +1798,15 @@
           <button id="addAnotherTreasure" type="button" style="min-height:48px;padding:0 18px;border:0;border-radius:999px;background:#d4af37;color:#1f1026;font-weight:900;cursor:pointer;">Add a Friend for My Treasure</button>
           <span style="color:#f8ead0;font-size:.88rem;line-height:1.35;">Because every gecko, butterfly, and little treasure deserves a friend.</span>
         </div>
-        <a id="openPaymentConfirmationEmail" href="${escapeHtml(paymentMailtoUrl)}" style="min-height:48px;display:inline-flex;align-items:center;justify-content:center;padding:0 18px;border:1px solid rgba(212,175,55,.8);border-radius:999px;background:rgba(212,175,55,.16);color:#fff;font-weight:900;text-decoration:none;cursor:pointer;">Finish and Send Payment Confirmation</a>
+        <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-start;">
+          <a id="openPaymentConfirmationEmail" href="${escapeHtml(paymentGmailUrl)}" target="_blank" rel="noopener noreferrer" style="min-height:48px;display:inline-flex;align-items:center;justify-content:center;padding:0 18px;border:1px solid rgba(212,175,55,.8);border-radius:999px;background:rgba(212,175,55,.16);color:#fff;font-weight:900;text-decoration:none;cursor:pointer;">Finish and Send Payment Confirmation</a>
+          <span style="color:#f8ead0;font-size:.84rem;line-height:1.4;">This opens a Gmail draft for you to review and send. Nothing is sent automatically.</span>
+          <span style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+            <a id="openDefaultPaymentEmail" href="${escapeHtml(paymentMailtoUrl)}" style="color:#f8ead0;font-size:.84rem;font-weight:800;">Open my default email app</a>
+            <button id="copyPaymentConfirmationDetails" type="button" style="border:0;background:transparent;color:#f8ead0;font-size:.84rem;font-weight:800;text-decoration:underline;cursor:pointer;">Copy email details</button>
+          </span>
+          <span id="paymentConfirmationStatus" role="status" aria-live="polite" style="color:#fff5df;font-size:.82rem;"></span>
+        </div>
         <a href="index.html" style="min-height:48px;display:inline-flex;align-items:center;justify-content:center;padding:0 18px;border:1px solid rgba(212,175,55,.75);border-radius:999px;color:#fff;text-decoration:none;font-weight:900;">Return to the Storybook</a>
       </div>
     `;
@@ -1777,6 +1818,16 @@
     if (successPanelVisible) {
       window.requestAnimationFrame(() => playSuccessCelebration(overlay));
     }
+    document.getElementById("copyPaymentConfirmationDetails")?.addEventListener("click", async () => {
+      const status = document.getElementById("paymentConfirmationStatus");
+      const completeEmail = `To: ${etransferEmail}\nSubject: ${paymentSubject}\n\n${paymentBody}`;
+      try {
+        await navigator.clipboard.writeText(completeEmail);
+        if (status) status.textContent = "Payment confirmation details copied. Paste them into any email app, review, and send.";
+      } catch (error) {
+        if (status) status.textContent = `Copy was unavailable. Email ${etransferEmail} and include order ${orderNumber}.`;
+      }
+    });
     document.getElementById("addAnotherTreasure")?.addEventListener("click", () => {
       const form = document.getElementById("homeDesignBuilder");
       if (form) form.dataset.submitting = "false";
@@ -2204,6 +2255,8 @@
   const trustedProductSlugFromCartItem = (item) => {
     if (item?.productId && !/^\d+$/.test(String(item.productId))) return String(item.productId);
     const numericId = String(item?.productId || item?.id || "").split(":")[0];
+    const trustedProduct = productCatalogue.find(product => String(product.id) === numericId);
+    if (trustedProduct) return trustedProduct.slug;
     if (legacyCartIdToSlug[numericId]) return legacyCartIdToSlug[numericId];
     const name = String(item?.name || item?.description || "").toLowerCase();
     if (name.includes("natalie")) return "natalies-butterfly";
@@ -2237,8 +2290,9 @@
       : Number.isFinite(Number(item?.price))
         ? Math.max(0, Math.round(Number(item.price) * 100))
         : Math.max(0, Math.round(Number(product?.basePriceCents || product?.basePrice || 0)));
-    const design = String(item?.name || product?.name || "Custom Idea").trim();
-    const image = String(item?.image || product?.referenceImageUrl || product?.imageUrl || "").trim();
+    const design = String(product?.name || item?.name || "Custom Idea").trim();
+    const trustedImage = product?.referenceImageUrl || product?.imageUrl || product?.previewImageUrl || "";
+    const image = String(product?.slug === "custom-idea" ? (item?.image || trustedImage) : (trustedImage || item?.image || "")).trim();
     return {
       productId,
       product,
@@ -2338,7 +2392,7 @@
       ].filter(Boolean).join(" | ");
       const thumbClasses = ["treasure-request-thumb", item.imageFocusClass].filter(Boolean).join(" ");
       const thumb = item.image
-        ? `<span class="${escapeHtml(thumbClasses)}"><img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.design)} photo"></span>`
+        ? `<span class="${escapeHtml(thumbClasses)}"><img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.design)} design reference"><small>Design reference — colours may vary from your selection.</small></span>`
         : `<span class="treasure-request-thumb image-missing" data-placeholder="${escapeHtml(item.design)} image coming soon"></span>`;
       return `
         <article class="treasure-request-item${index === selectedRequestIndex ? " is-selected" : ""}" data-request-index="${index}">
@@ -2393,6 +2447,20 @@
 
     syncCustomDescriptionField();
     syncPersonalizationField();
+    syncDesignColourControls(product);
+    const storedColours = String(item.colours || "").split(",").map(titleCase).filter(Boolean);
+    if (storedColours.length) {
+      const mainChoice = document.querySelector(`#homeMainColourSwatches input[value="${storedColours[0]}"]`);
+      if (mainChoice) mainChoice.checked = true;
+      const partChoices = [...document.querySelectorAll("#homePartColourControls select[data-part]")];
+      partChoices.forEach((select, colourIndex) => {
+        const selected = storedColours[Math.min(colourIndex + 1, storedColours.length - 1)];
+        if ([...select.options].some(option => option.value === selected)) select.value = selected;
+      });
+      const accentValue = storedColours[storedColours.length - 1];
+      const accentChoice = document.querySelector(`#homeAccentColourSwatches input[value="${accentValue}"]`);
+      if (accentChoice) accentChoice.checked = true;
+    }
     renderHomeTreasurePreview();
     if (item.image) {
       const imageProduct = {

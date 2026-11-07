@@ -1846,6 +1846,32 @@ body.intro-active .scroll-monarch-layer {
   display: block;
 }
 
+.treasure-request-thumb small {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  left: 4px;
+  padding: 3px 4px;
+  border-radius: 4px;
+  background: rgba(255, 250, 240, .94);
+  color: #3d2433;
+  font: 700 9px/1.15 Inter, Arial, sans-serif;
+  text-align: center;
+}
+
+.design-reference-preview {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+}
+
+.design-reference-preview img {
+  display: block;
+  width: min(100%, 360px);
+  max-height: 390px;
+  object-fit: contain;
+}
+
 .treasure-request-thumb.image-missing::after {
   content: attr(data-placeholder);
   padding: 8px;

@@ -1024,6 +1024,45 @@ test("uses the trusted November ornament price instead of the browser total", as
   });
 });
 
+test("stores Apple with its selected colours, hardware, quantity, and trusted identity", async () => {
+  await withServer({}, async ({ app, baseUrl }) => {
+    const response = await postOrder(baseUrl, validOrder({
+      items: [{
+        productId: "apple",
+        quantity: 2,
+        unitPriceCents: 1,
+        colours: "Turquoise, Green, Gold",
+        hardware: "Gold",
+        personalizationType: "name",
+        personalizationText: "AVA"
+      }]
+    }));
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(body.items[0].productId, "140");
+    assert.equal(body.items[0].productName, "Apple");
+    assert.equal(body.items[0].colours, "Turquoise, Green, Gold");
+    assert.equal(body.items[0].hardware, "Gold");
+    assert.equal(body.items[0].quantity, 2);
+    assert.equal(body.items[0].personalizationText, "AVA");
+    assert.equal(body.items[0].unitPriceCents, 2500);
+
+    const row = await dbGet(app.locals.db, `
+      SELECT product_id, product_name, colours, hardware, quantity, personalization
+      FROM order_items JOIN orders ON orders.id = order_items.order_id
+      WHERE orders.order_number = ?
+    `, [body.orderNumber]);
+    assert.deepEqual(row, {
+      product_id: "140",
+      product_name: "Apple",
+      colours: "Turquoise, Green, Gold",
+      hardware: "Gold",
+      quantity: 2,
+      personalization: "AVA"
+    });
+  });
+});
+
 test("stores Pearl exactly through the trusted order flow", async () => {
   await withServer({}, async ({ app, baseUrl }) => {
     const response = await postOrder(baseUrl, validOrder({

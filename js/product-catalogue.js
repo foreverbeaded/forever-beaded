@@ -370,6 +370,19 @@
       "....aaa....",
       ".....a....."
     ]),
+    apple: patternFromRows([
+      ".....c.....",
+      "....ccc....",
+      "..bbb......",
+      "...aaaa....",
+      ".aaaaaaaa..",
+      "aaaaaaaaaa.",
+      "aaaaaaaaaaa",
+      ".aaaaaaaaa.",
+      "..aaaaaaa..",
+      "...aaaaa...",
+      "....aaa...."
+    ]),
     unicorn: patternFromRows([
       ".........c...",
       "........cc...",
@@ -1877,7 +1890,7 @@
       imageUrl: "images/back-to-school/apple.jpeg",
       referenceImageUrl: "images/back-to-school/apple.jpeg",
       previewImageUrl: "images/back-to-school/apple.jpeg",
-      previewPattern: previewPatterns.loveHeart,
+      previewPattern: previewPatterns.apple,
       defaultColours: ["red", "green", "brown"],
       active: true,
       sortOrder: 140

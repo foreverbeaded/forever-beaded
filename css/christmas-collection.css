@@ -2,15 +2,30 @@
 html, body { margin: 0; width: 100%; min-height: 100%; }
 html { background: #173724; overflow-y: scroll; }
 body.hero-christmas {
+  position: relative;
+  isolation: isolate;
   overflow-x: hidden;
   color: #fff9ec;
   background: #173724;
   font-family: Georgia, "Times New Roman", serif;
 }
+body.hero-christmas::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(11, 35, 23, .18), rgba(45, 8, 13, .28)),
+    url("../images/christmas-collection/christmas-scenic-background.png");
+  background-position: center 56%;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
 .hero-christmas .page-scroll {
   min-height: 100vh;
   padding: 112px clamp(12px, 2vw, 32px) 76px;
-  background: rgba(16, 48, 30, .82);
+  background: linear-gradient(180deg, rgba(10, 31, 20, .22), rgba(31, 8, 12, .42));
 }
 .christmas-page { width: min(1180px, 100%); margin: 0 auto; }
 .hero-christmas .page-heading {
@@ -56,56 +71,6 @@ body.hero-christmas {
   outline: none;
 }
 .hero-christmas .search-wrap input:focus { box-shadow: 0 0 0 4px rgba(235, 198, 106, .25), 0 14px 34px rgba(19, 18, 13, .3); }
-.collection-overview {
-  width: min(1100px, 100%);
-  margin: 30px auto 42px;
-  overflow: hidden;
-  border: 4px solid #f0ce79;
-  border-radius: 8px;
-  background: #54151b;
-  box-shadow: 0 24px 58px rgba(14, 9, 7, .45);
-}
-.collection-overview img {
-  display: block;
-  width: 100%;
-  height: clamp(230px, 42vw, 480px);
-  object-fit: cover;
-  object-position: center 56%;
-}
-.november-exclusive-preview {
-  display: grid;
-  grid-template-columns: minmax(240px, 420px) minmax(0, 1fr);
-  gap: clamp(20px, 4vw, 54px);
-  align-items: center;
-  width: min(1040px, 100%);
-  margin: 0 auto 42px;
-  padding: clamp(16px, 2.5vw, 28px);
-  border: 1px solid rgba(242, 212, 134, .72);
-  border-radius: 8px;
-  background: #54151b;
-  box-shadow: 0 22px 48px rgba(14, 9, 7, .4);
-}
-.november-exclusive-preview img { display: block; width: 100%; border-radius: 6px; }
-.november-exclusive-preview h2 { margin: 4px 0 14px; color: #fff4cf; font-size: clamp(29px, 4vw, 48px); line-height: 1; letter-spacing: 0; }
-.november-exclusive-preview p { color: #fffaf0; font-size: 17px; line-height: 1.55; }
-.november-exclusive-preview strong { color: #f3d382; font: 800 15px/1.4 Arial, sans-serif; }
-.november-exclusive-preview .exclusive-kicker { margin: 0; color: #f3d382; font: 800 12px/1.2 Arial, sans-serif; text-transform: uppercase; }
-.november-exclusive-preview .exclusive-order-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  margin: 18px 0 0;
-  padding: 0 20px;
-  border: 1px solid #f3d382;
-  border-radius: 6px;
-  background: #f3d382;
-  color: #3d1717;
-  font: 800 14px/1 Arial, sans-serif;
-  text-decoration: none;
-}
-.november-exclusive-preview .exclusive-order-link:hover,
-.november-exclusive-preview .exclusive-order-link:focus-visible { background: #fff0bd; outline: 3px solid rgba(255, 240, 189, .35); outline-offset: 3px; }
 .hero-christmas .shop-results-row { margin: 0 auto 16px; text-align: center; color: #f8e6b8; }
 .hero-christmas .product-grid {
   display: grid;
@@ -177,14 +142,13 @@ body.hero-christmas {
 .hero-christmas .chapter-order-nav__link[aria-current="page"] { border-color: #f2d486; background: #7d1820; color: #fff9ec; }
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 @media (max-width: 760px) {
+  body.hero-christmas::before { background-position: 50% 50%; }
   .hero-christmas .page-scroll { padding-top: 92px; }
-  .collection-overview img { height: clamp(220px, 66vw, 320px); }
   .hero-christmas .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .hero-christmas .product-card { aspect-ratio: 1 / 1 !important; border-width: 3px; }
   .hero-christmas .product-name, .hero-christmas .product-price { left: 7px; right: 7px; }
   .hero-christmas .product-name { bottom: 43px; min-height: 34px; font-size: clamp(13px, 4vw, 17px); }
   .hero-christmas .product-price { bottom: 7px; }
-  .november-exclusive-preview { grid-template-columns: 1fr; }
 }
 @media (max-width: 380px) {
   .hero-christmas .product-grid { gap: 8px; }

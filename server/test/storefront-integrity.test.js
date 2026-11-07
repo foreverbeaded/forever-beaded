@@ -640,22 +640,24 @@ test("Christmas draft uses one trusted identity for every supplied standalone de
 
   const monthlyPage = fs.readFileSync(path.join(projectRoot, "monthly-exclusive.html"), "utf8");
   const homepage = fs.readFileSync(path.join(projectRoot, "index.html"), "utf8");
-  assert.match(monthlyPage, /design=autumn-tree/);
-  assert.match(monthlyPage, /October Exclusive/);
+  const autumnTree = catalogue.find(product => product.slug === "autumn-tree");
+  assert.equal(autumnTree?.id, 160);
+  assert.equal(autumnTree?.basePriceCents, 2500);
+  assert.equal(autumnTree?.imageUrl, "images/october-collection/autumn-tree.jpg");
+  assert.deepEqual(Array.from(autumnTree?.collections || []), ["Fall Collection"]);
+  assert.match(autumnTree?.description || "", /October Exclusive/i);
+  assert.doesNotMatch(monthlyPage, /design=autumn-tree|October Exclusive|Previous Exclusives|previousExclusivesHeading/);
   assert.match(monthlyPage, /Glow-in-the-Dark Christmas Ornament/);
   assert.match(monthlyPage, /\$35 CAD/);
   assert.match(monthlyPage, /design=glow-in-the-dark-christmas-ornament/);
   assert.match(monthlyPage, /Naturally glowing beads charge in the light/);
   assert.match(monthlyPage, /no batteries or LEDs/i);
-  assert.match(monthlyPage, /Previous Exclusives/);
   assert.match(monthlyPage, /\.\.\/images\/christmas-collection\/christmas-scenic-background\.png/);
   assert.match(monthlyPage, /class="monthly-exclusive-card" data-exclusive-search-item data-product-id="193"/);
-  assert.equal((monthlyPage.match(/class="monthly-exclusive-card"/g) || []).length, 2);
+  assert.equal((monthlyPage.match(/class="monthly-exclusive-card"/g) || []).length, 1);
+  assert.match(monthlyPage, /\.chapter-navigation\{background:transparent!important/);
+  assert.doesNotMatch(monthlyPage, /\.chapter-navigation\{background:#0b0908!important/);
   assert.doesNotMatch(monthlyPage, /monthly-exclusive-autumn-background|class="current-exclusive"/);
-  assert.ok(
-    monthlyPage.indexOf('id="novemberExclusiveTitle"') < monthlyPage.indexOf("design=autumn-tree"),
-    "November's ornament must be featured before the historical October exclusive"
-  );
   assert.match(homepage, /class="hero-feature august-exclusive-feature"[\s\S]*November Exclusive/);
   assert.match(homepage, /images\/christmas-collection\/products\/glow-in-the-dark-christmas-ornament\.jpg/);
   assert.match(homepage, /Glow-in-the-Dark Christmas Ornament/);

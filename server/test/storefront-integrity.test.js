@@ -100,6 +100,8 @@ test("Create Your Own Treasure keeps trusted product previews and payment drafts
   const apple = catalogue.find(product => product.slug === "apple");
   const loveHeart = catalogue.find(product => product.slug === "personalized-love-heart-keychain");
   const gardenSource = fs.readFileSync(path.join(projectRoot, "js", "garden.js"), "utf8");
+  const createSource = fs.readFileSync(path.join(projectRoot, "create.html"), "utf8");
+  const gardenCss = fs.readFileSync(path.join(projectRoot, "css", "garden.css"), "utf8");
 
   assert.equal(apple?.id, 140);
   assert.equal(apple?.imageUrl, "images/back-to-school/apple.jpeg");
@@ -108,11 +110,22 @@ test("Create Your Own Treasure keeps trusted product previews and payment drafts
   assert.match(gardenSource, /productCatalogue\.find\(product => String\(product\.id\) === numericId\)/);
   assert.match(gardenSource, /Design reference — colours may vary from your selection\./);
   assert.doesNotMatch(gardenSource, /<rect class="preview-bead-shape" data-preview-part="Main Colour" x="166"/);
-  assert.match(gardenSource, /https:\/\/mail\.google\.com\/mail\/\?view=cm&fs=1&to=/);
+  assert.ok(
+    createSource.indexOf("js/payment-email.js") < createSource.indexOf("js/garden.js"),
+    "payment email builder must load before the ordering flow"
+  );
+  assert.match(gardenSource, /id="openPaymentConfirmationEmail"/);
   assert.match(gardenSource, /id="openDefaultPaymentEmail"/);
-  assert.match(gardenSource, /id="copyPaymentConfirmationDetails"/);
-  assert.match(gardenSource, /Nothing is sent automatically\./);
+  assert.match(gardenSource, /id="copyPaymentEmailRecipient"/);
+  assert.match(gardenSource, /id="copyPaymentEmailSubject"/);
+  assert.match(gardenSource, /id="copyPaymentEmailMessage"/);
+  assert.match(gardenSource, /Your email app will open with your order details\. Please review the message and press Send\./);
+  assert.doesNotMatch(gardenSource, /mail\.google\.com|paymentGmailUrl|window\.open\(/);
+  assert.doesNotMatch(gardenSource, /openPaymentConfirmationEmail[^\n]+addEventListener/);
   assert.doesNotMatch(gardenSource, /payment confirmation (?:email )?(?:was |has been )?sent/i);
+  assert.match(gardenCss, /\.payment-email-open-button:focus-visible/);
+  assert.match(gardenCss, /@media \(max-width: 620px\)[\s\S]*\.payment-email-copy-row \{ grid-template-columns: minmax\(0, 1fr\); \}/);
+  assert.match(gardenCss, /\.payment-email-primary-action,[\s\S]*\.payment-email-open-button \{ width: 100%; \}/);
 });
 
 test("homepage monarch uses one accessible, self-cleaning appearance cycle", () => {

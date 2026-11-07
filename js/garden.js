@@ -1747,24 +1747,36 @@
         return `${index + 1}. ${design} — ${lineTotal}\n   Product Name: ${item.requestedProductName || "None"}\n   Colours: ${item.colours || ""}\n   Hardware: ${item.hardware || ""}\n   Quantity: ${quantity}\n   Personalization: ${personalization}`;
       }).join("\n\n")
       : "Order item details are listed in the Forever Beaded order record.";
-    const paymentSubject = `Forever Beaded Payment Confirmation – ${orderNumber}`;
-    const paymentBody = [
-      "Hi Forever Beaded,",
-      "",
-      "I have sent my Interac e-Transfer for this order.",
-      "",
-      `Order number: ${orderNumber}`,
-      `Customer name: ${customerName}`,
-      `Order total: ${total}`,
-      "",
-      "Ordered treasures:",
-      paymentItemLines,
-      ...(data.referenceImageSupplied === true ? ["", "A custom reference photo was supplied with this order."] : []),
-      "",
-      "Thank you."
-    ].join("\n");
-    const paymentMailtoUrl = `mailto:${etransferEmail}?subject=${encodeURIComponent(paymentSubject)}&body=${encodeURIComponent(paymentBody)}`;
-    const paymentGmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(etransferEmail)}&su=${encodeURIComponent(paymentSubject)}&body=${encodeURIComponent(paymentBody)}`;
+    const paymentDraftBuilder = window.FOREVER_BEADED_PAYMENT_EMAIL?.buildPaymentConfirmationDraft;
+    const paymentDraft = typeof paymentDraftBuilder === "function"
+      ? paymentDraftBuilder({
+          recipient: etransferEmail,
+          orderNumber,
+          customerName,
+          totalCents: data.total,
+          currency: data.currency,
+          items: orderItems,
+          referenceImageSupplied: data.referenceImageSupplied === true
+        })
+      : (() => {
+          const subject = `Forever Beaded Payment Confirmation — ${orderNumber}`;
+          const body = [
+            "Hi Forever Beaded,",
+            "",
+            "I am reporting that I sent an Interac e-Transfer payment for this order.",
+            "",
+            `Customer name: ${customerName || "Not provided"}`,
+            `Forever Beaded order number: ${orderNumber}`,
+            `Order total: ${total}`,
+            "",
+            "Purchased products:",
+            paymentItemLines,
+            "",
+            "Thank you."
+          ].join("\r\n");
+          const mailtoUrl = `mailto:${encodeURI(etransferEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+          return { recipient: etransferEmail, subject, body, mailtoUrl, isLongMailto: mailtoUrl.length > 1800 };
+        })();
     const { overlay, panel } = createSuccessOverlay();
 
     panel.innerHTML = `
@@ -1798,17 +1810,34 @@
           <button id="addAnotherTreasure" type="button" style="min-height:48px;padding:0 18px;border:0;border-radius:999px;background:#d4af37;color:#1f1026;font-weight:900;cursor:pointer;">Add a Friend for My Treasure</button>
           <span style="color:#f8ead0;font-size:.88rem;line-height:1.35;">Because every gecko, butterfly, and little treasure deserves a friend.</span>
         </div>
-        <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-start;">
-          <a id="openPaymentConfirmationEmail" href="${escapeHtml(paymentGmailUrl)}" target="_blank" rel="noopener noreferrer" style="min-height:48px;display:inline-flex;align-items:center;justify-content:center;padding:0 18px;border:1px solid rgba(212,175,55,.8);border-radius:999px;background:rgba(212,175,55,.16);color:#fff;font-weight:900;text-decoration:none;cursor:pointer;">Finish and Send Payment Confirmation</a>
-          <span style="color:#f8ead0;font-size:.84rem;line-height:1.4;">This opens a Gmail draft for you to review and send. Nothing is sent automatically.</span>
-          <span style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
-            <a id="openDefaultPaymentEmail" href="${escapeHtml(paymentMailtoUrl)}" style="color:#f8ead0;font-size:.84rem;font-weight:800;">Open my default email app</a>
-            <button id="copyPaymentConfirmationDetails" type="button" style="border:0;background:transparent;color:#f8ead0;font-size:.84rem;font-weight:800;text-decoration:underline;cursor:pointer;">Copy email details</button>
-          </span>
-          <span id="paymentConfirmationStatus" role="status" aria-live="polite" style="color:#fff5df;font-size:.82rem;"></span>
+        <div class="payment-email-primary-action">
+          <a id="openPaymentConfirmationEmail" class="payment-email-open-button" href="${escapeHtml(paymentDraft.mailtoUrl)}">Open Payment Confirmation Email</a>
+          <p>Your email app will open with your order details. Please review the message and press Send.</p>
         </div>
         <a href="index.html" style="min-height:48px;display:inline-flex;align-items:center;justify-content:center;padding:0 18px;border:1px solid rgba(212,175,55,.75);border-radius:999px;color:#fff;text-decoration:none;font-weight:900;">Return to the Storybook</a>
       </div>
+      <section class="payment-email-fallback" aria-labelledby="paymentEmailFallbackTitle">
+        <h3 id="paymentEmailFallbackTitle">Can't open your email app?</h3>
+        <p>Copy the details below and send them using your preferred email service.</p>
+        ${paymentDraft.isLongMailto ? '<p class="payment-email-length-warning">This order has a long email message. Some browsers or email apps may not open long email links, so the complete copyable details are provided below.</p>' : ''}
+        <div class="payment-email-copy-row">
+          <label for="paymentEmailRecipient">Email recipient</label>
+          <input id="paymentEmailRecipient" type="text" readonly value="${escapeHtml(paymentDraft.recipient)}">
+          <button id="copyPaymentEmailRecipient" type="button">Copy recipient</button>
+        </div>
+        <div class="payment-email-copy-row">
+          <label for="paymentEmailSubject">Subject</label>
+          <input id="paymentEmailSubject" type="text" readonly value="${escapeHtml(paymentDraft.subject)}">
+          <button id="copyPaymentEmailSubject" type="button">Copy subject</button>
+        </div>
+        <div class="payment-email-copy-row payment-email-message-row">
+          <label for="paymentEmailMessage">Full payment-confirmation message</label>
+          <textarea id="paymentEmailMessage" readonly rows="12">${escapeHtml(paymentDraft.body)}</textarea>
+          <button id="copyPaymentEmailMessage" type="button">Copy full message</button>
+        </div>
+        <a id="openDefaultPaymentEmail" class="payment-email-open-button is-secondary" href="${escapeHtml(paymentDraft.mailtoUrl)}">Open Email App</a>
+        <p id="paymentConfirmationStatus" class="payment-email-status" role="status" aria-live="polite"></p>
+      </section>
     `;
 
     clearOrderStatus();
@@ -1818,15 +1847,44 @@
     if (successPanelVisible) {
       window.requestAnimationFrame(() => playSuccessCelebration(overlay));
     }
-    document.getElementById("copyPaymentConfirmationDetails")?.addEventListener("click", async () => {
-      const status = document.getElementById("paymentConfirmationStatus");
-      const completeEmail = `To: ${etransferEmail}\nSubject: ${paymentSubject}\n\n${paymentBody}`;
+    const copyPaymentText = async (value) => {
       try {
-        await navigator.clipboard.writeText(completeEmail);
-        if (status) status.textContent = "Payment confirmation details copied. Paste them into any email app, review, and send.";
-      } catch (error) {
-        if (status) status.textContent = `Copy was unavailable. Email ${etransferEmail} and include order ${orderNumber}.`;
+        if (!navigator.clipboard?.writeText) throw new Error("Clipboard API unavailable");
+        await navigator.clipboard.writeText(value);
+        return true;
+      } catch (clipboardError) {
+        const temporary = document.createElement("textarea");
+        temporary.value = value;
+        temporary.setAttribute("readonly", "");
+        temporary.style.position = "fixed";
+        temporary.style.opacity = "0";
+        document.body.append(temporary);
+        temporary.select();
+        let copied = false;
+        try {
+          copied = document.execCommand("copy");
+        } catch (legacyClipboardError) {
+          copied = false;
+        }
+        temporary.remove();
+        return copied;
       }
+    };
+    const paymentCopyActions = [
+      ["copyPaymentEmailRecipient", paymentDraft.recipient, "Recipient copied."],
+      ["copyPaymentEmailSubject", paymentDraft.subject, "Subject copied."],
+      ["copyPaymentEmailMessage", paymentDraft.body, "Full payment-confirmation message copied."]
+    ];
+    paymentCopyActions.forEach(([buttonId, value, successMessage]) => {
+      document.getElementById(buttonId)?.addEventListener("click", async () => {
+        const status = document.getElementById("paymentConfirmationStatus");
+        const copied = await copyPaymentText(value);
+        if (status) {
+          status.textContent = copied
+            ? `${successMessage} Review it in your preferred email service and press Send.`
+            : "Copy is unavailable in this browser. Select the text above and copy it manually.";
+        }
+      });
     });
     document.getElementById("addAnotherTreasure")?.addEventListener("click", () => {
       const form = document.getElementById("homeDesignBuilder");

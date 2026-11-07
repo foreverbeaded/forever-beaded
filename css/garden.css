@@ -4552,3 +4552,117 @@ body.page-turning::before {
   object-fit: contain;
   background: rgba(255,255,255,.82);
 }
+
+/* Provider-neutral payment email handoff and copy fallback. */
+.payment-email-primary-action {
+  display: flex;
+  flex: 1 1 280px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .45rem;
+  min-width: 0;
+}
+.payment-email-primary-action p {
+  max-width: 38rem;
+  margin: 0;
+  color: #f8ead0;
+  font-size: .9rem;
+  line-height: 1.45;
+}
+.payment-email-open-button {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .7rem 1.15rem;
+  border: 2px solid #d4af37;
+  border-radius: 8px;
+  background: #d4af37;
+  color: #211226;
+  font-weight: 900;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
+}
+.payment-email-open-button:hover { background: #f2d16c; }
+.payment-email-open-button.is-secondary {
+  margin-top: .25rem;
+  background: transparent;
+  color: #fff;
+}
+.payment-email-open-button:focus-visible,
+.payment-email-fallback button:focus-visible,
+.payment-email-fallback input:focus-visible,
+.payment-email-fallback textarea:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+.payment-email-fallback {
+  width: 100%;
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 1px solid rgba(212,175,55,.72);
+  border-radius: 8px;
+  background: rgba(24,13,29,.52);
+  color: #fff;
+  text-align: left;
+}
+.payment-email-fallback h3 {
+  margin: 0 0 .35rem;
+  color: #f3d574;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.55rem;
+}
+.payment-email-fallback > p {
+  margin: 0 0 1rem;
+  color: #fff;
+  line-height: 1.5;
+}
+.payment-email-fallback .payment-email-length-warning {
+  padding: .75rem;
+  border-left: 4px solid #f3d574;
+  background: rgba(243,213,116,.12);
+}
+.payment-email-copy-row {
+  display: grid;
+  grid-template-columns: minmax(8rem, .45fr) minmax(0, 1.7fr) auto;
+  gap: .6rem;
+  align-items: center;
+  margin: .75rem 0;
+}
+.payment-email-copy-row label { color: #fff; font-weight: 800; }
+.payment-email-copy-row input,
+.payment-email-copy-row textarea {
+  width: 100%;
+  min-width: 0;
+  padding: .7rem .75rem;
+  border: 1px solid #cfb96d;
+  border-radius: 6px;
+  background: #fff;
+  color: #111;
+  font: inherit;
+}
+.payment-email-copy-row textarea {
+  min-height: 12rem;
+  line-height: 1.45;
+  resize: vertical;
+}
+.payment-email-copy-row button {
+  min-height: 44px;
+  padding: .6rem .85rem;
+  border: 1px solid #d4af37;
+  border-radius: 6px;
+  background: #fff;
+  color: #31183a;
+  font-weight: 900;
+  cursor: pointer;
+}
+.payment-email-message-row { align-items: start; }
+.payment-email-status { min-height: 1.5em; margin: .75rem 0 0 !important; font-weight: 800; }
+@media (max-width: 620px) {
+  .payment-email-primary-action,
+  .payment-email-open-button { width: 100%; }
+  .payment-email-copy-row { grid-template-columns: minmax(0, 1fr); }
+  .payment-email-copy-row button { width: 100%; }
+  .payment-email-fallback { padding: .85rem; }
+}

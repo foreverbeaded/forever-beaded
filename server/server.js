@@ -11,6 +11,12 @@ const validator = require("validator");
 const sharp = require("sharp");
 const sqlite3 = require("sqlite3").verbose();
 const { SEED_PRODUCTS, getSeedProduct } = require("./catalogue");
+const {
+  buildPaymentReminderEmail,
+  enrollPaymentReminder,
+  migratePaymentReminderSchema,
+  processPaymentReminders
+} = require("./payment-reminders");
 
 const PAYMENT_STATUSES = new Set(["AWAITING_PAYMENT", "RECEIVED", "VERIFIED", "REFUNDED", "CANCELLED"]);
 const ORDER_STATUSES = new Set(["NEW", "IN_PROGRESS", "READY", "SHIPPED", "COMPLETED", "CANCELLED"]);
@@ -71,6 +77,19 @@ const POSTAL_PROVINCE_PREFIXES = {
 
 function getEtransferEmail() {
   return process.env.ETRANSFER_EMAIL || "foreverbeaded1@gmail.com";
+}
+
+function paymentReminderOptions(options = {}) {
+  const enabled = Object.prototype.hasOwnProperty.call(options, "paymentRemindersEnabled")
+    ? options.paymentRemindersEnabled === true
+    : String(process.env.PAYMENT_REMINDERS_ENABLED || "").toLowerCase() === "true";
+  return {
+    enabled,
+    delayMs: options.paymentReminderDelayMs,
+    excludedEmails: Object.prototype.hasOwnProperty.call(options, "paymentReminderExcludedEmails")
+      ? options.paymentReminderExcludedEmails
+      : process.env.PAYMENT_REMINDER_EXCLUDED_EMAILS
+  };
 }
 
 function getDataPath(fileName) {
@@ -705,7 +724,7 @@ async function migrateSchema(db) {
     "id", "order_number", "created_at", "updated_at", "customer_name", "customer_email",
     "customer_phone", "shipping_address", "address_as_entered", "normalized_address", "city", "province", "postal_code", "country", "notes",
     "subtotal_cents", "shipping_cents", "total_cents", "currency", "payment_method",
-    "payment_status", "order_status", "etransfer_reference", "tracking_number"
+    "payment_status", "payment_confirmed_at", "order_status", "etransfer_reference", "tracking_number"
   ]);
 
   if (currentOrders.length && currentOrders.some((column) => !requiredOrderColumns.has(column.name))) {
@@ -825,7 +844,8 @@ async function migrateSchema(db) {
     ["address_as_entered", "TEXT"],
     ["normalized_address", "TEXT"],
     ["city", "TEXT"],
-    ["country", "TEXT"]
+    ["country", "TEXT"],
+    ["payment_confirmed_at", "TEXT"]
   ]) {
     if (!existingOrderColumns.has(name)) {
       await dbRun(db, `ALTER TABLE orders ADD COLUMN ${name} ${definition}`);
@@ -973,6 +993,7 @@ async function migrateSchema(db) {
     details TEXT,
     FOREIGN KEY(order_id) REFERENCES orders(id) ON DELETE CASCADE
   )`);
+  await migratePaymentReminderSchema(db);
 
   await dbRun(db, `CREATE TABLE IF NOT EXISTS order_reference_images (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1019,7 +1040,7 @@ async function generateOrderNumber(db, createdAt) {
   return `FB-${day}-${String((row?.count || 0) + 1).padStart(4, "0")}`;
 }
 
-async function createOrder(db, order) {
+async function createOrder(db, order, reminderOptions = {}) {
   await dbRun(db, "BEGIN IMMEDIATE TRANSACTION");
   try {
     const now = new Date().toISOString();
@@ -1059,8 +1080,13 @@ async function createOrder(db, order) {
       "ORDER_CREATED",
       JSON.stringify({ paymentStatus: order.paymentStatus, orderStatus: order.orderStatus })
     ]);
+    const reminder = await enrollPaymentReminder(db, {
+      orderId: result.lastID,
+      createdAt: now,
+      customerEmail: order.customerEmail
+    }, reminderOptions);
     await dbRun(db, "COMMIT");
-    return { orderId: result.lastID, orderNumber, referenceUploads };
+    return { orderId: result.lastID, orderNumber, referenceUploads, reminder };
   } catch (error) {
     await dbRun(db, "ROLLBACK").catch(() => {});
     throw error;
@@ -1583,6 +1609,57 @@ async function sendOrderNotificationEmail(order, saved, etransferEmail) {
   }
 }
 
+async function sendPaymentReminderEmail(order) {
+  const config = getEmailConfig();
+  if (!config.configured) {
+    return {
+      emailSent: false,
+      provider: "smtp",
+      providerResponse: `Missing email environment variables: ${config.missing.join(", ")}`,
+      messageId: null
+    };
+  }
+  try {
+    const message = buildPaymentReminderEmail(order);
+    const result = await sendSmtpMail(config, {
+      from: config.from,
+      to: order.customerEmail,
+      subject: message.subject,
+      text: message.text
+    });
+    return {
+      emailSent: true,
+      provider: "smtp",
+      providerResponse: result.providerResponse,
+      messageId: result.messageId
+    };
+  } catch (error) {
+    return {
+      emailSent: false,
+      provider: "smtp",
+      providerResponse: error.message,
+      messageId: null
+    };
+  }
+}
+
+function secretsMatch(provided, expected) {
+  const supplied = Buffer.from(String(provided || ""));
+  const configured = Buffer.from(String(expected || ""));
+  return supplied.length > 0 && supplied.length === configured.length && crypto.timingSafeEqual(supplied, configured);
+}
+
+function requireReminderSchedulerAuth(req, res, next, configuredSecret) {
+  const expected = configuredSecret || process.env.PAYMENT_REMINDER_SCHEDULER_SECRET;
+  if (!expected || expected === "replace-with-a-separate-long-random-secret") {
+    return res.status(503).json({ error: "Payment reminder scheduler is not configured." });
+  }
+  const header = req.get("authorization") || "";
+  const provided = header.startsWith("Bearer ") ? header.slice(7) : "";
+  if (!secretsMatch(provided, expected)) return res.status(401).json({ error: "Authentication required." });
+  return next();
+}
+
 function createDatabase(databasePath) {
   const resolvedPath = path.resolve(databasePath);
   fs.mkdirSync(path.dirname(resolvedPath), { recursive: true });
@@ -1651,6 +1728,7 @@ async function createApp(options = {}) {
   const app = express();
   const db = options.db || createDatabase(options.databasePath || process.env.DATABASE_PATH || path.join(__dirname, "data", "orders.db"));
   const referenceUploadPath = getReferenceUploadPath(options);
+  const reminderConfig = paymentReminderOptions(options);
   await migrateSchema(db);
   await syncAllEtsyTestimonials(db);
 
@@ -1667,6 +1745,7 @@ async function createApp(options = {}) {
   }
   app.locals.db = db;
   app.locals.referenceUploadPath = referenceUploadPath;
+  app.locals.paymentRemindersEnabled = reminderConfig.enabled;
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
@@ -1701,6 +1780,10 @@ async function createApp(options = {}) {
     res.set("Cache-Control", "no-store");
     res.sendFile(path.join(__dirname, "admin-reviews.html"));
   });
+  app.get("/admin/orders", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    res.sendFile(path.join(__dirname, "admin-orders.html"));
+  });
   app.get("/admin-assets/custom-design.css", (req, res) => {
     res.type("text/css").sendFile(path.join(__dirname, "admin-custom-design.css"));
   });
@@ -1712,6 +1795,12 @@ async function createApp(options = {}) {
   });
   app.get("/admin-assets/reviews.js", (req, res) => {
     res.type("application/javascript").sendFile(path.join(__dirname, "admin-reviews.js"));
+  });
+  app.get("/admin-assets/orders.css", (req, res) => {
+    res.type("text/css").sendFile(path.join(__dirname, "admin-orders.css"));
+  });
+  app.get("/admin-assets/orders.js", (req, res) => {
+    res.type("application/javascript").sendFile(path.join(__dirname, "admin-orders.js"));
   });
 
   app.use("/api", apiLimiter);
@@ -1810,7 +1899,7 @@ async function createApp(options = {}) {
       if (order.items.some((item) => item.referenceImageRequested) && !referenceUploadPath) {
         throw new PublicError(503, "Reference photo uploads are temporarily unavailable. Please remove the photo and try again.");
       }
-      const saved = await createOrder(db, order);
+      const saved = await createOrder(db, order, reminderConfig);
       const etransferEmail = getEtransferEmail();
       await writeOrdersWorkbook(db);
       const emailResult = options.emailSender
@@ -1967,6 +2056,22 @@ async function createApp(options = {}) {
   app.all("/api/orders/:orderNumber/items", rejectUnsupportedOrderMethod);
   app.all("/api/orders", rejectUnsupportedOrderMethod);
 
+  app.post("/api/internal/payment-reminders/run",
+    (req, res, next) => requireReminderSchedulerAuth(req, res, next, options.paymentReminderSchedulerSecret),
+    async (req, res, next) => {
+      try {
+        if (!reminderConfig.enabled) {
+          throw new PublicError(409, "Automatic payment reminders are not enabled.");
+        }
+        const summary = await processPaymentReminders(db, {
+          sender: options.paymentReminderEmailSender || sendPaymentReminderEmail
+        });
+        res.json({ success: true, providerAcceptanceOnly: true, ...summary });
+      } catch (error) {
+        next(error);
+      }
+    });
+
   app.use("/api/admin", (req, res, next) => requireAdminAuth(req, res, next, options.adminSecret));
   app.use("/api/admin", (req, res, next) => {
     res.set("Cache-Control", "private, no-store");
@@ -1974,6 +2079,183 @@ async function createApp(options = {}) {
   });
   app.get("/api/admin/health", (req, res) => {
     res.json({ ok: true, admin: true });
+  });
+  app.get("/api/admin/payment-orders", async (req, res, next) => {
+    try {
+      const requestedStatus = normalizeText(req.query.paymentStatus || "AWAITING_PAYMENT", 30, "Payment status").toUpperCase();
+      if (requestedStatus !== "ALL" && !PAYMENT_STATUSES.has(requestedStatus)) {
+        throw new PublicError(400, "Payment status is invalid.");
+      }
+      const params = [];
+      const where = requestedStatus === "ALL" ? "" : "WHERE orders.payment_status = ?";
+      if (requestedStatus !== "ALL") params.push(requestedStatus);
+      const rows = await dbAll(db, `SELECT orders.id, orders.order_number, orders.created_at,
+        orders.updated_at, orders.customer_name, orders.customer_email, orders.total_cents,
+        orders.currency, orders.payment_status, orders.payment_confirmed_at, orders.order_status,
+        payment_reminders.due_at, payment_reminders.state AS reminder_state,
+        payment_reminders.attempt_count, payment_reminders.last_attempt_at,
+        payment_reminders.next_attempt_at, payment_reminders.sent_at,
+        payment_reminders.provider_message_id, payment_reminders.last_error,
+        payment_reminders.suppressed_at, payment_reminders.suppressed_reason
+        FROM orders LEFT JOIN payment_reminders ON payment_reminders.order_id = orders.id
+        ${where} ORDER BY orders.created_at DESC LIMIT 250`, params);
+      const orderIds = rows.map(row => row.id);
+      let events = [];
+      if (orderIds.length) {
+        events = await dbAll(db, `SELECT order_id, created_at, event_type, details FROM order_events
+          WHERE order_id IN (${orderIds.map(() => "?").join(",")})
+            AND event_type IN ('PAYMENT_STATUS_CHANGED','PAYMENT_REMINDER_SENT','PAYMENT_REMINDER_FAILED','PAYMENT_REMINDER_SUPPRESSED','PAYMENT_REMINDER_RESUMED')
+          ORDER BY created_at DESC, id DESC`, orderIds);
+      }
+      const eventsByOrder = new Map();
+      events.forEach(event => {
+        if (!eventsByOrder.has(event.order_id)) eventsByOrder.set(event.order_id, []);
+        let details = {};
+        try { details = JSON.parse(event.details || "{}"); } catch {}
+        eventsByOrder.get(event.order_id).push({ createdAt: event.created_at, type: event.event_type, details });
+      });
+      res.json({
+        reminderFeatureEnabled: reminderConfig.enabled,
+        orders: rows.map(row => ({
+          orderNumber: row.order_number,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+          customerName: row.customer_name,
+          customerEmail: row.customer_email,
+          totalCents: row.total_cents,
+          currency: row.currency,
+          paymentStatus: row.payment_status,
+          paymentConfirmedAt: row.payment_confirmed_at,
+          orderStatus: row.order_status,
+          reminder: row.due_at ? {
+            dueAt: row.due_at,
+            state: row.reminder_state,
+            attemptCount: row.attempt_count,
+            lastAttemptAt: row.last_attempt_at,
+            nextAttemptAt: row.next_attempt_at,
+            sentAt: row.sent_at,
+            providerAccepted: Boolean(row.sent_at),
+            lastError: row.last_error,
+            suppressedAt: row.suppressed_at,
+            suppressedReason: row.suppressed_reason
+          } : null,
+          history: eventsByOrder.get(row.id) || []
+        }))
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+  app.put("/api/admin/orders/:orderNumber/payment-status", async (req, res, next) => {
+    try {
+      const orderNumber = normalizeText(req.params.orderNumber, 40, "Order number", { required: true });
+      const requested = normalizeText(req.body?.paymentStatus, 30, "Payment status", { required: true }).toUpperCase();
+      const paymentStatus = requested === "PAID" ? "VERIFIED" : requested;
+      if (!["AWAITING_PAYMENT", "VERIFIED", "CANCELLED"].includes(paymentStatus)) {
+        throw new PublicError(400, "Choose Awaiting Payment, Paid, or Cancelled.");
+      }
+      const now = new Date().toISOString();
+      await dbRun(db, "BEGIN IMMEDIATE TRANSACTION");
+      try {
+        const order = await dbGet(db, "SELECT id, payment_status FROM orders WHERE order_number = ?", [orderNumber]);
+        if (!order) throw new PublicError(404, "Order was not found.");
+        await dbRun(db, `UPDATE orders SET payment_status = ?, payment_confirmed_at = ?, updated_at = ?
+          WHERE id = ?`, [paymentStatus, paymentStatus === "VERIFIED" ? now : null, now, order.id]);
+        if (paymentStatus !== "AWAITING_PAYMENT") {
+          await dbRun(db, `UPDATE payment_reminders SET state = 'INELIGIBLE', updated_at = ?,
+            next_attempt_at = NULL,
+            last_error = 'Order is no longer awaiting payment.'
+            WHERE order_id = ? AND sent_at IS NULL
+              AND state IN ('PENDING', 'FAILED', 'CLAIMED', 'ATTENTION')`, [now, order.id]);
+        } else {
+          await dbRun(db, `UPDATE payment_reminders SET state = 'PENDING', updated_at = ?,
+            next_attempt_at = CASE WHEN due_at > ? THEN due_at ELSE ? END, last_error = NULL
+            WHERE order_id = ? AND state = 'INELIGIBLE' AND sent_at IS NULL
+              AND last_error = 'Order is no longer awaiting payment.'`, [now, now, now, order.id]);
+        }
+        await dbRun(db, "INSERT INTO order_events(order_id, created_at, event_type, details) VALUES (?, ?, ?, ?)", [
+          order.id,
+          now,
+          "PAYMENT_STATUS_CHANGED",
+          JSON.stringify({ previousPaymentStatus: order.payment_status, paymentStatus, source: "OWNER" })
+        ]);
+        await dbRun(db, "COMMIT");
+      } catch (error) {
+        await dbRun(db, "ROLLBACK").catch(() => {});
+        throw error;
+      }
+      res.json({ success: true, orderNumber, paymentStatus, paymentConfirmedAt: paymentStatus === "VERIFIED" ? now : null });
+    } catch (error) {
+      next(error);
+    }
+  });
+  app.put("/api/admin/orders/:orderNumber/payment-reminder", async (req, res, next) => {
+    try {
+      const orderNumber = normalizeText(req.params.orderNumber, 40, "Order number", { required: true });
+      const suppressed = req.body?.suppressed === true;
+      const reason = normalizeText(req.body?.reason, 200, "Suppression reason");
+      const now = new Date().toISOString();
+      const row = await dbGet(db, `SELECT orders.id AS order_id, orders.payment_status,
+        payment_reminders.id, payment_reminders.state, payment_reminders.sent_at,
+        payment_reminders.due_at FROM orders
+        LEFT JOIN payment_reminders ON payment_reminders.order_id = orders.id
+        WHERE orders.order_number = ?`, [orderNumber]);
+      if (!row?.order_id) throw new PublicError(404, "Order was not found.");
+      if (!row.id) throw new PublicError(409, "This historical or pre-activation order is not enrolled for automatic reminders.");
+      if (row.sent_at) throw new PublicError(409, "The payment reminder was already accepted by the email provider.");
+      if (row.state === "CLAIMED") {
+        throw new PublicError(409, "This reminder is being processed. Refresh before changing its hold status.");
+      }
+      if (suppressed && !["PENDING", "FAILED", "ATTENTION"].includes(row.state)) {
+        throw new PublicError(409, "This reminder is not eligible to be placed on hold.");
+      }
+      if (!suppressed && row.state !== "SUPPRESSED") {
+        throw new PublicError(409, "Only a reminder currently on hold can be resumed.");
+      }
+      if (!suppressed && row.payment_status !== "AWAITING_PAYMENT") {
+        throw new PublicError(409, "Only an order awaiting payment can resume reminders.");
+      }
+      await dbRun(db, `UPDATE payment_reminders SET state = ?, updated_at = ?,
+        next_attempt_at = ?, suppressed_at = ?, suppressed_reason = ?, last_error = NULL,
+        claim_token = NULL, claim_expires_at = NULL WHERE id = ?`, [
+        suppressed ? "SUPPRESSED" : "PENDING",
+        now,
+        suppressed ? null : (row.due_at > now ? row.due_at : now),
+        suppressed ? now : null,
+        suppressed ? (reason || "Suppressed by owner") : null,
+        row.id
+      ]);
+      await dbRun(db, "INSERT INTO order_events(order_id, created_at, event_type, details) VALUES (?, ?, ?, ?)", [
+        row.order_id,
+        now,
+        suppressed ? "PAYMENT_REMINDER_SUPPRESSED" : "PAYMENT_REMINDER_RESUMED",
+        JSON.stringify({ source: "OWNER", reason: suppressed ? (reason || "Suppressed by owner") : null })
+      ]);
+      res.json({ success: true, orderNumber, reminderState: suppressed ? "SUPPRESSED" : "PENDING" });
+    } catch (error) {
+      next(error);
+    }
+  });
+  app.post("/api/admin/orders/:orderNumber/payment-reminder/retry", async (req, res, next) => {
+    try {
+      if (!reminderConfig.enabled) throw new PublicError(409, "Automatic payment reminders are not enabled.");
+      const orderNumber = normalizeText(req.params.orderNumber, 40, "Order number", { required: true });
+      const reminder = await dbGet(db, `SELECT payment_reminders.state, payment_reminders.sent_at,
+        orders.payment_status FROM payment_reminders JOIN orders ON orders.id = payment_reminders.order_id
+        WHERE orders.order_number = ?`, [orderNumber]);
+      if (!reminder) throw new PublicError(404, "Payment reminder was not found.");
+      if (reminder.sent_at) throw new PublicError(409, "The payment reminder was already accepted by the email provider.");
+      if (!["FAILED", "ATTENTION"].includes(reminder.state)) throw new PublicError(409, "Only a failed or uncertain reminder can be retried manually.");
+      if (reminder.payment_status !== "AWAITING_PAYMENT") throw new PublicError(409, "The order is no longer awaiting payment.");
+      const summary = await processPaymentReminders(db, {
+        orderNumber,
+        manual: true,
+        sender: options.paymentReminderEmailSender || sendPaymentReminderEmail
+      });
+      res.json({ success: summary.sent === 1, providerAcceptanceOnly: true, orderNumber, ...summary });
+    } catch (error) {
+      next(error);
+    }
   });
   app.get("/api/admin/reviews", async (req, res, next) => {
     try {

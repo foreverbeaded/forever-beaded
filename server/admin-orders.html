@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forever Beaded Payment Orders</title>
+  <link rel="stylesheet" href="/admin-assets/orders.css">
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">Forever Beaded Owner Tools</p>
+      <h1>Payment Orders</h1>
+      <p>Check RBC independently, match the payment to the correct order, then update its payment state here.</p>
+    </header>
+
+    <form id="accessForm" class="panel">
+      <label for="adminSecret">Admin secret</label>
+      <input id="adminSecret" type="password" autocomplete="current-password" required>
+      <label for="paymentStatusFilter">Payment status</label>
+      <select id="paymentStatusFilter">
+        <option value="AWAITING_PAYMENT">Awaiting Payment</option>
+        <option value="VERIFIED">Paid</option>
+        <option value="CANCELLED">Cancelled</option>
+        <option value="ALL">All payment states</option>
+      </select>
+      <button type="submit">Load Orders</button>
+    </form>
+
+    <aside id="activationNotice" class="activation-notice" hidden></aside>
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+    <section id="orderList" aria-live="polite" aria-label="Private payment order results"></section>
+  </main>
+  <script src="/admin-assets/orders.js" defer></script>
+</body>
+</html>

@@ -2,7 +2,7 @@ const { spawn } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
-const { createApp } = require("../server");
+const { createApp, dbRun } = require("../server");
 
 const widths = [320, 375, 390, 393, 414, 430, 768, 1024, 1366];
 const edge = [
@@ -59,7 +59,7 @@ async function waitForDebugger() {
     referenceUploadPath: null,
     allowedOrigins: "http://127.0.0.1",
     adminSecret: "responsive-admin-secret",
-    paymentRemindersEnabled: true,
+    paymentRemindersEnabled: false,
     paymentReminderSchedulerSecret: "responsive-scheduler-secret",
     emailSender: async () => ({ emailSent: true, messageId: "owner-test" }),
     reviewNotificationSender: async () => ({ emailSent: true, messageId: "review-test" }),
@@ -74,7 +74,7 @@ async function waitForDebugger() {
     method: "POST",
     headers: { "Content-Type": "application/json", Origin: "http://127.0.0.1" },
     body: JSON.stringify({
-      customer: { name: "Responsive Customer", email: "responsive@example.com", phone: "604-555-1212" },
+      customer: { name: "Responsive Customer With A Longer Name", email: "responsive@example.com", phone: "604-555-1212" },
       shipping: {
         address: "123 Bead Lane",
         street: "123 Bead Lane",
@@ -84,10 +84,12 @@ async function waitForDebugger() {
         country: "Canada",
         addressAsEntered: "123 Bead Lane\nVancouver, BC V6B 1A1\nCanada"
       },
-      items: [{ productId: 1, quantity: 1, colours: "Purple, Cream, Gold", hardware: "Gold" }]
+      notes: "Please leave the package at the side door after delivery.",
+      items: [{ productId: 1, quantity: 2, colours: "Purple, Cream, Gold", hardware: "Gold" }]
     })
   });
   if (!orderResponse.ok) throw new Error(`Could not seed responsive order: ${orderResponse.status} ${await orderResponse.text()}`);
+  const seededOrder = await orderResponse.json();
 
   browser = spawn(edge, [
     "--headless", "--disable-gpu", "--no-first-run",
@@ -101,7 +103,13 @@ async function waitForDebugger() {
   const cdp = await connect(page.webSocketDebuggerUrl);
   await cdp.send("Page.enable");
   const results = [];
-  for (const width of widths) {
+  for (const [index, width] of widths.entries()) {
+    const paymentState = ["AWAITING_PAYMENT", "VERIFIED", "CANCELLED"][index % 3];
+    await dbRun(app.locals.db, "UPDATE orders SET payment_status = ?, payment_confirmed_at = ? WHERE order_number = ?", [
+      paymentState,
+      paymentState === "VERIFIED" ? new Date().toISOString() : null,
+      seededOrder.orderNumber
+    ]);
     await cdp.send("Emulation.setDeviceMetricsOverride", { width, height: 900, deviceScaleFactor: 1, mobile: width <= 430 });
     await cdp.send("Page.navigate", { url: `${baseUrl}/admin/orders` });
     await sleep(250);
@@ -109,16 +117,25 @@ async function waitForDebugger() {
       expression: `(async () => {
         for (let i = 0; i < 40 && !document.getElementById('adminSecret'); i += 1) await new Promise(r => setTimeout(r, 50));
         document.getElementById('adminSecret').value = 'responsive-admin-secret';
+        document.getElementById('paymentStatusFilter').value = 'ALL';
         document.getElementById('accessForm').requestSubmit();
         for (let i = 0; i < 40 && document.querySelectorAll('.order-card').length !== 1; i += 1) await new Promise(r => setTimeout(r, 50));
+        const detailsButton = document.querySelector('.details-button');
+        detailsButton?.click();
+        for (let i = 0; i < 40 && !document.querySelector('.order-details:not([hidden])'); i += 1) await new Promise(r => setTimeout(r, 50));
+        const details = document.querySelector('.order-details:not([hidden])');
         return {
           width: ${width},
+          paymentState: '${paymentState}',
           clientWidth: document.documentElement.clientWidth,
           scrollWidth: document.documentElement.scrollWidth,
           horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
           cardCount: document.querySelectorAll('.order-card').length,
           visibleButtons: [...document.querySelectorAll('.order-card button')].filter(button => button.offsetParent !== null).length,
           dueDateVisible: document.body.textContent.includes('Reminder due'),
+          detailsVisible: Boolean(details),
+          detailItemCount: details?.querySelectorAll('.detail-item').length || 0,
+          detailsContainSavedFields: Boolean(details?.textContent.includes('Responsive Customer With A Longer Name') && details?.textContent.includes('Purple, Cream, Gold') && details?.textContent.includes('side door')),
           secretVisible: document.body.textContent.includes('responsive-admin-secret')
         };
       })()`,
@@ -129,7 +146,7 @@ async function waitForDebugger() {
   }
   cdp.close();
   console.log(JSON.stringify(results, null, 2));
-  if (results.some(result => result.horizontalOverflow || result.cardCount !== 1 || result.visibleButtons < 3 || !result.dueDateVisible || result.secretVisible)) {
+  if (results.some(result => result.horizontalOverflow || result.cardCount !== 1 || result.visibleButtons < 3 || !result.dueDateVisible || !result.detailsVisible || result.detailItemCount !== 1 || !result.detailsContainSavedFields || result.secretVisible)) {
     process.exitCode = 1;
   }
 })().catch(error => {

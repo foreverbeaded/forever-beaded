@@ -1096,7 +1096,7 @@ async function createOrder(db, order, reminderOptions = {}) {
 async function getOrderWithItems(db, orderNumber) {
   const orderRow = await dbGet(db, `SELECT id, order_number, created_at, updated_at, customer_name, customer_email, customer_phone,
     shipping_address, address_as_entered, normalized_address, city, province, postal_code, country, notes,
-    subtotal_cents, shipping_cents, total_cents, currency, payment_method, payment_status, order_status
+    subtotal_cents, shipping_cents, total_cents, currency, payment_method, payment_status, payment_confirmed_at, order_status
     FROM orders
     WHERE order_number = ?`, [orderNumber]);
   if (!orderRow) throw new PublicError(404, "Order was not found.");
@@ -1115,6 +1115,8 @@ async function getOrderWithItems(db, orderNumber) {
   return {
     orderId: orderRow.id,
     orderNumber: orderRow.order_number,
+    createdAt: orderRow.created_at,
+    updatedAt: orderRow.updated_at,
     customerName: orderRow.customer_name,
     customerEmail: orderRow.customer_email,
     customerPhone: orderRow.customer_phone,
@@ -1132,6 +1134,7 @@ async function getOrderWithItems(db, orderNumber) {
     currency: orderRow.currency,
     paymentMethod: orderRow.payment_method,
     paymentStatus: orderRow.payment_status,
+    paymentConfirmedAt: orderRow.payment_confirmed_at,
     orderStatus: orderRow.order_status,
     items: itemRows.map((item) => ({
       productId: item.product_id,
@@ -2141,6 +2144,28 @@ async function createApp(options = {}) {
           } : null,
           history: eventsByOrder.get(row.id) || []
         }))
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+  app.get("/api/admin/orders/:orderNumber/details", async (req, res, next) => {
+    try {
+      const orderNumber = normalizeText(req.params.orderNumber, 40, "Order number", { required: true });
+      const order = await getOrderWithItems(db, orderNumber);
+      const events = await dbAll(db, `SELECT created_at, event_type, details
+        FROM order_events WHERE order_id = ? ORDER BY created_at ASC, id ASC`, [order.orderId]);
+      res.json({
+        order: {
+          ...order,
+          orderId: undefined,
+          fulfillmentMethod: null,
+          history: events.map(event => {
+            let details = {};
+            try { details = JSON.parse(event.details || "{}"); } catch {}
+            return { createdAt: event.created_at, type: event.event_type, details };
+          })
+        }
       });
     } catch (error) {
       next(error);

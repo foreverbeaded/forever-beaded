@@ -105,6 +105,133 @@
     return button;
   };
 
+  const displayValue = value => {
+    if (value === null || value === undefined || value === "") return "Not recorded";
+    if (Array.isArray(value)) return value.length ? value.join(", ") : "Not recorded";
+    if (typeof value === "object") return Object.entries(value)
+      .map(([key, detail]) => `${stateLabel(key)}: ${displayValue(detail)}`)
+      .join("; ") || "Not recorded";
+    return String(value);
+  };
+
+  const definitionList = (className, values) => {
+    const list = document.createElement("dl");
+    list.className = className;
+    values.forEach(([term, value, valueClass]) => {
+      const wrapper = document.createElement("div");
+      const dt = document.createElement("dt");
+      const dd = document.createElement("dd");
+      dt.textContent = term;
+      dd.textContent = displayValue(value);
+      if (valueClass) dd.className = valueClass;
+      wrapper.append(dt, dd);
+      list.append(wrapper);
+    });
+    return list;
+  };
+
+  const renderOrderDetails = order => {
+    const content = document.createDocumentFragment();
+    const summaryHeading = document.createElement("h3");
+    summaryHeading.textContent = "Customer and delivery";
+    const deliveryAddress = order.addressAsEntered || order.shippingAddress || order.normalizedAddress;
+    content.append(summaryHeading, definitionList("detail-grid", [
+      ["Order number", order.orderNumber],
+      ["Order date", formatDate(order.createdAt)],
+      ["Last updated", formatDate(order.updatedAt)],
+      ["Customer", order.customerName],
+      ["Email", order.customerEmail],
+      ["Phone", order.customerPhone],
+      ["Shipping or pickup method", order.fulfillmentMethod],
+      ["Delivery address", deliveryAddress, "multiline"],
+      ["Customer notes", order.notes, "multiline"]
+    ]));
+
+    const itemsHeading = document.createElement("h3");
+    itemsHeading.textContent = `Purchased products (${order.items.length})`;
+    const items = document.createElement("div");
+    items.className = "detail-items";
+    order.items.forEach((item, index) => {
+      const article = document.createElement("article");
+      article.className = "detail-item";
+      const heading = document.createElement("h4");
+      heading.textContent = `${index + 1}. ${item.productName}`;
+      article.append(heading, definitionList("item-grid", [
+        ["Product ID", item.productId],
+        ["Requested name", item.requestedProductName],
+        ["Design", item.design],
+        ["Quantity", item.quantity],
+        ["Individual price", formatMoney(item.unitPriceCents)],
+        ["Line total", formatMoney(item.lineTotalCents)],
+        ["Bead colours", item.colours],
+        ["Hardware", item.hardware],
+        ["Personalization type", item.personalizationType],
+        ["Name, letters or personalization", item.personalization],
+        ["Personalization instructions", item.customDescription, "multiline"]
+      ]));
+      items.append(article);
+    });
+    content.append(itemsHeading, items);
+
+    const totalsHeading = document.createElement("h3");
+    totalsHeading.textContent = "Totals and status";
+    content.append(totalsHeading, definitionList("detail-grid", [
+      ["Subtotal", formatMoney(order.subtotalCents)],
+      ["Shipping", formatMoney(order.shippingCents)],
+      ["Final total", `${formatMoney(order.totalCents)} ${order.currency || "CAD"}`],
+      ["Payment method", stateLabel(order.paymentMethod)],
+      ["Payment status", stateLabel(order.paymentStatus)],
+      ["Payment confirmed", formatDate(order.paymentConfirmedAt)],
+      ["Fulfilment status", stateLabel(order.orderStatus)]
+    ]));
+
+    const historyHeading = document.createElement("h3");
+    historyHeading.textContent = `Order and payment history (${order.history.length})`;
+    const history = document.createElement("ol");
+    history.className = "detail-history";
+    if (!order.history.length) {
+      const item = document.createElement("li");
+      item.textContent = "No saved history events.";
+      history.append(item);
+    } else {
+      order.history.forEach(event => {
+        const item = document.createElement("li");
+        const eventName = document.createElement("strong");
+        eventName.textContent = stateLabel(event.type);
+        const eventDetails = document.createElement("span");
+        eventDetails.textContent = `${formatDate(event.createdAt)} | ${displayValue(event.details)}`;
+        item.append(eventName, eventDetails);
+        history.append(item);
+      });
+    }
+    content.append(historyHeading, history);
+    return content;
+  };
+
+  const toggleOrderDetails = async (order, button, region) => {
+    if (region.dataset.loaded === "true") {
+      region.hidden = !region.hidden;
+      button.setAttribute("aria-expanded", String(!region.hidden));
+      button.textContent = region.hidden ? "View Order Details" : "Hide Order Details";
+      return;
+    }
+    button.disabled = true;
+    button.textContent = "Loading Order Details...";
+    try {
+      const data = await adminFetch(`/api/admin/orders/${encodeURIComponent(order.orderNumber)}/details`);
+      region.replaceChildren(renderOrderDetails(data.order));
+      region.dataset.loaded = "true";
+      region.hidden = false;
+      button.setAttribute("aria-expanded", "true");
+      button.textContent = "Hide Order Details";
+    } catch (error) {
+      setStatus(error.message, true);
+      button.textContent = "View Order Details";
+    } finally {
+      button.disabled = false;
+    }
+  };
+
   const renderOrders = orders => {
     orderList.replaceChildren();
     if (!orders.length) return setStatus("No orders match this payment status.");
@@ -156,6 +283,15 @@
 
       const actions = document.createElement("div");
       actions.className = "actions";
+      const detailsRegion = document.createElement("section");
+      const detailsId = `order-details-${String(order.orderNumber).replace(/[^A-Za-z0-9_-]/g, "-")}`;
+      detailsRegion.id = detailsId;
+      detailsRegion.className = "order-details";
+      detailsRegion.hidden = true;
+      const detailsButton = actionButton("View Order Details", "details-button", button => toggleOrderDetails(order, button, detailsRegion));
+      detailsButton.setAttribute("aria-expanded", "false");
+      detailsButton.setAttribute("aria-controls", detailsId);
+      actions.append(detailsButton);
       if (order.paymentStatus !== "VERIFIED") actions.append(actionButton("Mark Paid", "", button => changePaymentStatus(order, "VERIFIED", button)));
       if (order.paymentStatus !== "AWAITING_PAYMENT") actions.append(actionButton("Mark Awaiting Payment", "secondary", button => changePaymentStatus(order, "AWAITING_PAYMENT", button)));
       if (order.paymentStatus !== "CANCELLED") actions.append(actionButton("Mark Cancelled", "danger", button => changePaymentStatus(order, "CANCELLED", button)));
@@ -167,6 +303,7 @@
         actions.append(actionButton("Retry Reminder", "secondary", button => retryReminder(order, button)));
       }
       card.append(actions);
+      card.append(detailsRegion);
 
       if (order.history?.length) {
         const history = document.createElement("details");

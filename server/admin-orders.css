@@ -34,6 +34,22 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .state-grid dd { margin: 5px 0 0; overflow-wrap: anywhere; }
 .actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .actions button { flex: 1 1 170px; }
+.actions .details-button { border-color: #fff8e8; background: #fff8e8; color: #211225; }
+.order-details { display: grid; gap: 14px; border-top: 1px solid rgba(223,185,93,.35); padding-top: 16px; }
+.order-details[hidden] { display: none; }
+.order-details h3 { margin-top: 4px; color: #f2d38b; font-size: 1.08rem; }
+.order-details h4 { margin: 0; color: #fff8e8; font: 800 1rem/1.35 Inter, system-ui, sans-serif; }
+.detail-grid, .item-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.detail-grid div, .item-grid div { min-width: 0; border-left: 3px solid rgba(223,185,93,.55); padding: 7px 10px; background: rgba(255,255,255,.035); }
+.detail-grid dt, .item-grid dt { color: #f2d38b; font-size: .78rem; font-weight: 800; }
+.detail-grid dd, .item-grid dd { margin: 4px 0 0; line-height: 1.45; overflow-wrap: anywhere; }
+.detail-grid .multiline, .item-grid .multiline { white-space: pre-wrap; }
+.detail-items { display: grid; gap: 10px; }
+.detail-item { display: grid; gap: 9px; border: 1px solid rgba(223,185,93,.35); padding: 12px; background: rgba(15,7,18,.22); }
+.detail-history { display: grid; gap: 10px; margin: 0; padding-left: 22px; }
+.detail-history li { padding-left: 4px; line-height: 1.45; }
+.detail-history strong, .detail-history span { display: block; }
+.detail-history span { margin-top: 2px; color: #eadfdc; overflow-wrap: anywhere; }
 .history { border-top: 1px solid rgba(223,185,93,.35); padding-top: 10px; }
 .history summary { cursor: pointer; color: #f2d38b; font-weight: 800; }
 .history ul { margin: 10px 0 0; padding-left: 20px; }
@@ -43,6 +59,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   main { width: min(100% - 20px, 960px); padding-top: 20px; }
   .panel, .order-card { padding: 15px; }
   .state-grid { grid-template-columns: 1fr; }
+  .detail-grid, .item-grid { grid-template-columns: 1fr; }
   .actions { flex-direction: column; }
   .actions button { flex: 0 0 auto; width: 100%; }
 }

@@ -40,7 +40,7 @@ async function startServer(options = {}) {
     paymentReminderDelayMs: options.paymentReminderDelayMs,
     paymentReminderExcludedEmails: options.paymentReminderExcludedEmails,
     paymentReminderEmailSender: options.paymentReminderEmailSender,
-    emailSender: async () => ({ emailSent: true, provider: "test", providerResponse: "accepted", messageId: "owner-order-test" }),
+    emailSender: options.emailSender || (async () => ({ emailSent: true, provider: "test", providerResponse: "accepted", messageId: "owner-order-test" })),
     reviewNotificationSender: async () => ({ emailSent: true, providerResponse: "accepted", messageId: "review-test" })
   });
   const server = await new Promise((resolve, reject) => {
@@ -379,6 +379,78 @@ test("admin and scheduler endpoints reject unauthorized requests and feature rem
     assert.equal((await fetch(`${context.baseUrl}/api/internal/payment-reminders/run`, { method: "POST" })).status, 401);
     assert.equal((await fetch(`${context.baseUrl}/api/internal/payment-reminders/run`, { method: "POST", headers: schedulerHeaders })).status, 409);
     assert.equal((await dbGet(context.app.locals.db, "SELECT payment_status FROM orders WHERE order_number = ?", [order.orderNumber])).payment_status, "AWAITING_PAYMENT");
+  } finally {
+    await context.close();
+  }
+});
+
+test("authenticated order details return complete saved data without changing status or sending email", async () => {
+  let ownerEmails = 0;
+  const context = await startServer({
+    paymentRemindersEnabled: false,
+    emailSender: async () => {
+      ownerEmails += 1;
+      return { emailSent: true, provider: "test", providerResponse: "accepted", messageId: "owner-order-details-test" };
+    }
+  });
+  try {
+    const payload = validOrder("private-details@example.com");
+    payload.customer.name = "Morgan Details";
+    payload.notes = "Please leave the parcel at the side door.";
+    const created = await postOrder(context.baseUrl, payload);
+    assert.equal(ownerEmails, 1);
+    await dbRun(context.app.locals.db, `UPDATE order_items SET requested_product_name = ?, design = ?,
+      personalization_type = ?, personalization = ?, custom_description = ?
+      WHERE order_id = (SELECT id FROM orders WHERE order_number = ?)`, [
+      "Custom Butterfly", "Butterfly", "Name", "MORGAN", "Use alternating letter colours.", created.orderNumber
+    ]);
+
+    const unauthorized = await fetch(`${context.baseUrl}/api/admin/orders/${created.orderNumber}/details`);
+    assert.equal(unauthorized.status, 401);
+
+    const before = await dbGet(context.app.locals.db, `SELECT payment_status, payment_confirmed_at, order_status, updated_at
+      FROM orders WHERE order_number = ?`, [created.orderNumber]);
+    const response = await fetch(`${context.baseUrl}/api/admin/orders/${created.orderNumber}/details`, { headers: adminHeaders });
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get("cache-control"), /no-store/);
+    const { order } = await response.json();
+    assert.equal(order.orderNumber, created.orderNumber);
+    assert.equal(order.customerName, "Morgan Details");
+    assert.equal(order.customerEmail, "private-details@example.com");
+    assert.equal(order.customerPhone, "604-555-1212");
+    assert.equal(order.addressAsEntered, "123 Bead Lane\nVancouver, BC V6B 1A1\nCanada");
+    assert.equal(order.notes, "Please leave the parcel at the side door.");
+    assert.equal(order.fulfillmentMethod, null);
+    assert.equal(order.paymentStatus, "AWAITING_PAYMENT");
+    assert.equal(order.paymentConfirmedAt, null);
+    assert.equal(order.orderStatus, "NEW");
+    assert.equal(order.items.length, 1);
+    assert.deepEqual({
+      productId: order.items[0].productId,
+      colours: order.items[0].colours,
+      hardware: order.items[0].hardware,
+      quantity: order.items[0].quantity,
+      personalization: order.items[0].personalization,
+      customDescription: order.items[0].customDescription,
+      unitPriceCents: order.items[0].unitPriceCents,
+      lineTotalCents: order.items[0].lineTotalCents
+    }, {
+      productId: "1",
+      colours: "Purple, Cream, Gold",
+      hardware: "Gold",
+      quantity: 1,
+      personalization: "MORGAN",
+      customDescription: "Use alternating letter colours.",
+      unitPriceCents: 2000,
+      lineTotalCents: 2000
+    });
+    assert.equal(order.subtotalCents, 2000);
+    assert.equal(order.shippingCents, 500);
+    assert.equal(order.totalCents, 2500);
+    assert.ok(order.history.some(event => event.type === "ORDER_CREATED"));
+    assert.equal(ownerEmails, 1);
+    assert.deepEqual(await dbGet(context.app.locals.db, `SELECT payment_status, payment_confirmed_at, order_status, updated_at
+      FROM orders WHERE order_number = ?`, [created.orderNumber]), before);
   } finally {
     await context.close();
   }

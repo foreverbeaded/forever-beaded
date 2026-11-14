@@ -129,11 +129,13 @@ test("one due unpaid reminder is provider-accepted once across repeated schedule
     assert.equal(reminder.attempt_count, 1);
     assert.ok(reminder.sent_at);
     assert.equal(reminder.provider_message_id, "reminder-message-1");
-    const email = buildPaymentReminderEmail(sent[0]);
-    assert.equal(email.subject, `Forever Beaded \u2014 Friendly Payment Reminder for Order ${order.orderNumber}`);
+    const email = buildPaymentReminderEmail({ ...sent[0], etransferEmail: "payments@example.com" });
+    assert.equal(email.subject, `Friendly Payment Reminder \u2014 Forever Beaded Order ${order.orderNumber}`);
     assert.match(email.text, /^Hi Jamie,/);
     assert.match(email.text, new RegExp(order.orderNumber));
     assert.match(email.text, /Order total: \$25\.00 CAD/);
+    assert.match(email.text, /Send your Interac e-Transfer to: payments@example\.com/);
+    assert.match(email.text, new RegExp(`Include order ${order.orderNumber}`));
     assert.match(email.text, /already sent it.*disregard/i);
     assert.doesNotMatch(email.text, /123 Bead Lane|604-555/i);
   } finally {

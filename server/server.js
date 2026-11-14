@@ -1623,7 +1623,7 @@ async function sendPaymentReminderEmail(order) {
     };
   }
   try {
-    const message = buildPaymentReminderEmail(order);
+    const message = buildPaymentReminderEmail({ ...order, etransferEmail: getEtransferEmail() });
     const result = await sendSmtpMail(config, {
       from: config.from,
       to: order.customerEmail,

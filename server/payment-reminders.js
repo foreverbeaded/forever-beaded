@@ -98,7 +98,10 @@ function formatCad(cents) {
 }
 
 function buildPaymentReminderEmail(order) {
-  const subject = `Forever Beaded \u2014 Friendly Payment Reminder for Order ${order.orderNumber}`;
+  const subject = `Friendly Payment Reminder \u2014 Forever Beaded Order ${order.orderNumber}`;
+  const paymentInstructions = order.etransferEmail
+    ? `Send your Interac e-Transfer to: ${order.etransferEmail}\nInclude order ${order.orderNumber} in the e-Transfer message.`
+    : "Please use the Interac e-Transfer instructions provided during checkout.";
   const text = `Hi ${firstName(order.customerName)},
 
 Thank you for your Forever Beaded order!
@@ -107,7 +110,8 @@ We're just following up because we haven't yet confirmed the Interac e-Transfer 
 
 Order total: $${formatCad(order.totalCents)} CAD
 
-If you haven't sent your payment yet, please follow the payment instructions provided during checkout.
+If you haven't sent your payment yet:
+${paymentInstructions}
 
 If you've already sent it, thank you! Please disregard this reminder while we verify the payment.
 

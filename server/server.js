@@ -17,6 +17,16 @@ const {
   migratePaymentReminderSchema,
   processPaymentReminders
 } = require("./payment-reminders");
+const {
+  FULFILLMENT_STATUSES,
+  NOTIFICATION_STATUSES,
+  buildFulfillmentNotificationEmail,
+  effectiveFulfillmentStatus,
+  legacyOrderStatus,
+  migrateFulfillmentNotificationSchema,
+  validCustomerEmail,
+  validTrackingNumber
+} = require("./fulfillment-notifications");
 
 const PAYMENT_STATUSES = new Set(["AWAITING_PAYMENT", "RECEIVED", "VERIFIED", "REFUNDED", "CANCELLED"]);
 const ORDER_STATUSES = new Set(["NEW", "IN_PROGRESS", "READY", "SHIPPED", "COMPLETED", "CANCELLED"]);
@@ -89,6 +99,20 @@ function paymentReminderOptions(options = {}) {
     excludedEmails: Object.prototype.hasOwnProperty.call(options, "paymentReminderExcludedEmails")
       ? options.paymentReminderExcludedEmails
       : process.env.PAYMENT_REMINDER_EXCLUDED_EMAILS
+  };
+}
+
+function fulfillmentNotificationOptions(options = {}) {
+  const enabled = Object.prototype.hasOwnProperty.call(options, "fulfillmentNotificationsEnabled")
+    ? options.fulfillmentNotificationsEnabled === true
+    : String(process.env.FULFILLMENT_NOTIFICATIONS_ENABLED || "").toLowerCase() === "true";
+  const rawExcluded = Object.prototype.hasOwnProperty.call(options, "fulfillmentNotificationExcludedEmails")
+    ? options.fulfillmentNotificationExcludedEmails
+    : process.env.FULFILLMENT_NOTIFICATION_EXCLUDED_EMAILS;
+  const values = Array.isArray(rawExcluded) ? rawExcluded : String(rawExcluded || "").split(",");
+  return {
+    enabled,
+    excludedEmails: new Set(values.map(value => String(value || "").trim().toLowerCase()).filter(Boolean))
   };
 }
 
@@ -724,7 +748,8 @@ async function migrateSchema(db) {
     "id", "order_number", "created_at", "updated_at", "customer_name", "customer_email",
     "customer_phone", "shipping_address", "address_as_entered", "normalized_address", "city", "province", "postal_code", "country", "notes",
     "subtotal_cents", "shipping_cents", "total_cents", "currency", "payment_method",
-    "payment_status", "payment_confirmed_at", "order_status", "etransfer_reference", "tracking_number"
+    "payment_status", "payment_confirmed_at", "order_status", "fulfillment_status",
+    "customer_notifications_suppressed", "etransfer_reference", "tracking_number"
   ]);
 
   if (currentOrders.length && currentOrders.some((column) => !requiredOrderColumns.has(column.name))) {
@@ -829,6 +854,8 @@ async function migrateSchema(db) {
     payment_method TEXT NOT NULL DEFAULT 'INTERAC_ETRANSFER',
     payment_status TEXT NOT NULL DEFAULT 'AWAITING_PAYMENT' CHECK(payment_status IN ('AWAITING_PAYMENT','RECEIVED','VERIFIED','REFUNDED','CANCELLED')),
     order_status TEXT NOT NULL DEFAULT 'NEW' CHECK(order_status IN ('NEW','IN_PROGRESS','READY','SHIPPED','COMPLETED','CANCELLED')),
+    fulfillment_status TEXT,
+    customer_notifications_suppressed INTEGER NOT NULL DEFAULT 0,
     etransfer_reference TEXT,
     tracking_number TEXT
   )`);
@@ -994,6 +1021,7 @@ async function migrateSchema(db) {
     FOREIGN KEY(order_id) REFERENCES orders(id) ON DELETE CASCADE
   )`);
   await migratePaymentReminderSchema(db);
+  await migrateFulfillmentNotificationSchema(db);
 
   await dbRun(db, `CREATE TABLE IF NOT EXISTS order_reference_images (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1096,7 +1124,8 @@ async function createOrder(db, order, reminderOptions = {}) {
 async function getOrderWithItems(db, orderNumber) {
   const orderRow = await dbGet(db, `SELECT id, order_number, created_at, updated_at, customer_name, customer_email, customer_phone,
     shipping_address, address_as_entered, normalized_address, city, province, postal_code, country, notes,
-    subtotal_cents, shipping_cents, total_cents, currency, payment_method, payment_status, payment_confirmed_at, order_status
+    subtotal_cents, shipping_cents, total_cents, currency, payment_method, payment_status, payment_confirmed_at, order_status,
+    fulfillment_status, customer_notifications_suppressed, tracking_number
     FROM orders
     WHERE order_number = ?`, [orderNumber]);
   if (!orderRow) throw new PublicError(404, "Order was not found.");
@@ -1136,6 +1165,9 @@ async function getOrderWithItems(db, orderNumber) {
     paymentStatus: orderRow.payment_status,
     paymentConfirmedAt: orderRow.payment_confirmed_at,
     orderStatus: orderRow.order_status,
+    fulfillmentStatus: effectiveFulfillmentStatus(orderRow),
+    customerNotificationsSuppressed: Boolean(orderRow.customer_notifications_suppressed),
+    trackingNumber: orderRow.tracking_number || "",
     items: itemRows.map((item) => ({
       productId: item.product_id,
       productName: item.product_name,
@@ -1646,6 +1678,124 @@ async function sendPaymentReminderEmail(order) {
   }
 }
 
+async function sendFulfillmentNotificationEmail(order, status) {
+  const config = getEmailConfig();
+  if (!config.configured) {
+    return {
+      emailSent: false,
+      provider: "smtp",
+      providerResponse: `Missing email environment variables: ${config.missing.join(", ")}`,
+      messageId: null
+    };
+  }
+  const message = buildFulfillmentNotificationEmail(order, status);
+  if (!message) return { emailSent: false, provider: "smtp", providerResponse: "Notification status is invalid.", messageId: null };
+  try {
+    const result = await sendSmtpMail(config, {
+      from: config.from,
+      to: order.customerEmail,
+      subject: message.subject,
+      text: message.text,
+      html: message.html
+    });
+    return {
+      emailSent: true,
+      provider: "smtp",
+      providerResponse: result.providerResponse,
+      messageId: result.messageId
+    };
+  } catch (error) {
+    return { emailSent: false, provider: "smtp", providerResponse: error.message, messageId: null };
+  }
+}
+
+async function processFulfillmentNotification(db, orderNumber, status, sender) {
+  const now = new Date().toISOString();
+  let claimed;
+  await dbRun(db, "BEGIN IMMEDIATE TRANSACTION");
+  try {
+    const row = await dbGet(db, `SELECT fulfillment_notifications.id AS notification_id,
+      fulfillment_notifications.state, fulfillment_notifications.sent_at,
+      orders.id AS order_id, orders.order_number, orders.customer_name, orders.customer_email,
+      orders.payment_status, orders.order_status, orders.fulfillment_status,
+      orders.customer_notifications_suppressed, orders.tracking_number
+      FROM fulfillment_notifications JOIN orders ON orders.id = fulfillment_notifications.order_id
+      WHERE orders.order_number = ? AND fulfillment_notifications.fulfillment_status = ?`, [orderNumber, status]);
+    if (!row) throw new PublicError(404, "Customer notification was not found.");
+    if (row.sent_at || row.state === "SENT") {
+      await dbRun(db, "COMMIT");
+      return { sent: false, duplicate: true, state: "SENT" };
+    }
+    if (row.state !== "PENDING") throw new PublicError(409, "This customer notification is not ready to send.");
+    if (row.payment_status === "CANCELLED" || row.order_status === "CANCELLED") {
+      await dbRun(db, `UPDATE fulfillment_notifications SET state = 'INELIGIBLE', updated_at = ?,
+        last_error = 'Cancelled orders cannot receive customer notifications.' WHERE id = ?`, [now, row.notification_id]);
+      await dbRun(db, "COMMIT");
+      return { sent: false, state: "INELIGIBLE" };
+    }
+    if (row.customer_notifications_suppressed || effectiveFulfillmentStatus(row) !== status) {
+      await dbRun(db, `UPDATE fulfillment_notifications SET state = ?, updated_at = ?, last_error = ? WHERE id = ?`, [
+        row.customer_notifications_suppressed ? "SUPPRESSED" : "INELIGIBLE",
+        now,
+        row.customer_notifications_suppressed ? "Customer notifications are suppressed by the owner." : "Order status changed before notification delivery.",
+        row.notification_id
+      ]);
+      await dbRun(db, "COMMIT");
+      return { sent: false, state: row.customer_notifications_suppressed ? "SUPPRESSED" : "INELIGIBLE" };
+    }
+    const updated = await dbRun(db, `UPDATE fulfillment_notifications SET state = 'CLAIMED', updated_at = ?,
+      last_attempt_at = ?, attempt_count = attempt_count + 1, last_error = NULL
+      WHERE id = ? AND state = 'PENDING' AND sent_at IS NULL`, [now, now, row.notification_id]);
+    if (!updated.changes) throw new PublicError(409, "This customer notification is already being processed.");
+    claimed = row;
+    await dbRun(db, "COMMIT");
+  } catch (error) {
+    await dbRun(db, "ROLLBACK").catch(() => {});
+    throw error;
+  }
+
+  const items = await dbAll(db, "SELECT product_name FROM order_items WHERE order_id = ? ORDER BY id ASC", [claimed.order_id]);
+  const payload = {
+    orderNumber: claimed.order_number,
+    customerName: claimed.customer_name,
+    customerEmail: claimed.customer_email,
+    trackingNumber: claimed.tracking_number || "",
+    productNames: items.map(item => item.product_name)
+  };
+  let result;
+  try {
+    result = await sender(payload, status);
+  } catch (error) {
+    result = { emailSent: false, providerResponse: error.message, messageId: null };
+  }
+  const finishedAt = new Date().toISOString();
+  const accepted = result?.emailSent === true;
+  await dbRun(db, "BEGIN IMMEDIATE TRANSACTION");
+  try {
+    const update = await dbRun(db, `UPDATE fulfillment_notifications SET state = ?, updated_at = ?,
+      sent_at = ?, provider_message_id = ?, last_error = ? WHERE id = ? AND state = 'CLAIMED'`, [
+      accepted ? "SENT" : "FAILED",
+      finishedAt,
+      accepted ? finishedAt : null,
+      accepted ? (result.messageId || null) : null,
+      accepted ? null : String(result?.providerResponse || "Email provider did not accept the message.").slice(0, 500),
+      claimed.notification_id
+    ]);
+    if (!update.changes) throw new Error("Customer notification claim changed before completion.");
+    await dbRun(db, "INSERT INTO order_events(order_id, created_at, event_type, details) VALUES (?, ?, ?, ?)", [
+      claimed.order_id,
+      finishedAt,
+      accepted ? "FULFILLMENT_NOTIFICATION_SENT" : "FULFILLMENT_NOTIFICATION_FAILED",
+      JSON.stringify({ fulfillmentStatus: status, providerAcceptanceOnly: accepted, messageId: accepted ? (result.messageId || null) : null })
+    ]);
+    await dbRun(db, "COMMIT");
+  } catch (error) {
+    await dbRun(db, "ROLLBACK").catch(() => {});
+    throw error;
+  }
+  return { sent: accepted, state: accepted ? "SENT" : "FAILED", providerAcceptanceOnly: accepted };
+}
+
 function secretsMatch(provided, expected) {
   const supplied = Buffer.from(String(provided || ""));
   const configured = Buffer.from(String(expected || ""));
@@ -1732,6 +1882,7 @@ async function createApp(options = {}) {
   const db = options.db || createDatabase(options.databasePath || process.env.DATABASE_PATH || path.join(__dirname, "data", "orders.db"));
   const referenceUploadPath = getReferenceUploadPath(options);
   const reminderConfig = paymentReminderOptions(options);
+  const fulfillmentNotificationConfig = fulfillmentNotificationOptions(options);
   await migrateSchema(db);
   await syncAllEtsyTestimonials(db);
 
@@ -1749,6 +1900,7 @@ async function createApp(options = {}) {
   app.locals.db = db;
   app.locals.referenceUploadPath = referenceUploadPath;
   app.locals.paymentRemindersEnabled = reminderConfig.enabled;
+  app.locals.fulfillmentNotificationsEnabled = fulfillmentNotificationConfig.enabled;
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
@@ -2095,6 +2247,7 @@ async function createApp(options = {}) {
       const rows = await dbAll(db, `SELECT orders.id, orders.order_number, orders.created_at,
         orders.updated_at, orders.customer_name, orders.customer_email, orders.total_cents,
         orders.currency, orders.payment_status, orders.payment_confirmed_at, orders.order_status,
+        orders.fulfillment_status, orders.customer_notifications_suppressed, orders.tracking_number,
         payment_reminders.due_at, payment_reminders.state AS reminder_state,
         payment_reminders.attempt_count, payment_reminders.last_attempt_at,
         payment_reminders.next_attempt_at, payment_reminders.sent_at,
@@ -2104,10 +2257,17 @@ async function createApp(options = {}) {
         ${where} ORDER BY orders.created_at DESC LIMIT 250`, params);
       const orderIds = rows.map(row => row.id);
       let events = [];
+      let fulfillmentNotifications = [];
       if (orderIds.length) {
         events = await dbAll(db, `SELECT order_id, created_at, event_type, details FROM order_events
           WHERE order_id IN (${orderIds.map(() => "?").join(",")})
-            AND event_type IN ('PAYMENT_STATUS_CHANGED','PAYMENT_REMINDER_SENT','PAYMENT_REMINDER_FAILED','PAYMENT_REMINDER_SUPPRESSED','PAYMENT_REMINDER_RESUMED')
+            AND event_type IN ('PAYMENT_STATUS_CHANGED','PAYMENT_REMINDER_SENT','PAYMENT_REMINDER_FAILED','PAYMENT_REMINDER_SUPPRESSED','PAYMENT_REMINDER_RESUMED',
+              'FULFILLMENT_STATUS_CHANGED','FULFILLMENT_NOTIFICATION_SENT','FULFILLMENT_NOTIFICATION_FAILED',
+              'FULFILLMENT_NOTIFICATIONS_SUPPRESSED','FULFILLMENT_NOTIFICATIONS_RESUMED')
+          ORDER BY created_at DESC, id DESC`, orderIds);
+        fulfillmentNotifications = await dbAll(db, `SELECT order_id, fulfillment_status, state,
+          attempt_count, last_attempt_at, sent_at, provider_message_id, last_error, created_at, updated_at
+          FROM fulfillment_notifications WHERE order_id IN (${orderIds.map(() => "?").join(",")})
           ORDER BY created_at DESC, id DESC`, orderIds);
       }
       const eventsByOrder = new Map();
@@ -2117,8 +2277,25 @@ async function createApp(options = {}) {
         try { details = JSON.parse(event.details || "{}"); } catch {}
         eventsByOrder.get(event.order_id).push({ createdAt: event.created_at, type: event.event_type, details });
       });
+      const notificationsByOrder = new Map();
+      fulfillmentNotifications.forEach(notification => {
+        if (!notificationsByOrder.has(notification.order_id)) notificationsByOrder.set(notification.order_id, []);
+        notificationsByOrder.get(notification.order_id).push({
+          fulfillmentStatus: notification.fulfillment_status,
+          state: notification.state,
+          attemptCount: notification.attempt_count,
+          lastAttemptAt: notification.last_attempt_at,
+          sentAt: notification.sent_at,
+          providerAccepted: Boolean(notification.sent_at),
+          providerMessageId: notification.provider_message_id,
+          lastError: notification.last_error,
+          createdAt: notification.created_at,
+          updatedAt: notification.updated_at
+        });
+      });
       res.json({
         reminderFeatureEnabled: reminderConfig.enabled,
+        fulfillmentNotificationsEnabled: fulfillmentNotificationConfig.enabled,
         orders: rows.map(row => ({
           orderNumber: row.order_number,
           createdAt: row.created_at,
@@ -2130,6 +2307,10 @@ async function createApp(options = {}) {
           paymentStatus: row.payment_status,
           paymentConfirmedAt: row.payment_confirmed_at,
           orderStatus: row.order_status,
+          fulfillmentStatus: effectiveFulfillmentStatus(row),
+          customerNotificationsSuppressed: Boolean(row.customer_notifications_suppressed),
+          trackingNumber: row.tracking_number || "",
+          fulfillmentNotifications: notificationsByOrder.get(row.id) || [],
           reminder: row.due_at ? {
             dueAt: row.due_at,
             state: row.reminder_state,
@@ -2155,11 +2336,26 @@ async function createApp(options = {}) {
       const order = await getOrderWithItems(db, orderNumber);
       const events = await dbAll(db, `SELECT created_at, event_type, details
         FROM order_events WHERE order_id = ? ORDER BY created_at ASC, id ASC`, [order.orderId]);
+      const notifications = await dbAll(db, `SELECT fulfillment_status, state, attempt_count,
+        last_attempt_at, sent_at, provider_message_id, last_error, created_at, updated_at
+        FROM fulfillment_notifications WHERE order_id = ? ORDER BY created_at ASC, id ASC`, [order.orderId]);
       res.json({
         order: {
           ...order,
           orderId: undefined,
           fulfillmentMethod: null,
+          fulfillmentNotifications: notifications.map(notification => ({
+            fulfillmentStatus: notification.fulfillment_status,
+            state: notification.state,
+            attemptCount: notification.attempt_count,
+            lastAttemptAt: notification.last_attempt_at,
+            sentAt: notification.sent_at,
+            providerAccepted: Boolean(notification.sent_at),
+            providerMessageId: notification.provider_message_id,
+            lastError: notification.last_error,
+            createdAt: notification.created_at,
+            updatedAt: notification.updated_at
+          })),
           history: events.map(event => {
             let details = {};
             try { details = JSON.parse(event.details || "{}"); } catch {}
@@ -2167,6 +2363,156 @@ async function createApp(options = {}) {
           })
         }
       });
+    } catch (error) {
+      next(error);
+    }
+  });
+  app.put("/api/admin/orders/:orderNumber/fulfillment-status", async (req, res, next) => {
+    try {
+      const orderNumber = normalizeText(req.params.orderNumber, 40, "Order number", { required: true });
+      const rawStatus = normalizeText(req.body?.fulfillmentStatus, 30, "Fulfilment status", { required: true }).toUpperCase();
+      const fulfillmentStatus = rawStatus === "MADE" || rawStatus === "MADE_COMPLETED"
+        ? "COMPLETED"
+        : (rawStatus === "READY" ? "READY_FOR_PICKUP" : rawStatus);
+      if (!FULFILLMENT_STATUSES.has(fulfillmentStatus)) {
+        throw new PublicError(400, "Choose New, In Progress, Made / Completed, Shipped, Ready for Pickup, or Delivered.");
+      }
+      const hasTracking = Object.prototype.hasOwnProperty.call(req.body || {}, "trackingNumber");
+      const trackingNumber = hasTracking ? normalizeText(req.body.trackingNumber, 100, "Tracking number") : null;
+      if (hasTracking && !validTrackingNumber(trackingNumber)) {
+        throw new PublicError(400, "Tracking information may use letters, numbers, spaces, periods, and hyphens.");
+      }
+      const now = new Date().toISOString();
+      let notificationState = null;
+      let shouldSend = false;
+      let unchanged = false;
+      await dbRun(db, "BEGIN IMMEDIATE TRANSACTION");
+      try {
+        const order = await dbGet(db, `SELECT id, customer_email, payment_status, order_status,
+          fulfillment_status, customer_notifications_suppressed, tracking_number
+          FROM orders WHERE order_number = ?`, [orderNumber]);
+        if (!order) throw new PublicError(404, "Order was not found.");
+        const previousStatus = effectiveFulfillmentStatus(order);
+        unchanged = previousStatus === fulfillmentStatus && (!hasTracking || String(order.tracking_number || "") === trackingNumber);
+        if (!unchanged) {
+          const savedTracking = fulfillmentStatus === "SHIPPED" && hasTracking ? (trackingNumber || null) : order.tracking_number;
+          await dbRun(db, `UPDATE orders SET fulfillment_status = ?, order_status = ?, tracking_number = ?,
+            updated_at = ? WHERE id = ?`, [fulfillmentStatus, legacyOrderStatus(fulfillmentStatus), savedTracking, now, order.id]);
+          await dbRun(db, "INSERT INTO order_events(order_id, created_at, event_type, details) VALUES (?, ?, ?, ?)", [
+            order.id,
+            now,
+            "FULFILLMENT_STATUS_CHANGED",
+            JSON.stringify({ previousFulfillmentStatus: previousStatus, fulfillmentStatus, source: "OWNER", trackingProvided: Boolean(savedTracking) })
+          ]);
+          if (NOTIFICATION_STATUSES.has(fulfillmentStatus) && fulfillmentNotificationConfig.enabled) {
+            if (order.payment_status === "CANCELLED" || order.order_status === "CANCELLED") {
+              notificationState = "INELIGIBLE";
+            } else if (order.customer_notifications_suppressed) {
+              notificationState = "SUPPRESSED";
+            } else if (!validCustomerEmail(order.customer_email) || fulfillmentNotificationConfig.excludedEmails.has(String(order.customer_email).toLowerCase())) {
+              notificationState = "INELIGIBLE";
+            } else {
+              notificationState = "PENDING";
+            }
+            const inserted = await dbRun(db, `INSERT OR IGNORE INTO fulfillment_notifications (
+              order_id, fulfillment_status, created_at, updated_at, state, last_error
+            ) VALUES (?, ?, ?, ?, ?, ?)`, [
+              order.id,
+              fulfillmentStatus,
+              now,
+              now,
+              notificationState,
+              notificationState === "SUPPRESSED" ? "Customer notifications are suppressed by the owner."
+                : (notificationState === "INELIGIBLE" ? "Order or customer email is not eligible for notification." : null)
+            ]);
+            shouldSend = inserted.changes === 1 && notificationState === "PENDING";
+          }
+        }
+        await dbRun(db, "COMMIT");
+      } catch (error) {
+        await dbRun(db, "ROLLBACK").catch(() => {});
+        throw error;
+      }
+      let notification = { sent: false, state: notificationState || (fulfillmentNotificationConfig.enabled ? null : "DISABLED") };
+      if (shouldSend) {
+        notification = await processFulfillmentNotification(
+          db,
+          orderNumber,
+          fulfillmentStatus,
+          options.fulfillmentNotificationSender || sendFulfillmentNotificationEmail
+        );
+      }
+      res.json({
+        success: true,
+        orderNumber,
+        fulfillmentStatus,
+        unchanged,
+        paymentStatusUnchanged: true,
+        notificationsEnabled: fulfillmentNotificationConfig.enabled,
+        notification
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+  app.put("/api/admin/orders/:orderNumber/customer-notifications", async (req, res, next) => {
+    try {
+      const orderNumber = normalizeText(req.params.orderNumber, 40, "Order number", { required: true });
+      const suppressed = req.body?.suppressed === true;
+      const reason = normalizeText(req.body?.reason, 200, "Suppression reason");
+      const now = new Date().toISOString();
+      await dbRun(db, "BEGIN IMMEDIATE TRANSACTION");
+      try {
+        const order = await dbGet(db, "SELECT id, customer_notifications_suppressed FROM orders WHERE order_number = ?", [orderNumber]);
+        if (!order) throw new PublicError(404, "Order was not found.");
+        await dbRun(db, "UPDATE orders SET customer_notifications_suppressed = ?, updated_at = ? WHERE id = ?", [suppressed ? 1 : 0, now, order.id]);
+        if (suppressed) {
+          await dbRun(db, `UPDATE fulfillment_notifications SET state = 'SUPPRESSED', updated_at = ?,
+            last_error = 'Customer notifications are suppressed by the owner.'
+            WHERE order_id = ? AND state IN ('PENDING','FAILED') AND sent_at IS NULL`, [now, order.id]);
+        }
+        await dbRun(db, "INSERT INTO order_events(order_id, created_at, event_type, details) VALUES (?, ?, ?, ?)", [
+          order.id,
+          now,
+          suppressed ? "FULFILLMENT_NOTIFICATIONS_SUPPRESSED" : "FULFILLMENT_NOTIFICATIONS_RESUMED",
+          JSON.stringify({ source: "OWNER", reason: suppressed ? (reason || "Suppressed by owner") : null })
+        ]);
+        await dbRun(db, "COMMIT");
+      } catch (error) {
+        await dbRun(db, "ROLLBACK").catch(() => {});
+        throw error;
+      }
+      res.json({ success: true, orderNumber, customerNotificationsSuppressed: suppressed });
+    } catch (error) {
+      next(error);
+    }
+  });
+  app.post("/api/admin/orders/:orderNumber/fulfillment-notifications/:status/retry", async (req, res, next) => {
+    try {
+      if (!fulfillmentNotificationConfig.enabled) throw new PublicError(409, "Customer progress notifications are not enabled.");
+      const orderNumber = normalizeText(req.params.orderNumber, 40, "Order number", { required: true });
+      const status = normalizeText(req.params.status, 30, "Fulfilment status", { required: true }).toUpperCase();
+      if (!NOTIFICATION_STATUSES.has(status)) throw new PublicError(400, "Customer notification status is invalid.");
+      const row = await dbGet(db, `SELECT fulfillment_notifications.id, fulfillment_notifications.state,
+        fulfillment_notifications.sent_at, orders.payment_status, orders.customer_notifications_suppressed
+        FROM fulfillment_notifications JOIN orders ON orders.id = fulfillment_notifications.order_id
+        WHERE orders.order_number = ? AND fulfillment_notifications.fulfillment_status = ?`, [orderNumber, status]);
+      if (!row) throw new PublicError(404, "Customer notification was not found.");
+      if (row.sent_at) throw new PublicError(409, "This customer notification was already accepted by the email provider.");
+      if (!['FAILED','ATTENTION'].includes(row.state)) throw new PublicError(409, "Only a failed or uncertain customer notification can be retried.");
+      if (row.payment_status === "CANCELLED" || row.customer_notifications_suppressed) {
+        throw new PublicError(409, "This order is not eligible for customer notifications.");
+      }
+      await dbRun(db, "UPDATE fulfillment_notifications SET state = 'PENDING', updated_at = ?, last_error = NULL WHERE id = ?", [
+        new Date().toISOString(), row.id
+      ]);
+      const notification = await processFulfillmentNotification(
+        db,
+        orderNumber,
+        status,
+        options.fulfillmentNotificationSender || sendFulfillmentNotificationEmail
+      );
+      res.json({ success: notification.sent, orderNumber, fulfillmentStatus: status, ...notification });
     } catch (error) {
       next(error);
     }

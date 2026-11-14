@@ -61,6 +61,7 @@ async function waitForDebugger() {
     adminSecret: "responsive-admin-secret",
     paymentRemindersEnabled: false,
     paymentReminderSchedulerSecret: "responsive-scheduler-secret",
+    fulfillmentNotificationsEnabled: false,
     emailSender: async () => ({ emailSent: true, messageId: "owner-test" }),
     reviewNotificationSender: async () => ({ emailSent: true, messageId: "review-test" }),
     paymentReminderEmailSender: async () => ({ emailSent: true, messageId: "reminder-test" })
@@ -136,6 +137,8 @@ async function waitForDebugger() {
           detailsVisible: Boolean(details),
           detailItemCount: details?.querySelectorAll('.detail-item').length || 0,
           detailsContainSavedFields: Boolean(details?.textContent.includes('Responsive Customer With A Longer Name') && details?.textContent.includes('Purple, Cream, Gold') && details?.textContent.includes('side door')),
+          progressControlsVisible: Boolean(document.querySelector('.fulfillment-controls select')?.offsetParent && document.querySelector('.fulfillment-controls input')?.offsetParent),
+          progressOptions: document.querySelectorAll('.fulfillment-controls select option').length,
           secretVisible: document.body.textContent.includes('responsive-admin-secret')
         };
       })()`,
@@ -146,7 +149,7 @@ async function waitForDebugger() {
   }
   cdp.close();
   console.log(JSON.stringify(results, null, 2));
-  if (results.some(result => result.horizontalOverflow || result.cardCount !== 1 || result.visibleButtons < 3 || !result.dueDateVisible || !result.detailsVisible || result.detailItemCount !== 1 || !result.detailsContainSavedFields || result.secretVisible)) {
+  if (results.some(result => result.horizontalOverflow || result.cardCount !== 1 || result.visibleButtons < 3 || !result.dueDateVisible || !result.detailsVisible || result.detailItemCount !== 1 || !result.detailsContainSavedFields || !result.progressControlsVisible || result.progressOptions !== 6 || result.secretVisible)) {
     process.exitCode = 1;
   }
 })().catch(error => {

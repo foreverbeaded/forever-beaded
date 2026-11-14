@@ -5,6 +5,7 @@
   const orderList = document.getElementById("orderList");
   const status = document.getElementById("status");
   const activationNotice = document.getElementById("activationNotice");
+  let fulfillmentNotificationsEnabled = false;
 
   const setStatus = (message, isError = false) => {
     status.textContent = message;
@@ -31,7 +32,14 @@
     VERIFIED: "Paid",
     CANCELLED: "Cancelled",
     RECEIVED: "Received, not verified",
-    REFUNDED: "Refunded"
+    REFUNDED: "Refunded",
+    NEW: "New",
+    IN_PROGRESS: "In Progress",
+    COMPLETED: "Made / Completed",
+    SHIPPED: "Shipped",
+    READY: "Ready for Pickup",
+    READY_FOR_PICKUP: "Ready for Pickup",
+    DELIVERED: "Delivered"
   }[value] || String(value || "Unknown").replaceAll("_", " "));
 
   const changePaymentStatus = async (order, paymentStatus, button) => {
@@ -89,6 +97,66 @@
       setStatus(result.sent
         ? "The email provider accepted the reminder. Inbox delivery is not guaranteed."
         : "The provider did not accept the reminder. It remains available for review.", !result.sent);
+      await loadOrders();
+    } catch (error) {
+      setStatus(error.message, true);
+      button.disabled = false;
+    }
+  };
+
+  const changeFulfillmentStatus = async (order, select, trackingInput, button) => {
+    const fulfillmentStatus = select.value;
+    const notificationMilestone = ["COMPLETED", "SHIPPED", "READY_FOR_PICKUP", "DELIVERED"].includes(fulfillmentStatus);
+    const notice = notificationMilestone && fulfillmentNotificationsEnabled
+      ? " The eligible customer notification will be prepared and sent after this change."
+      : " Customer email notifications are currently disabled, so no email will be sent.";
+    if (!window.confirm(`Change ${order.orderNumber} to ${stateLabel(fulfillmentStatus)}? Payment status will remain unchanged.${notice}`)) return;
+    button.disabled = true;
+    setStatus(`Saving ${stateLabel(fulfillmentStatus)} for ${order.orderNumber}...`);
+    try {
+      const body = { fulfillmentStatus };
+      if (fulfillmentStatus === "SHIPPED") body.trackingNumber = trackingInput.value.trim();
+      const result = await adminFetch(`/api/admin/orders/${encodeURIComponent(order.orderNumber)}/fulfillment-status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      const emailResult = result.notification?.sent
+        ? " The email provider accepted the customer update; inbox delivery is not guaranteed."
+        : " No customer email was sent.";
+      setStatus(`${order.orderNumber} is now ${stateLabel(fulfillmentStatus)}.${emailResult}`);
+      await loadOrders();
+    } catch (error) {
+      setStatus(error.message, true);
+      button.disabled = false;
+    }
+  };
+
+  const setCustomerNotificationsSuppressed = async (order, suppressed, button) => {
+    if (!window.confirm(`${suppressed ? "Suppress" : "Resume"} progress and delivery notifications for ${order.orderNumber}? Previously sent emails are unchanged.`)) return;
+    button.disabled = true;
+    try {
+      await adminFetch(`/api/admin/orders/${encodeURIComponent(order.orderNumber)}/customer-notifications`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ suppressed, reason: suppressed ? "Suppressed by owner" : "" })
+      });
+      setStatus(`Customer notifications ${suppressed ? "suppressed" : "resumed"} for ${order.orderNumber}.`);
+      await loadOrders();
+    } catch (error) {
+      setStatus(error.message, true);
+      button.disabled = false;
+    }
+  };
+
+  const retryFulfillmentNotification = async (order, notification, button) => {
+    if (!window.confirm(`Retry the ${stateLabel(notification.fulfillmentStatus)} customer notification for ${order.orderNumber}? Check email history first to avoid a duplicate.`)) return;
+    button.disabled = true;
+    try {
+      const result = await adminFetch(`/api/admin/orders/${encodeURIComponent(order.orderNumber)}/fulfillment-notifications/${encodeURIComponent(notification.fulfillmentStatus)}/retry`, { method: "POST" });
+      setStatus(result.sent
+        ? "The email provider accepted the customer update. Inbox delivery is not guaranteed."
+        : "The provider did not accept the customer update.", !result.sent);
       await loadOrders();
     } catch (error) {
       setStatus(error.message, true);
@@ -182,8 +250,33 @@
       ["Payment method", stateLabel(order.paymentMethod)],
       ["Payment status", stateLabel(order.paymentStatus)],
       ["Payment confirmed", formatDate(order.paymentConfirmedAt)],
-      ["Fulfilment status", stateLabel(order.orderStatus)]
+      ["Fulfilment status", stateLabel(order.fulfillmentStatus || order.orderStatus)],
+      ["Tracking information", order.trackingNumber],
+      ["Customer progress emails", order.customerNotificationsSuppressed ? "Suppressed by owner" : "Allowed when enabled"]
     ]));
+
+    const notificationHeading = document.createElement("h3");
+    notificationHeading.textContent = `Customer notification history (${order.fulfillmentNotifications?.length || 0})`;
+    const notificationHistory = document.createElement("ol");
+    notificationHistory.className = "detail-history";
+    if (!order.fulfillmentNotifications?.length) {
+      const item = document.createElement("li");
+      item.textContent = "No progress or delivery notification attempts are recorded.";
+      notificationHistory.append(item);
+    } else {
+      order.fulfillmentNotifications.forEach(notification => {
+        const item = document.createElement("li");
+        const heading = document.createElement("strong");
+        heading.textContent = `${stateLabel(notification.fulfillmentStatus)} - ${stateLabel(notification.state)}`;
+        const details = document.createElement("span");
+        details.textContent = notification.sentAt
+          ? `${formatDate(notification.sentAt)} | Email provider accepted the message; inbox delivery is not guaranteed.`
+          : `${formatDate(notification.lastAttemptAt || notification.createdAt)}${notification.lastError ? ` | ${notification.lastError}` : ""}`;
+        item.append(heading, details);
+        notificationHistory.append(item);
+      });
+    }
+    content.append(notificationHeading, notificationHistory);
 
     const historyHeading = document.createElement("h3");
     historyHeading.textContent = `Order and payment history (${order.history.length})`;
@@ -255,13 +348,19 @@
       const states = document.createElement("dl");
       states.className = "state-grid";
       const reminder = order.reminder;
+      const customerNotifications = order.fulfillmentNotifications || [];
+      const latestCustomerNotification = customerNotifications.find(notification => notification.sentAt) || customerNotifications[0];
       const values = [
         ["Payment", stateLabel(order.paymentStatus)],
-        ["Fulfilment", stateLabel(order.orderStatus)],
+        ["Fulfilment", stateLabel(order.fulfillmentStatus || order.orderStatus)],
         ["Payment confirmed", formatDate(order.paymentConfirmedAt)],
         ["Reminder due", reminder ? formatDate(reminder.dueAt) : "Not enrolled (historical or pre-activation)"],
         ["Reminder state", reminder ? stateLabel(reminder.state) : "Not enrolled"],
-        ["Reminder sent", reminder?.sentAt ? `${formatDate(reminder.sentAt)} (provider accepted)` : "Not sent"]
+        ["Reminder sent", reminder?.sentAt ? `${formatDate(reminder.sentAt)} (provider accepted)` : "Not sent"],
+        ["Customer progress emails", order.customerNotificationsSuppressed ? "Suppressed" : "Allowed when enabled"],
+        ["Latest customer update", latestCustomerNotification
+          ? `${stateLabel(latestCustomerNotification.fulfillmentStatus)} - ${stateLabel(latestCustomerNotification.state)}`
+          : "No notification recorded"]
       ];
       values.forEach(([term, value]) => {
         const wrapper = document.createElement("div");
@@ -273,6 +372,40 @@
         states.append(wrapper);
       });
       card.append(heading, customer, states);
+
+      const fulfillmentControls = document.createElement("fieldset");
+      fulfillmentControls.className = "fulfillment-controls";
+      const legend = document.createElement("legend");
+      legend.textContent = "Handmade progress";
+      const fulfillmentLabel = document.createElement("label");
+      fulfillmentLabel.textContent = "Fulfilment status";
+      const fulfillmentSelect = document.createElement("select");
+      [
+        ["NEW", "New"],
+        ["IN_PROGRESS", "In Progress"],
+        ["COMPLETED", "Made / Completed"],
+        ["SHIPPED", "Shipped"],
+        ["READY_FOR_PICKUP", "Ready for Pickup"],
+        ["DELIVERED", "Delivered"]
+      ].forEach(([value, label]) => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = label;
+        fulfillmentSelect.append(option);
+      });
+      const currentFulfillment = order.fulfillmentStatus || (order.orderStatus === "READY" ? "READY_FOR_PICKUP" : order.orderStatus);
+      fulfillmentSelect.value = ["NEW", "IN_PROGRESS", "COMPLETED", "SHIPPED", "READY_FOR_PICKUP", "DELIVERED"].includes(currentFulfillment)
+        ? currentFulfillment : "NEW";
+      const trackingLabel = document.createElement("label");
+      trackingLabel.textContent = "Tracking information (optional, used for Shipped only)";
+      const trackingInput = document.createElement("input");
+      trackingInput.type = "text";
+      trackingInput.maxLength = 100;
+      trackingInput.value = order.trackingNumber || "";
+      trackingInput.placeholder = "Enter tracking number when available";
+      const saveProgress = actionButton("Update Progress", "", button => changeFulfillmentStatus(order, fulfillmentSelect, trackingInput, button));
+      fulfillmentControls.append(legend, fulfillmentLabel, fulfillmentSelect, trackingLabel, trackingInput, saveProgress);
+      card.append(fulfillmentControls);
 
       if (reminder?.lastError) {
         const error = document.createElement("p");
@@ -302,6 +435,14 @@
       if (reminder && ["FAILED", "ATTENTION"].includes(reminder.state) && order.paymentStatus === "AWAITING_PAYMENT") {
         actions.append(actionButton("Retry Reminder", "secondary", button => retryReminder(order, button)));
       }
+      actions.append(actionButton(
+        order.customerNotificationsSuppressed ? "Resume Customer Updates" : "Suppress Customer Updates",
+        "secondary",
+        button => setCustomerNotificationsSuppressed(order, !order.customerNotificationsSuppressed, button)
+      ));
+      customerNotifications.filter(notification => ["FAILED", "ATTENTION"].includes(notification.state)).forEach(notification => {
+        actions.append(actionButton(`Retry ${stateLabel(notification.fulfillmentStatus)} Email`, "secondary", button => retryFulfillmentNotification(order, notification, button)));
+      });
       card.append(actions);
       card.append(detailsRegion);
 
@@ -329,10 +470,14 @@
     try {
       const paymentStatus = document.getElementById("paymentStatusFilter").value;
       const data = await adminFetch(`/api/admin/payment-orders?paymentStatus=${encodeURIComponent(paymentStatus)}`);
-      activationNotice.hidden = data.reminderFeatureEnabled;
-      activationNotice.textContent = data.reminderFeatureEnabled
-        ? ""
-        : "Automatic reminders are currently disabled. Orders remain safe and no reminder emails can be sent until the owner explicitly activates the backend setting.";
+      fulfillmentNotificationsEnabled = data.fulfillmentNotificationsEnabled === true;
+      const disabled = [];
+      if (!data.reminderFeatureEnabled) disabled.push("Automatic payment reminders");
+      if (!fulfillmentNotificationsEnabled) disabled.push("customer progress and delivery emails");
+      activationNotice.hidden = disabled.length === 0;
+      activationNotice.textContent = disabled.length
+        ? `${disabled.join(" and ")} are currently disabled. Status changes remain available, but disabled email features cannot send customer messages until the owner explicitly activates their backend settings.`
+        : "";
       renderOrders(data.orders || []);
     } catch (error) {
       activationNotice.hidden = true;

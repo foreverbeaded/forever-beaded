@@ -57,3 +57,23 @@ can check the provider and use the dashboard's manual retry control.
 
 `SENT` means the SMTP provider accepted the message. It does not prove inbox
 delivery or that the customer read it.
+
+## Fulfilment progress notifications
+
+The owner dashboard also supports New, In Progress, Made / Completed, Shipped,
+Ready for Pickup, and Delivered as a payment-independent fulfilment state. The
+schema and controls are safe to deploy with customer messages disabled.
+
+- Keep `FULFILLMENT_NOTIFICATIONS_ENABLED=false` until the owner approves the
+  email copy and live activation.
+- Add controlled test addresses to
+  `FULFILLMENT_NOTIFICATION_EXCLUDED_EMAILS` when they must never receive a
+  progress email.
+- Repeatedly saving the same milestone does not send another message. Each
+  notification milestone is unique per order and records provider acceptance,
+  attempts, errors, and timestamps in SQLite.
+- The owner can suppress future customer progress messages per order. Resuming
+  does not retroactively send a message that was suppressed.
+- Shipped messages include tracking only when the owner enters valid tracking
+  information. Delivered messages are sent only after an explicit owner status
+  change.

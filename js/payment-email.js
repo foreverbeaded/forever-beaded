@@ -26,7 +26,7 @@
         `${index + 1}. ${design} — ${lineTotal}`,
         `   Product Name: ${item.requestedProductName || design}`,
         `   Colours: ${item.colours || "Not specified"}`,
-        `   Hardware: ${item.hardware || "Not specified"}`,
+        ...(item.hardware ? [`   Hardware: ${item.hardware}`] : []),
         `   Quantity: ${quantity}`,
         `   Personalization: ${personalization}`
       ].join("\r\n");

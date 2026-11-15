@@ -77,6 +77,27 @@ test("long payment confirmations remain complete and request copy fallback", () 
   assert.equal(parseMailto(draft.mailtoUrl).params.get("body"), draft.body);
 });
 
+test("bracelet payment details do not invent keychain hardware", () => {
+  const draft = buildPaymentConfirmationDraft({
+    recipient: "foreverbeaded1@gmail.com",
+    orderNumber: "FB-BRACELET-1",
+    customerName: "Bracelet Customer",
+    totalCents: 2500,
+    items: [{
+      productName: "Best Friends Forever Bracelet",
+      colours: "Pink, Purple, White",
+      hardware: "",
+      quantity: 1,
+      personalizationType: "name",
+      personalizationText: "AVA",
+      lineTotalCents: 2500
+    }]
+  });
+  assert.match(draft.body, /Best Friends Forever Bracelet/);
+  assert.match(draft.body, /Personalization: name: AVA/);
+  assert.doesNotMatch(draft.body, /Hardware:/);
+});
+
 test("email headers cannot inject additional mailto fields", () => {
   const draft = buildPaymentConfirmationDraft({
     recipient: "owner@example.com\r\nbcc:attacker@example.com",

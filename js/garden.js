@@ -248,7 +248,7 @@
       : (product?.referenceImageUrl || product?.imageUrl || "");
     const requestedAlt = `${productName} handmade beaded keychain`;
 
-    const showFallbackMessage = (message = `${productName} image coming soon.`) => {
+    const showFallbackMessage = (message = `No approved image is currently available for ${productName}.`) => {
       image.classList.remove("is-changing");
       image.removeAttribute("src");
       image.hidden = true;
@@ -323,9 +323,9 @@
       image.dataset.designPhotoUrl = "";
       image.removeAttribute("src");
       image.hidden = true;
-      image.alt = `${product.name} image coming soon`;
+      image.alt = `${product.name} approved image unavailable`;
       if (placeholderTarget) {
-        placeholderTarget.dataset.placeholder = `${product.name} image coming soon`;
+        placeholderTarget.dataset.placeholder = `${product.name} approved image unavailable`;
         placeholderTarget.classList.add("image-missing");
       }
       return;
@@ -342,9 +342,9 @@
       if (image.dataset.designPhotoUrl !== url) return;
       image.removeAttribute("src");
       image.hidden = true;
-      image.alt = `${product.name} image coming soon`;
+      image.alt = `${product.name} approved image unavailable`;
       if (placeholderTarget) {
-        placeholderTarget.dataset.placeholder = `${product.name} image coming soon`;
+        placeholderTarget.dataset.placeholder = `${product.name} approved image unavailable`;
         placeholderTarget.classList.add("image-missing");
       }
     };
@@ -398,12 +398,39 @@
       <span class="preview-hardware-clasp"></span>
     </span>`;
 
-  const currentHardwareValue = () => document.getElementById("homeTreasureHardware")?.value || "Silver";
+  const productUsesSelectableHardware = (product) => product?.requiresHardwareSelection !== false
+    && Array.isArray(product?.hardwareOptions)
+    && product.hardwareOptions.length > 0;
 
-  const syncHardwarePreviewSample = () => {
+  const currentHardwareValue = (product = getSelectedProduct()) => {
+    if (!productUsesSelectableHardware(product)) return "";
+    const selected = document.getElementById("homeTreasureHardware")?.value || "";
+    return product.hardwareOptions.includes(selected) ? selected : product.hardwareOptions[0];
+  };
+
+  const syncHardwareControls = (product = getSelectedProduct()) => {
+    const field = document.getElementById("homeTreasureHardwareField");
+    const select = document.getElementById("homeTreasureHardware");
+    const previewCard = document.getElementById("homeHardwarePreviewCard");
+    const enabled = productUsesSelectableHardware(product);
+    if (field) field.hidden = !enabled;
+    if (previewCard) previewCard.hidden = !enabled;
+    if (select) {
+      select.disabled = !enabled;
+      if (enabled && !product.hardwareOptions.includes(select.value)) select.value = product.hardwareOptions[0];
+    }
+  };
+
+  const syncHardwarePreviewSample = (product = getSelectedProduct()) => {
     const sample = document.getElementById("homeHardwarePreviewSample");
     const text = document.getElementById("homeHardwarePreviewText");
-    const hardware = currentHardwareValue();
+    syncHardwareControls(product);
+    const hardware = currentHardwareValue(product);
+    if (!productUsesSelectableHardware(product)) {
+      if (sample) sample.replaceChildren();
+      if (text) text.textContent = product?.attachmentDescription || "No separate hardware selection";
+      return;
+    }
     const tone = hardwareToneClass(hardware);
     if (sample) {
       sample.className = `hardware-preview-sample has-${tone}-hardware`;
@@ -421,20 +448,54 @@
     preview.innerHTML = colours.map((colour) => `<span class="preview-colour-swatch" style="--bead:${colour}"></span>`).join("");
   };
 
-  const renderBeadPattern = (preview, product, colours) => {
+  const productReferenceImage = (product) => (
+    product?.previewImageUrl || product?.referenceImageUrl || product?.imageUrl || ""
+  );
+
+  const renderReferencePreview = (preview, product, compact = false) => {
+    if (!preview) return;
+    const referenceUrl = productReferenceImage(product);
+    preview.className = `home-preview-beads design-reference-preview${compact ? " is-compact" : ""}`;
+    preview.removeAttribute("data-placeholder");
+    preview.dataset.design = product?.slug || "unavailable";
+    preview.dataset.previewMode = "reference";
+    preview.innerHTML = referenceUrl
+      ? `<img src="${escapeHtml(referenceUrl)}" alt="${escapeHtml(product?.name || "Selected design")} approved design reference"><p class="custom-preview-caption">Design reference — your selected colours are listed below.</p>${product?.previewNote && !compact ? `<p class="design-reference-note">${escapeHtml(product.previewNote)}</p>` : ""}`
+      : `<p class="design-reference-missing">No approved preview image is available for ${escapeHtml(product?.name || "this design")}. Your selected design and options will still be included with the request.</p>`;
+  };
+
+  const previewSelectionRows = (selections) => [
+    { label: "Main", colour: selections?.mainColour || "Purple" },
+    ...(selections?.partSelections || []).map(selection => ({ label: selection.part, colour: selection.colour })),
+    { label: "Accent", colour: selections?.accentColour || "Gold" }
+  ].filter(selection => !isNoColour(selection.colour));
+
+  const renderPreviewSelectionLegend = (selections, product, hardware) => {
+    const legend = document.getElementById("homePreviewSelectionLegend");
+    if (!legend) return;
+    const colourRows = previewSelectionRows(selections).map(selection => `
+      <li><span class="preview-selection-swatch" style="--selection-colour:${normalizeColour(selection.colour)}" aria-hidden="true"></span><span>${escapeHtml(selection.label)}</span><strong>${escapeHtml(selection.colour)}</strong></li>
+    `).join("");
+    const attachmentRow = productUsesSelectableHardware(product)
+      ? `<li><span class="preview-selection-swatch is-${hardwareToneClass(hardware)}-hardware" aria-hidden="true"></span><span>Hardware</span><strong>${escapeHtml(hardware)}</strong></li>`
+      : `<li><span class="preview-selection-swatch is-attachment" aria-hidden="true"></span><span>Construction</span><strong>${escapeHtml(product?.attachmentDescription || "Product-specific construction")}</strong></li>`;
+    legend.innerHTML = `<p>Selected colours and construction</p><ul>${colourRows}${attachmentRow}</ul>`;
+  };
+
+  const renderBeadPattern = (preview, product, colours, selections) => {
     const pattern = product?.previewPattern;
     preview.className = "home-preview-beads";
     preview.removeAttribute("data-placeholder");
     preview.dataset.design = product?.slug || "custom-idea";
+    preview.dataset.previewMode = product?.customerPreviewMode || "reference";
 
     if (isCustomProduct(product)) {
       renderColourSwatches(preview, colours);
       return;
     }
 
-    if (!Array.isArray(pattern) || !pattern.length) {
-      preview.classList.add("preview-coming-soon");
-      preview.innerHTML = `<span>${product?.name || "This design"} colour preview coming soon</span>`;
+    if (product?.customerPreviewMode !== "colour-responsive" || !Array.isArray(pattern) || !pattern.length) {
+      renderReferencePreview(preview, product, true);
       return;
     }
 
@@ -650,13 +711,16 @@
   const optionalCustomizerColourOptions = ["No Color", ...customizerColourOptions];
 
   const colourPartsForProduct = (product) => {
+    if (Array.isArray(product?.previewColourParts) && product.previewColourParts.length) {
+      return product.previewColourParts;
+    }
     const value = `${product?.slug || ""} ${product?.name || ""} ${product?.category || ""}`.toLowerCase();
     if (/unicorn/.test(value)) return ["Ears", "Eyes", "Mane", "Tail", "Horn", "Body details"];
     if (/butterfl|dragonfl|bee/.test(value)) return ["Wings", "Wing details", "Body", "Antennae"];
     if (/flower|rose|daisy|sunflower|bouquet|tulip/.test(value)) return ["Petals", "Centre", "Stem", "Leaves"];
     if (/bird|owl|penguin|chick/.test(value)) return ["Wings", "Beak", "Eyes", "Tail", "Body details"];
     if (/fish|whale|dolphin|shark|lobster|octopus|turtle|ocean/.test(value)) return ["Fins", "Eyes", "Tail", "Body details"];
-    if (/frog/.test(value)) return ["Body", "Arms and legs", "Fingers and toes", "Eyes"];
+    if (/frog/.test(value)) return ["Body", "Arms and legs", "Fingers and toes"];
     if (/dog|puppy|cat|panda|monkey|giraffe|lion|bear|gecko|animal/.test(value)) return ["Eyes", "Ears", "Mouth", "Tail", "Body details"];
     if (/car|truck|vehicle/.test(value)) return ["Wheels", "Windows", "Body details"];
     if (/rocket|space/.test(value)) return ["Window", "Fins", "Flame", "Body details"];
@@ -686,19 +750,27 @@
     if (customizer.dataset.design !== slug) {
       const defaults = (product?.defaultColours || ["Purple", "Cream", "Gold"]).map(titleCase);
       const mainDefault = customizerColourOptions.includes(defaults[0]) ? defaults[0] : "Purple";
-      const accentDefault = isCustomProduct(product) ? "No Color" : (customizerColourOptions.includes(defaults[2]) ? defaults[2] : "Gold");
+      const accentDefault = isCustomProduct(product) || product?.previewSupportsAccent === false
+        ? "No Color"
+        : (customizerColourOptions.includes(defaults[2]) ? defaults[2] : "Gold");
       main.innerHTML = swatchMarkup("mainColour", mainDefault);
       accent.innerHTML = swatchMarkup("accentColour", accentDefault, true);
       parts.innerHTML = colourPartsForProduct(product).map((part, index) => {
+        const verifiedDefault = product?.previewPartDefaults?.[part];
         const selected = isCustomProduct(product) && index > 0
           ? "No Color"
-          : (customizerColourOptions.includes(defaults[(index + 1) % defaults.length])
+          : (customizerColourOptions.includes(verifiedDefault)
+            ? verifiedDefault
+            : customizerColourOptions.includes(defaults[(index + 1) % defaults.length])
             ? defaults[(index + 1) % defaults.length]
             : "Cream");
         return `<label class="part-colour-row"><span>${part}</span><select name="partColour" data-part="${part}">${colourOptionMarkup(selected)}</select></label>`;
       }).join("");
       customizer.dataset.design = slug;
     }
+
+    const accentGroup = accent.closest(".colour-control-group");
+    if (accentGroup) accentGroup.hidden = product?.previewSupportsAccent === false;
 
     const mainColour = main.querySelector('input:checked')?.value || "Purple";
     const accentColour = accent.querySelector('input:checked')?.value || "Gold";
@@ -738,9 +810,16 @@
     return { mainColour, accentColour, partSelections };
   };
 
-  const renderFinishedTreasurePicture = (preview, product, selections) => {
+  const renderFinishedTreasurePicture = (preview, product, selections, renderOptions = {}) => {
     preview.className = "home-preview-beads finished-custom-preview";
     preview.removeAttribute("data-placeholder");
+    preview.dataset.design = product?.slug || "unavailable";
+    const allowUnverifiedPattern = renderOptions.allowUnverifiedPattern === true;
+    const patternIsApproved = product?.patternVerificationStatus === "verified";
+    if (product?.previewMode !== "colour-responsive" || (!patternIsApproved && !allowUnverifiedPattern)) {
+      renderReferencePreview(preview, product);
+      return;
+    }
     const mainHex = normalizeColour(selections?.mainColour || "Purple");
     const accentHex = isNoColour(selections?.accentColour) ? mainHex : normalizeColour(selections?.accentColour || "Gold");
     const chosenPart = (name, fallback = selections?.mainColour || "Purple") => {
@@ -748,11 +827,24 @@
       return isNoColour(match?.colour) ? normalizeColour(fallback) : normalizeColour(match?.colour || fallback);
     };
     const value = `${product?.slug || ""} ${product?.name || ""}`.toLowerCase();
-    const bead = (cx, cy, rx, ry, fill, extra = "") => `<g class="preview-pony-bead" ${extra}><ellipse class="preview-bead-shape" cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fill}"/><ellipse class="preview-bead-shine" cx="${cx-rx*.24}" cy="${cy-ry*.3}" rx="${rx*.35}" ry="${ry*.24}"/><ellipse class="preview-bead-rim" cx="${cx}" cy="${cy}" rx="${Math.max(4.2,rx*.25)}" ry="${Math.max(3.6,ry*.23)}"/><ellipse class="preview-bead-hole" cx="${cx}" cy="${cy}" rx="${Math.max(2.7,rx*.14)}" ry="${Math.max(2.3,ry*.13)}"/></g>`;
+    const bead = (cx, cy, rx, ry, fill, extra = "") => `<g class="preview-pony-bead" ${extra}><ellipse class="preview-bead-depth" cx="${cx+rx*.08}" cy="${cy+ry*.18}" rx="${rx}" ry="${ry}"/><ellipse class="preview-bead-shape" cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fill}"/><ellipse class="preview-bead-shine" cx="${cx-rx*.24}" cy="${cy-ry*.3}" rx="${rx*.35}" ry="${ry*.24}"/><ellipse class="preview-bead-glint" cx="${cx-rx*.38}" cy="${cy-ry*.38}" rx="${Math.max(1.8,rx*.11)}" ry="${Math.max(1.5,ry*.09)}"/><ellipse class="preview-bead-rim" cx="${cx}" cy="${cy}" rx="${Math.max(4.2,rx*.25)}" ry="${Math.max(3.6,ry*.23)}"/><ellipse class="preview-bead-hole" cx="${cx}" cy="${cy}" rx="${Math.max(2.7,rx*.14)}" ry="${Math.max(2.3,ry*.13)}"/></g>`;
+    const letterBead = (cx, cy, rx, ry, letter) => `<g class="preview-letter-bead">${bead(cx,cy,rx,ry,"#f7f4ef")}<text x="${cx}" y="${cy + ry * .32}" text-anchor="middle" fill="#171217" font-family="Inter,Arial,sans-serif" font-size="${Math.max(10, ry * 1.05)}" font-weight="900">${String(letter || "").replace(/[<>&]/g, "")}</text></g>`;
     const beadSet = (points, fill, part, size = [18, 15]) => `<g data-preview-part="${part}">${points.map(([x,y,rx=size[0],ry=size[1]]) => bead(x,y,rx,ry,fill)).join("")}</g>`;
+    const personalization = renderOptions.personalization !== undefined
+      ? String(renderOptions.personalization || "").trim()
+      : (document.getElementById("homePersonalizationText")?.value.trim() || "");
+    const attachmentArtwork = () => {
+      if (product?.productType === "bracelet") {
+        return '<ellipse class="preview-bracelet-cord" cx="296" cy="255" rx="178" ry="126" fill="none" stroke="#f3f0ea" stroke-width="8"/>';
+      }
+      if (product?.productType === "ornament") {
+        return '<path class="preview-ornament-cord" d="M278 86 C278 34 314 24 314 86" fill="none" stroke="#f5f2ea" stroke-width="8" stroke-linecap="round"/>';
+      }
+      return '<path class="preview-cord" d="M296 82 C296 48 320 34 346 34"/><circle cx="328" cy="52" r="28" fill="none" stroke="#c9a653" stroke-width="12"/>';
+    };
     let artwork = "";
 
-    if (/lanyard/.test(value)) {
+    if (product?.previewRendererKind === "flower-lanyard") {
       const petals = chosenPart("Petals");
       const centre = chosenPart("Centre", selections?.accentColour);
       const flowerColours = [mainHex, petals, accentHex, centre];
@@ -769,7 +861,7 @@
         ${flower(296,410,flowerColours[1],10)}
         <circle cx="296" cy="468" r="24" fill="none" stroke="#c9a653" stroke-width="11"/>
         <path d="M296 438 L296 445" stroke="#c9a653" stroke-width="10" stroke-linecap="round"/>`;
-    } else if (/butterfl/.test(value)) {
+    } else if (product?.previewRendererKind === "butterfly-construction") {
       const wings = chosenPart("Wings");
       const details = chosenPart("Wing details", selections?.accentColour);
       const body = chosenPart("Body");
@@ -790,7 +882,44 @@
         ${beadSet(bodyBeads,body,"Body")}
         ${beadSet(antennaBeads,antennae,"Antennae")}
         ${beadSet(accentBeads,accentHex,"Accent Colour",[12,10])}`;
-    } else if (/unicorn/.test(value)) {
+    } else if (product?.previewRendererKind === "frog-construction") {
+      const body = chosenPart("Body", selections?.mainColour);
+      const limbs = chosenPart("Arms and legs", selections?.mainColour);
+      const extremities = chosenPart("Fingers and toes", "Black");
+      const bodyRows = [
+        { y: 132, xs: [270,296,322], red: [1] },
+        { y: 160, xs: [244,270,296,322,348], red: [0,4] },
+        { y: 188, xs: [226,250,274,298,322,346,370], red: [2,5] },
+        { y: 216, xs: [218,242,266,290,314,338,362,386], red: [1,4,7] },
+        { y: 244, xs: [224,248,272,296,320,344,368], red: [2,5] },
+        { y: 272, xs: [234,258,282,306,330,354], red: [1,4] },
+        { y: 300, xs: [246,270,294,318,342], red: [0,3] }
+      ];
+      const bodyBeads = bodyRows.map(row => row.xs.map((x,index) => bead(x,row.y,15.8,13.5,row.red.includes(index) ? accentHex : body)).join("")).join("");
+      const leftArm = [[203,211],[178,225],[152,239],[126,251],[101,260]];
+      const rightArm = leftArm.map(([x,y]) => [592-x,y]);
+      const leftLeg = [[242,302],[219,324],[197,347],[176,370],[157,392]];
+      const rightLeg = leftLeg.map(([x,y]) => [592-x,y]);
+      const limbBeads = (points, reverse = false) => points.map(([x,y],index) => bead(x,y,16,13,index === 2 ? accentHex : limbs,`transform="rotate(${reverse ? -26 : 26} ${x} ${y})"`)).join("");
+      const cluster = (cx,cy) => [[0,0],[-14,13],[14,13]].map(([dx,dy]) => bead(cx+dx,cy+dy,13,11,extremities)).join("");
+      artwork = `
+        <g class="preview-frog-hardware" aria-hidden="true">
+          <circle cx="296" cy="69" r="34" fill="none" stroke="#c9a653" stroke-width="12"/>
+          <path d="M281 41 C264 11 288 -1 310 9 C328 17 332 38 317 52 L303 63 L289 50 C282 45 278 43 281 41 Z" fill="#c9a653" stroke="#80652b" stroke-width="3"/>
+          <path d="M307 17 Q324 25 314 41" fill="none" stroke="#fff3bd" stroke-width="4" stroke-linecap="round"/>
+        </g>
+        <g class="preview-frog-cord" aria-hidden="true">
+          <path d="M296 94 C270 102 246 111 226 130 C208 149 211 260 241 310"/>
+          <path d="M296 94 C322 102 346 111 366 130 C384 149 381 260 351 310"/>
+          <path d="M222 199 Q156 222 91 266 M370 199 Q436 222 501 266"/>
+          <path d="M252 286 Q201 338 147 405 M340 286 Q391 338 445 405"/>
+          <path d="M296 105 L296 314"/>
+        </g>
+        <g data-preview-part="Body">${bodyBeads}</g>
+        <g data-preview-part="Arms and legs">${limbBeads(leftArm)}${limbBeads(rightArm,true)}${limbBeads(leftLeg,true)}${limbBeads(rightLeg)}</g>
+        <g data-preview-part="Fingers and toes">${cluster(76,260)}${cluster(516,260)}${cluster(142,405)}${cluster(450,405)}</g>
+        <circle cx="296" cy="103" r="8" fill="none" stroke="#f7f2eb" stroke-width="6"/>`;
+    } else if (product?.previewRendererKind === "unicorn-construction") {
       const ears = chosenPart("Ears");
       const eyes = chosenPart("Eyes", "Black");
       const mane = chosenPart("Mane");
@@ -807,7 +936,7 @@
         <g data-preview-part="Eyes" fill="${eyes}">${bead(240,210,12,15,eyes)}${bead(337,203,12,15,eyes)}</g>
         <g data-preview-part="Body details" fill="${details}">${bead(288,277,18,14,details)}${bead(261,365,15,13,details)}${bead(321,365,15,13,details)}</g>
         <path class="preview-highlight" d="M206 181 Q279 133 348 171"/>`;
-    } else if (/flower|rose|daisy|sunflower|bouquet|tulip/.test(value)) {
+    } else if (product?.previewRendererKind === "flower-construction") {
       const petals = chosenPart("Petals");
       const centre = chosenPart("Centre", selections?.accentColour);
       const stem = chosenPart("Stem", "Green");
@@ -845,10 +974,7 @@
         tokenColours[point.c] || mainHex,
         `data-preview-part="${point.c === "a" ? "Main Colour" : "Body details"}"`
       )).join("");
-      artwork = `
-        <path class="preview-cord" d="M296 82 C296 48 320 34 346 34"/>
-        <circle cx="328" cy="52" r="28" fill="none" stroke="#c9a653" stroke-width="12"/>
-        <g aria-hidden="true">${animalBeads}</g>`;
+      artwork = `${attachmentArtwork()}<g aria-hidden="true">${animalBeads}</g>`;
     } else if (Array.isArray(product?.previewPattern) && product.previewPattern.length) {
       const points = product.previewPattern;
       const xs = points.map(point => point.x);
@@ -866,41 +992,63 @@
         .filter(selection => !isNoColour(selection.colour))
         .map(selection => normalizeColour(selection.colour));
       const palette = [mainHex, ...partColours, accentHex];
+      let letterIndex = 0;
       const designBeads = points.map(point => {
         const code = String(point.c || "a").charAt(0).toLowerCase();
+        if (code === "n") {
+          const letters = personalization || "NAME";
+          return letterBead(
+            startX + (point.x - minX) * spacing,
+            startY + (point.y - minY) * spacing,
+            Math.max(7, spacing * .42),
+            Math.max(6, spacing * .36),
+            letters.charAt(letterIndex++)
+          );
+        }
         const colourIndex = Math.max(0, code.charCodeAt(0) - 97);
+        const fixedColour = product?.previewFixedColours?.[code];
         return bead(
           startX + (point.x - minX) * spacing,
           startY + (point.y - minY) * spacing,
           Math.max(7, spacing * .42),
           Math.max(6, spacing * .36),
-          palette[colourIndex % palette.length] || mainHex,
+          fixedColour ? normalizeColour(fixedColour) : (palette[colourIndex % palette.length] || mainHex),
           `data-preview-part="${code === "a" ? "Main Colour" : "Design details"}"`
         );
       }).join("");
-      artwork = `
-        <path class="preview-cord" d="M296 82 C296 48 320 34 346 34"/>
-        <circle cx="328" cy="52" r="28" fill="none" stroke="#c9a653" stroke-width="12"/>
-        <g aria-hidden="true">${designBeads}</g>`;
+      artwork = `${attachmentArtwork()}<g aria-hidden="true">${designBeads}</g>`;
     } else {
-      const referenceUrl = product?.previewImageUrl || product?.referenceImageUrl || product?.imageUrl || "";
-      preview.classList.add("design-reference-preview");
-      preview.innerHTML = referenceUrl
-        ? `<img src="${escapeHtml(referenceUrl)}" alt="${escapeHtml(product?.name || "Selected design")} design reference"><p class="custom-preview-caption">Design reference — colours may vary from your selection.</p>`
-        : `<p class="custom-preview-caption">${escapeHtml(product?.name || "Selected design")} preview unavailable. Your selected design and options will still be included with the order.</p>`;
+      renderReferencePreview(preview, product);
       return;
     }
 
-    const personalization = document.getElementById("homePersonalizationText")?.value.trim() || "";
-    const label = personalization ? `<text x="296" y="455" text-anchor="middle" fill="#3d2433" font-family="Inter,Arial,sans-serif" font-size="22" font-weight="800">${personalization.slice(0,18).replace(/[<>&]/g, "")}</text>` : "";
+    const patternHasLetterBeads = Array.isArray(product?.previewPattern)
+      && product.previewPattern.some(point => String(point.c || "").toLowerCase() === "n");
+    const label = personalization && product?.previewPersonalizationPlacement === "caption" && !patternHasLetterBeads
+      ? `<text x="296" y="455" text-anchor="middle" fill="#3d2433" font-family="Inter,Arial,sans-serif" font-size="22" font-weight="800">${personalization.slice(0,18).replace(/[<>&]/g, "")}</text>`
+      : "";
+    const hardware = productUsesSelectableHardware(product)
+      ? (renderOptions.hardware || currentHardwareValue(product))
+      : "";
+    if (hardware) {
+      const hardwareHex = hardwareToneClass(hardware) === "silver" ? "#c7ccd4" : "#c9a653";
+      artwork = artwork.replaceAll("#c9a653", hardwareHex);
+    }
     const accessibleSelections = [
       `Main ${selections?.mainColour || "Purple"}`,
       ...(selections?.partSelections || []).filter(({ colour }) => !isNoColour(colour)).map(({ part, colour }) => `${part} ${colour}`),
       ...(isNoColour(selections?.accentColour) ? [] : [`Accent ${selections?.accentColour || "Gold"}`]),
+      productUsesSelectableHardware(product)
+        ? `Hardware ${hardware}`
+        : `Construction ${product?.attachmentDescription || product?.productType || "product specific"}`
     ].join("; ");
 
     const accentCaption = isNoColour(selections?.accentColour) ? "" : ` · ${selections?.accentColour || "Gold"} accent`;
-    preview.innerHTML = `<svg viewBox="0 0 592 480" role="img" aria-label="Dynamically recoloured ${product?.name || "treasure"} preview. ${accessibleSelections}" data-design="${product?.slug || "custom"}">${artwork}${label}</svg><p class="custom-preview-caption">Approximate finished ${product?.name || "treasure"} · ${selections?.mainColour || "Purple"} main${accentCaption}</p>`;
+    const attachmentCaption = productUsesSelectableHardware(product)
+      ? ` · ${hardware} hardware`
+      : ` · ${product?.attachmentDescription || "product-specific construction"}`;
+    preview.dataset.previewMode = "colour-responsive";
+    preview.innerHTML = `<svg viewBox="0 0 592 480" role="img" aria-label="Dynamically recoloured ${product?.name || "treasure"} preview. ${accessibleSelections}" data-design="${product?.slug || "custom"}">${artwork}${label}</svg><p class="custom-preview-caption">Approximate finished ${product?.name || "treasure"} · ${selections?.mainColour || "Purple"} main${accentCaption}${attachmentCaption}</p>`;
   };
 
   const renderCustomIdeaNotice = (preview, selections) => {
@@ -924,7 +1072,7 @@
     const design = product?.name || "Design unavailable";
     const colourSelections = syncDesignColourControls(product);
     const colourInput = document.getElementById("homeTreasureColours")?.value || "Purple, Cream, Gold";
-    const hardware = document.getElementById("homeTreasureHardware")?.value || "Silver";
+    const hardware = currentHardwareValue(product);
     const quantity = document.getElementById("homeTreasureQuantity")?.value || "1";
     const personalization = getPersonalizationState();
     const requestedProductName = isCustomProduct(product) ? (document.getElementById("homeProductName")?.value.trim() || "") : "";
@@ -961,25 +1109,26 @@
     const showcasePreview = document.getElementById("homeShowcaseDynamicPreview");
     const showcaseImage = document.getElementById("homeShowcaseProductImage");
     if (!product) {
-      renderBeadPattern(preview, null, colours);
-      renderBeadPattern(showcasePreview, null, colours);
+      renderBeadPattern(preview, null, colours, colourSelections);
+      renderBeadPattern(showcasePreview, null, colours, colourSelections);
     } else if (customSelected) {
       renderCustomIdeaNotice(preview, colourSelections);
       renderCustomIdeaNotice(showcasePreview, colourSelections);
     } else {
-      renderBeadPattern(preview, product, colours);
+      renderBeadPattern(preview, product, colours, colourSelections);
       renderFinishedTreasurePicture(showcasePreview, product, colourSelections);
     }
     if (showcasePreview) showcasePreview.hidden = false;
     if (showcaseImage) showcaseImage.hidden = true;
-    syncHardwarePreviewSample();
+    syncHardwarePreviewSample(product);
+    renderPreviewSelectionLegend(colourSelections, product, hardware);
 
     if (editorialShowcase) editorialShowcase.classList.toggle("is-custom-idea", customSelected);
     if (customConceptCard) customConceptCard.hidden = !customSelected;
     if (customConceptIdea) {
       customConceptIdea.textContent = customDescription || "Start typing your custom idea to see it here.";
     }
-    if (customConceptHardware) customConceptHardware.textContent = hardware;
+    if (customConceptHardware) customConceptHardware.textContent = hardware || product?.attachmentDescription || "Owner confirmed";
     if (customConceptProductName) customConceptProductName.textContent = requestedProductName || "Not entered";
     if (customConceptPersonalization) {
       customConceptPersonalization.textContent = personalization.type !== "none" && personalization.text
@@ -1222,7 +1371,10 @@
       } else {
         const price = product ? ` Starting at ${formatCents(product.basePrice)}.` : "";
         const personalizationSentence = `${personalization.phrase}${/[.!?]$/.test(personalization.phrase) ? "" : "."}`;
-        previewMeta.textContent = `${hardware} hardware, quantity ${quantity || 1}, ${personalizationSentence}${price}`;
+        const construction = productUsesSelectableHardware(product)
+          ? `${hardware} hardware`
+          : (product?.attachmentDescription || "Product-specific construction");
+        previewMeta.textContent = `${construction}, quantity ${quantity || 1}, ${personalizationSentence}${price}`;
       }
     }
 
@@ -1262,10 +1414,16 @@
         previewDescription.textContent = [
           `Selected design: ${design}`,
           `Product Name: ${design}`,
+          product?.customerPreviewMode === "reference"
+            ? "Preview: Design reference — your selected colours are listed below."
+            : "Preview: Approximate colour-responsive rendering.",
           `Selected colours: ${readableColours}`,
-          `Hardware: ${hardware}`,
+          ...(productUsesSelectableHardware(product)
+            ? [`Hardware: ${hardware}`]
+            : [`Construction: ${product?.attachmentDescription || "Product-specific construction"}`]),
           `Quantity: ${String(quantity || 1)}`,
-          `Personalization / Name: ${personalization.text || "None"}`
+          `Personalization / Name: ${personalization.text || "None"}`,
+          ...(product?.previewNote ? [product.previewNote] : [])
         ].join("\n");
         previewDescription.hidden = false;
       }
@@ -1723,7 +1881,7 @@
           ${orderItems.map((item) => {
             const design = escapeHtml(item.productName || item.design || "Treasure");
             const colours = escapeHtml(item.colours || "Custom colours");
-            const hardware = escapeHtml(item.hardware || "Hardware selected");
+            const hardware = item.hardware ? `; Hardware: ${escapeHtml(item.hardware)}` : "";
             const quantity = Number(item.quantity || 1);
             const personalization = item.personalizationType && item.personalizationType !== "none"
               ? `${escapeHtml(item.personalizationType)}: ${escapeHtml(item.personalizationText || "")}`
@@ -1731,7 +1889,7 @@
             const lineTotal = formatCents(item.lineTotalCents || item.unitPriceCents || 0, data.currency);
             const unitPrice = quantity > 1 && item.unitPriceCents ? ` <span style="opacity:.82;">(${formatCents(item.unitPriceCents, data.currency)} each)</span>` : "";
             const requestedProductName = escapeHtml(item.requestedProductName || "None");
-            return `<li style="margin:0 0 10px;"><strong style="color:#fff;">${design}</strong> — ${lineTotal}${unitPrice}<br><span style="font-size:.92rem;">Product Name: ${requestedProductName}; Colours: ${colours}; Hardware: ${hardware}; Quantity: ${quantity}; ${personalization}</span></li>`;
+            return `<li style="margin:0 0 10px;"><strong style="color:#fff;">${design}</strong> — ${lineTotal}${unitPrice}<br><span style="font-size:.92rem;">Product Name: ${requestedProductName}; Colours: ${colours}${hardware}; Quantity: ${quantity}; ${personalization}</span></li>`;
           }).join("")}
         </ol>
       </div>
@@ -1744,7 +1902,14 @@
         const personalization = item.personalizationType && item.personalizationType !== "none"
           ? `${item.personalizationType}: ${item.personalizationText || ""}`
           : "No personalization";
-        return `${index + 1}. ${design} — ${lineTotal}\n   Product Name: ${item.requestedProductName || "None"}\n   Colours: ${item.colours || ""}\n   Hardware: ${item.hardware || ""}\n   Quantity: ${quantity}\n   Personalization: ${personalization}`;
+        return [
+          `${index + 1}. ${design} — ${lineTotal}`,
+          `   Product Name: ${item.requestedProductName || "None"}`,
+          `   Colours: ${item.colours || ""}`,
+          ...(item.hardware ? [`   Hardware: ${item.hardware}`] : []),
+          `   Quantity: ${quantity}`,
+          `   Personalization: ${personalization}`
+        ].join("\n");
       }).join("\n\n")
       : "Order item details are listed in the Forever Beaded order record.";
     const paymentDraftBuilder = window.FOREVER_BEADED_PAYMENT_EMAIL?.buildPaymentConfirmationDraft;
@@ -2450,8 +2615,8 @@
       ].filter(Boolean).join(" | ");
       const thumbClasses = ["treasure-request-thumb", item.imageFocusClass].filter(Boolean).join(" ");
       const thumb = item.image
-        ? `<span class="${escapeHtml(thumbClasses)}"><img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.design)} design reference"><small>Design reference — colours may vary from your selection.</small></span>`
-        : `<span class="treasure-request-thumb image-missing" data-placeholder="${escapeHtml(item.design)} image coming soon"></span>`;
+        ? `<span class="${escapeHtml(thumbClasses)}"><img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.design)} design reference"><small>Design reference — your selected colours are listed below.</small></span>`
+        : `<span class="treasure-request-thumb image-missing" data-placeholder="${escapeHtml(item.design)} approved image unavailable"></span>`;
       return `
         <article class="treasure-request-item${index === selectedRequestIndex ? " is-selected" : ""}" data-request-index="${index}">
           ${thumb}
@@ -2591,7 +2756,7 @@
     const design = product?.name || "Custom idea";
     const colours = document.getElementById("homeTreasureColours")?.value.trim() || "Custom colours";
     const colourPlacement = document.getElementById("homeColourPlacement")?.value.trim() || "";
-    const hardware = document.getElementById("homeTreasureHardware")?.value || "Silver";
+    const hardware = currentHardwareValue(product);
     const quantity = Number(document.getElementById("homeTreasureQuantity")?.value || 1);
     const personalization = getPersonalizationState();
     const requestedProductName = isCustomProduct(product) ? (document.getElementById("homeProductName")?.value.trim() || "") : "";
@@ -3109,6 +3274,36 @@
       if (flightTimer) window.clearInterval(flightTimer);
     }, { once: true });
   };
+
+  window.FOREVER_BEADED_PREVIEW_RENDERER = Object.freeze({
+    colourOptions: Object.freeze([...customizerColourOptions]),
+    normalizeColour,
+    colourPartsForProduct,
+    render(preview, product, options = {}) {
+      if (!preview || !product) return null;
+      const defaults = (product.defaultColours || ["Purple", "Cream", "Gold"]).map(titleCase);
+      const parts = colourPartsForProduct(product);
+      const mainColour = options.mainColour || defaults[0] || "Purple";
+      const accentColour = options.accentColour !== undefined
+        ? options.accentColour
+        : (product.previewSupportsAccent === false ? "No Color" : (product.previewAccentDefault || defaults[2] || "Gold"));
+      const suppliedParts = Array.isArray(options.partSelections) ? options.partSelections : [];
+      const partSelections = parts.map((part, index) => ({
+        part,
+        colour: suppliedParts.find(item => item.part === part)?.colour || product.previewPartDefaults?.[part] || defaults[(index + 1) % defaults.length] || "Cream"
+      }));
+      const selections = { mainColour, accentColour, partSelections };
+      const hardware = productUsesSelectableHardware(product)
+        ? (product.hardwareOptions.includes(options.hardware) ? options.hardware : product.hardwareOptions[0])
+        : "";
+      renderFinishedTreasurePicture(preview, product, selections, {
+        hardware,
+        personalization: options.personalization || "",
+        allowUnverifiedPattern: options.allowUnverifiedPattern === true
+      });
+      return { selections, hardware, parts };
+    }
+  });
 
   document.addEventListener("click", saveCategoryJump);
 

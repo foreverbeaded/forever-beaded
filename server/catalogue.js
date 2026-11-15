@@ -16,6 +16,10 @@ function normalizeSeedProduct(product) {
     previewPattern: Array.isArray(product.previewPattern) ? product.previewPattern : null,
     defaultColours: Array.isArray(product.defaultColours) ? product.defaultColours : [],
     personalizationMaxLength: Number.isInteger(product.personalizationMaxLength) ? product.personalizationMaxLength : null,
+    productType: String(product.productType || "keychain"),
+    attachmentDescription: String(product.attachmentDescription || ""),
+    hardwareOptions: Array.isArray(product.hardwareOptions) ? product.hardwareOptions.map(String) : [],
+    requiresHardwareSelection: product.requiresHardwareSelection === true,
     active: product.active ? 1 : 0,
     sortOrder: Number(product.sortOrder)
   };

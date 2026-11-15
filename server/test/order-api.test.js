@@ -752,6 +752,32 @@ test("creates a valid Interac e-Transfer order", async () => {
   });
 });
 
+test("bracelet orders discard invented keychain hardware while preserving the order", async () => {
+  await withServer({}, async ({ app, baseUrl }) => {
+    const response = await postOrder(baseUrl, validOrder({
+      items: [{
+        productId: 120,
+        quantity: 1,
+        colours: "Pink, Purple, White",
+        hardware: "Gold",
+        personalizationType: "name",
+        personalizationText: "AVA"
+      }]
+    }));
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(body.success, true);
+    assert.equal(body.items[0].productName, "Best Friends Forever Bracelet");
+    assert.equal(body.items[0].hardware, "");
+    assert.equal(body.items[0].personalizationText, "AVA");
+    const stored = await dbGet(app.locals.db, `SELECT hardware, personalization
+      FROM order_items
+      JOIN orders ON orders.id = order_items.order_id
+      WHERE orders.order_number = ?`, [body.orderNumber]);
+    assert.deepEqual(stored, { hardware: "", personalization: "AVA" });
+  });
+});
+
 test("adds another treasure to the same order number", async () => {
   await withServer({}, async ({ app, baseUrl }) => {
     const first = await postOrder(baseUrl, validOrder({
@@ -848,10 +874,10 @@ test("seeds active products and exposes safe catalogue metadata", async () => {
     assert.equal(response.status, 200);
     assert.equal(body.success, true);
     assert.equal(body.products.length, activeProductCount);
-    for (const slug of ["natalies-butterfly", "fish", "crab", "penguin", "whale", "jellyfish", "lobster", "shark", "custom-idea", "gecko", "big-flower", "lion", "zebra", "personalized-love-heart-keychain"]) {
-      const expected = SEED_PRODUCTS.find((product) => product.slug === slug);
-      const actual = body.products.find((product) => product.slug === slug);
-      assert.ok(actual, `${slug} is missing from the catalogue API`);
+    for (const expected of SEED_PRODUCTS.filter(product => product.active === 1)) {
+      const actual = body.products.find((product) => product.slug === expected.slug);
+      assert.ok(actual, `${expected.slug} is missing from the catalogue API`);
+      assert.equal(actual.id, expected.id);
       assert.equal(actual.name, expected.name);
       assert.equal(actual.category, expected.category);
       assert.equal(actual.basePriceCents, expected.basePriceCents);
@@ -1025,7 +1051,13 @@ test("uses the trusted November ornament price instead of the browser total", as
 });
 
 test("stores Apple with its selected colours, hardware, quantity, and trusted identity", async () => {
-  await withServer({}, async ({ app, baseUrl }) => {
+  let notifiedOrder;
+  await withServer({
+    emailSender: async (order) => {
+      notifiedOrder = order;
+      return { emailSent: true, provider: "test", providerResponse: "accepted", messageId: "apple-order-test" };
+    }
+  }, async ({ app, baseUrl }) => {
     const response = await postOrder(baseUrl, validOrder({
       items: [{
         productId: "apple",
@@ -1060,6 +1092,12 @@ test("stores Apple with its selected colours, hardware, quantity, and trusted id
       quantity: 2,
       personalization: "AVA"
     });
+    assert.equal(notifiedOrder?.items[0].productId, "140");
+    assert.equal(notifiedOrder?.items[0].productName, "Apple");
+    assert.equal(notifiedOrder?.items[0].colours, "Turquoise, Green, Gold");
+    assert.equal(notifiedOrder?.items[0].hardware, "Gold");
+    assert.equal(notifiedOrder?.items[0].quantity, 2);
+    assert.equal(notifiedOrder?.items[0].personalizationText, "AVA");
   });
 });
 

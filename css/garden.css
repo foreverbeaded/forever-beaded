@@ -1859,17 +1859,117 @@ body.intro-active .scroll-monarch-layer {
   text-align: center;
 }
 
-.design-reference-preview {
-  display: grid;
-  place-items: center;
-  gap: 10px;
+.world-create .design-reference-preview {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  grid-template: none !important;
+  place-content: initial !important;
+  padding: 12px !important;
 }
 
-.design-reference-preview img {
+.world-create .design-reference-preview img {
   display: block;
-  width: min(100%, 360px);
-  max-height: 390px;
+  width: min(100%, 520px);
+  min-height: 0;
+  max-height: min(470px, 72vh);
   object-fit: contain;
+}
+
+.world-create .design-reference-preview.is-compact img {
+  width: 100%;
+  height: 130px;
+  max-height: 130px;
+}
+
+.world-create .design-reference-preview .custom-preview-caption {
+  position: static !important;
+  inset: auto !important;
+  width: 100%;
+  margin: 0 !important;
+  padding: 6px 8px !important;
+  border-radius: 5px !important;
+  background: rgba(35, 18, 38, .9) !important;
+  color: #fff7e8 !important;
+  font-size: 11px !important;
+  line-height: 1.3 !important;
+}
+
+.world-create .design-reference-note,
+.world-create .design-reference-missing {
+  width: min(100%, 62ch);
+  margin: 0 !important;
+  color: #fff5df !important;
+  font-size: .8rem !important;
+  line-height: 1.45 !important;
+  text-align: center;
+}
+
+.preview-selection-legend {
+  width: 100%;
+  padding-top: 4px;
+}
+
+.preview-selection-legend > p {
+  margin: 0 0 8px !important;
+  color: #efca7a !important;
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.preview-selection-legend ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.preview-selection-legend li {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  gap: 7px;
+  align-items: center;
+  min-width: 0;
+  padding: 7px 9px;
+  border: 1px solid rgba(244, 213, 141, .2);
+  border-radius: 6px;
+  background: rgba(4, 1, 7, .34);
+  color: #fff5df;
+  font-size: .72rem;
+  line-height: 1.25;
+}
+
+.preview-selection-legend li span:nth-child(2) {
+  overflow-wrap: anywhere;
+}
+
+.preview-selection-legend li strong {
+  color: #f4d58d;
+  font-size: .72rem;
+  text-align: right;
+}
+
+.preview-selection-swatch {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, .72);
+  border-radius: 50%;
+  background: var(--selection-colour);
+  box-shadow: inset -2px -2px 4px rgba(0, 0, 0, .3);
+}
+
+.preview-selection-swatch.is-gold-hardware {
+  background: linear-gradient(135deg, #fff0a8, #d8ad45 52%, #8b5f18);
+}
+
+.preview-selection-swatch.is-silver-hardware {
+  background: linear-gradient(135deg, #fff, #c7ccd4 52%, #737b86);
 }
 
 .treasure-request-thumb.image-missing::after {
@@ -4665,4 +4765,15 @@ body.page-turning::before {
   .payment-email-copy-row { grid-template-columns: minmax(0, 1fr); }
   .payment-email-copy-row button { width: 100%; }
   .payment-email-fallback { padding: .85rem; }
+}
+
+/* Product-specific attachment controls: bracelets and ornaments are not keychains. */
+#homeTreasureHardwareField[hidden],
+#homeHardwarePreviewCard[hidden] {
+  display: none !important;
+}
+.preview-bracelet-cord,
+.preview-ornament-cord {
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 2px 2px rgba(42, 28, 36, .18));
 }

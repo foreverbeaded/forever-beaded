@@ -3,22 +3,37 @@
     Array.from(row).flatMap((c, x) => c === "." ? [] : [{ x: x + 1, y: y + 1, c: c.toLowerCase() }])
   ));
 
+  // Owner-approved single-butterfly construction: looped upper and lower
+  // wings around a narrow pearl body, with two corded antennae.
+  const ownerApprovedButterflyRows = [
+    ".....d.....d.....",
+    "......d...d......",
+    ".......ccc.......",
+    "..aaaa.ccc.aaaa..",
+    ".aaaaa.ccc.aaaaa.",
+    ".aa..a.ccc.a..aa.",
+    ".aaaaa.ccc.aaaaa.",
+    "..aaaa.ccc.aaaa..",
+    "...bbb.ccc.bbb...",
+    "..bbbbbcccbbbbb..",
+    "..bbbbbcccbbbbb..",
+    "...bbb.ccc.bbb...",
+    ".......ccc.......",
+    "........c........"
+  ];
+  const ownerApprovedButterflyNameRows = ownerApprovedButterflyRows.map((row, index) => (
+    `${row}${[3, 4, 5, 6, 7, 8].includes(index) ? ["....n.", ".....n", ".....n", "....n.", "...n..", "..n..."][index - 3] : "......"}`
+  ));
+  const ownerApprovedButterflyFlowerRows = ownerApprovedButterflyRows.map((row, index) => (
+    `${row}${[
+      "........", "........", "........", "........", "........", "....eee.",
+      "...eefee", "....eee.", ".....g..", "....ggg.", ".....g..", "....ggg.",
+      ".....g..", "........"
+    ][index]}`
+  ));
+
   const previewPatterns = {
-    butterfly: patternFromRows([
-      "........c........",
-      ".......cbc.......",
-      "..aaa..bbb..aaa..",
-      ".aaaaa.bbb.aaaaa.",
-      "aaaaaa.bbb.aaaaaa",
-      ".aaaaa.bbb.aaaaa.",
-      "..aaa..bbb..aaa..",
-      "...aa.bbbbb.aa...",
-      "..aaa..bbb..aaa..",
-      ".aaa...bbb...aaa.",
-      ".aa....bbb....aa.",
-      ".......bbb.......",
-      "........b........"
-    ]),
+    butterfly: patternFromRows(ownerApprovedButterflyRows),
     fish: patternFromRows([
       "...aaa.....",
       ".aaaaaa..c",
@@ -37,13 +52,17 @@
     ]),
     penguin: patternFromRows([
       "..aaaaa..",
-      ".aabbbaa.",
+      ".aaaaaaa.",
+      "aabbabbaa",
+      "ababbbaba",
+      "abbbccbba",
+      "abbbcbbba",
       "aabbbbbaa",
-      "aabcccbaa",
-      "aabcccbaa",
-      ".abcccba.",
-      ".aadddaa.",
-      "..ddddd.."
+      "aabbbbbaa",
+      "aabbbbbaa",
+      "aaabbbaaa",
+      "aabbbbbaa",
+      ".ccaaacc."
     ]),
     gecko: patternFromRows([
       ".......aaa.......",
@@ -110,23 +129,7 @@
       ".......ccc.......",
       ".......ccc......."
     ]),
-    butterflyWithFlowers: patternFromRows([
-      "..aaa.............",
-      ".aadaa......bb....",
-      "..aaa......bcb....",
-      "..c.......bbbbb...",
-      "..aaa....ccbbbcc..",
-      ".aadaa..ccccbcccc.",
-      "..aaa....ccbbbcc..",
-      "..c........bbb....",
-      "..aaa.......b.....",
-      ".aadaa............",
-      "..aaa.............",
-      "..c...............",
-      "..aaa.............",
-      ".aadaa............",
-      "..aaa............."
-    ]),
+    butterflyWithFlowers: patternFromRows(ownerApprovedButterflyFlowerRows),
     macaw: patternFromRows([
       "...aaaa....",
       "..aaaaac...",
@@ -371,17 +374,16 @@
       ".....a....."
     ]),
     apple: patternFromRows([
-      ".....c.....",
-      "....ccc....",
-      "..bbb......",
-      "...aaaa....",
-      ".aaaaaaaa..",
-      "aaaaaaaaaa.",
-      "aaaaaaaaaaa",
-      ".aaaaaaaaa.",
-      "..aaaaaaa..",
-      "...aaaaa...",
-      "....aaa...."
+      "....c.bb..",
+      "....cbbbb.",
+      "....c.bbb.",
+      ".aaaaaaa..",
+      "aaaaaaaaa.",
+      "aaaaaaada.",
+      "aannnnaaa.",
+      "aaaaaaaaa.",
+      ".aaaaaaa..",
+      "..aaaaaa.."
     ]),
     unicorn: patternFromRows([
       ".........c...",
@@ -755,6 +757,512 @@
     ])
   };
 
+  // These visual reconstructions are intentionally proposals, not manufacturing
+  // patterns. They model the visible front-facing bead layout from approved
+  // catalogue assets while hidden cord paths and reverse-side construction await
+  // owner verification.
+  const provisionalPatternRows = {
+    "best-friends-forever-bracelet": [
+      "....aaaaaaa....", "..aa.......aa..", ".a...........a.", "a.............a",
+      "a.............a", ".a...........a.", "..annnnnnnnnaa..", "....aabbaa...."
+    ],
+    "unicorn-dreams-bracelet": [
+      "....aaaaaaa....", "..ab.......ba..", ".a...........a.", "a.............a",
+      "a.............a", ".a...........a.", "..annnnnnnnnaa..", "....aabbaa...."
+    ],
+    "mermaid-wishes-bracelet": [
+      "....aaaaaaa....", "..ac.......ca..", ".a...........a.", "a.............a",
+      "a.............a", ".a...........a.", "..annnnnnnnnaa..", "....aabbaa...."
+    ],
+    "sweetheart-bracelet": [
+      "....abcbaaa....", "..aa.......aa..", ".a...........a.", "a.............a",
+      "a.............a", ".a...........a.", "..annnnbnnnnaa..", "....aacaa...."
+    ],
+    "pearl-glow-bracelet": [
+      "....aaaaaaa....", "..ab.......ba..", ".a...........a.", "a.............a",
+      "a.............a", ".a...........a.", "..annnnbnnnaa..", "....aaaaa...."
+    ],
+    "personalized-butterfly-keychain": ownerApprovedButterflyNameRows,
+    "personalized-blossom-keychain": [
+      "....aaa....", "..aaabaaa..", ".aaabbbaaa.", "aaabbbbbaaa", ".aaabbbaaa.",
+      "..aaabaaa..", "....ccc....", "....cdc....", "....ccc....", "....cec....",
+      "....ccc....", "...d...d...", "..d.....d.."
+    ],
+    "butterfly-with-flowers": [
+      "..aaa.......aaa..", ".aadaa.....aadaa.", "aaaaaa..b.aaaaaa", ".aadaa.bbb.aadaa.",
+      "..aaa..bbb..aaa..", "....aa.bbb.aa....", "..ccc..bbb..ccc..", ".cecec.bbb.cecec.",
+      "..ccc..bbb..ccc..", ".......bbb.......", "........b........"
+    ],
+    "personalized-turtle-keychain": [
+      ".....aaa.....", "...aabbaa....", "..aabbbbaa...", ".aabbbbbbaa..", "aabbbbbbbbaa.",
+      ".aabbbbbbaa..", "..aabbbbaa...", "c...aaaa...c.", "....dddd.....", "....deded....",
+      "....dddd.....", "....dfdf.....", "....dddd....."
+    ],
+    "personalized-scripture-dove-keychain": [
+      ".........aa......", "........aaaa.....", "...aaaaaabbaa....", ".aaaaaaaaaaaa.ccc.",
+      "aaaaaaaaaaaaacccc", ".aaaaaaaaaaa..ccc.", "...aaaaaaaa...c..", ".....aaaaaa......",
+      "......aaaa.......", ".......dd........", ".......ded.......", ".......ddd......."
+    ],
+    "butterfly-collection": ownerApprovedButterflyRows,
+    "butterfly-name-keychain": ownerApprovedButterflyNameRows,
+    "flower-braided": [
+      "....aaa....", "..aabbbaa..", ".aabbbbbaa.", "..aabbbaa..", "....ccc....",
+      "...cdcdc...", "....ccc....", "...cecec...", "....ccc....", "...cfcfc...", "....ccc...."
+    ],
+    "intricated-flower": [
+      ".....aaa.....", "..aaabbbaaa..", ".aabbbbbbbbb..", "aabbbcccbbbaa", ".aabbbbbbbbaa.",
+      "..aaabbbaaa..", ".....ddd.....", "...ddeddd....", "..dddedddd...", ".....ddd....."
+    ],
+    "butterfly-and-flower": ownerApprovedButterflyFlowerRows,
+    "abc-blocks": [
+      "aaabbbccc", "aaabbbccc", "adabeccfc", "aaabbbccc", "ggghhhiii", "gjghkhili", "ggghhhiii"
+    ],
+    "backpack": [
+      "...aaaa...", "..abbbba..", ".aaaaaaaa.", ".acccccca.", ".acddddca.",
+      ".acddddca.", ".acccccca.", ".aaaaaaaa.", "..aa..aa..", ".aa....aa."
+    ],
+    "school-bus": [
+      "..aaaaaaaaa..", ".abbbbbbbbba.", "aabcbcbcbbaa", "aaaaaaaaaaaaa", "aadadaadadaaa", ".eeeeeeeeeee.", "..ff.....ff.."
+    ],
+    "ruler": [
+      "aaaaaaaaaaaaaaa", "abacabadabacaba", "aaaaaaaaaaaaaaa"
+    ],
+    "calculator": [
+      ".aaaaaaaa.", "abbbbbbbba", "abbbbbbbba", "acacacacca", "acacacacca", "acacacacca", ".aaaaaaaa."
+    ],
+    "glue-bottle": [
+      "...aaa...", "..ababa..", "..aaaaa..", ".bbbbbbb.", ".bcccccb.",
+      ".bcccccb.", ".bbbbbbb.", "..bbbbb.."
+    ],
+    "scissors": [
+      "aa.......aa", "aaa.....aaa", ".aa.....aa.", "..aa...aa..", "...aa.aa...", "....aba....", "...bb.bb...", "..bb...bb.."
+    ],
+    "lunch-box": [
+      "...aaaa...", "..a....a..", ".bbbbbbbb.", "bccccccccb", "bcddddddcb", "bccccccccb", ".bbbbbbbb."
+    ],
+    "stack-of-books": [
+      ".aaaaaaaaaa.", "abbbbbbbbbba", ".cccccccccc.", "cddddddddddc", ".eeeeeeeeee.", "effffffffffe"
+    ],
+    "owl": [
+      "aa.....aa", "aaa...aaa", ".aabbbaa.", "aabcbcbaa", "aabbbbbaa", ".aabbbbaa.", "..abdbba..", "...bbb..."
+    ],
+    "fall-fox": [
+      "aa.......aa", "aaaa.....aaaa", ".aaabbbbbaaa.", "..abccccba..", "..abcddcba..",
+      "...bccccb...", "....bccb....", "..bbb..bbb..", ".bb......bb."
+    ],
+    "fall-maple-leaf": [
+      "......a......", "..a...aaa...a..", ".aaa.aaaaa.aaa.", "aaaaaaaaaaaaaaa", ".aaaaaaaaaaaaa.",
+      "...aaaaaaaaa...", ".....aaaaa.....", "......bbb......", "......bbb......"
+    ],
+    "fall-sunflower": [
+      "....aaa....", "..aabbbaa..", ".aabbbbbaa.", "aabbcccbbaa",
+      ".aabbbbbaa.", "..aabbbaa..", "....ddd....", "...ddddd...", "....ddd...."
+    ],
+    "fall-leaves-keychain": [
+      ".aaa.......bbb.", "aaaaa.....bbbbb", ".aaaaa...bbbbb.", "..aaa.....bbb..", "...c.......c...",
+      "......ddd......", ".....ddddd.....", "......ddd......", ".......c......."
+    ],
+    "spider-man": [
+      "...aaaaa...", "..abbbbba..", ".abcbcbcba.", ".abbbbbba.", "..abbbbba..",
+      "...aaaaa...", "..aadddaa..", ".aaadddaaa.", "aa..ddd..aa", "....ddd....", "...dd.dd..."
+    ],
+    "spider-man-version-1": [
+      "...aaaaa...", "..abbbbba..", ".abcbcbcba.", ".abbbbbba.", "..abbbbba..",
+      "...aaaaa...", ".aaadddaaa.", "aaadddddaaa", "aa..ddd..aa", "....ddd....", "...dd.dd..."
+    ],
+    "christmas-star": [
+      "......a......", ".....aaa.....", "a...aaaaa...a", ".aaaaaaaaaaa.", "..aaaaaaaaa..", "...aaaaaaa...",
+      "..aaaaaaaaa..", ".aaaa...aaaa.", "aaaa.....aaaa"
+    ],
+    "poinsettia": [
+      "....a...a....", "..aaaa.aaaa..", ".aaaaaaaaaaa.", "aaaabbbbbaaaa", ".aaabbcbbaaa.",
+      "..aaabaaa...", ".ddd...ddd...", "ddddd.ddddd..", ".ddd...ddd..."
+    ],
+    "christmas-truck": [
+      "......d.......", ".....ddd......", "....ddddd.....", "aaaaaaaaaaaaa.", "abbbbaaaaaaaa.",
+      "abbbbaacccaaa.", "aaaaaaaaaaaaaa", "..eeee...eeee."
+    ],
+    "christmas-teddy-bear": [
+      "..aa...aa..", ".aaaa.aaaa.", ".aaaaaaaaa.", ".aabcbcbba.", "..abbcbba..", "aaabbbbbaaa",
+      ".aaadddaaa.", "...aaaaa...", "...aa.aa...", "..aa...aa.."
+    ],
+    "christmas-polar-bear": [
+      "..aa...aa..", ".aaaaaaaaa.", ".aabbbbbaa.", ".abcacacba.", "..abccbba..", "aaabbbbbaaa",
+      ".aaadddaaa.", "...aaaaa...", "...aa.aa...", "..aa...aa.."
+    ],
+    "gingerbread-girl": [
+      "...aaaaa...", "..aabbaa...", ".aabcbcbaa.", "..aabbbaa..", "aaabbbbbaaa", ".aabdbdbaa.",
+      "..aaeeaaa..", "..aa...aa..", ".aa.....aa."
+    ],
+    "christmas-wreath": [
+      "...aaaaa...", ".aaaaaaaaa.", "aaa.....aaa", "aa.......aa", "aa.......aa", "aaa.....aaa",
+      ".aaabbbbaa.", "..abbbbbba.", "...bbbbb..."
+    ],
+    "christmas-candy-cane": [
+      "...aabb...", "..aabbaa..", ".aabbbaa..", ".abbbaa...", "..bbaa....", "..aabb....",
+      "..bbaa....", ".aabbccaa.", "aabbccccaa", ".aa..cc..aa"
+    ],
+    "christmas-present": [
+      "..bbb.bbb..", ".bbbbbbbbb.", "...bbbbb...", "aaaaaaaaaaa", "aaaabbbaaaa", "aaaabbbaaaa",
+      "aaaabbbaaaa", "aaaabbbaaaa", "aaaabbbaaaa"
+    ],
+    "christmas-stocking": [
+      "..bbbbbbb..", ".bbbbcbbbb.", "...aaaaa...", "...aaaaa...", "...aaaaa...", "...aaaaa...",
+      "...aaaaa...", ".aaaaaaaa..", "aaaaaaaa...", ".aaaaaa...."
+    ],
+    "christmas-tree": [
+      ".....d.....", "....aaa....", "...aaaaa...", "..aabaaaa..", ".aaaaacaaaa.", "aaaabaaaaaaa",
+      "..aaaaaaa..", ".aaacaaaaaa.", "aaaaaaaaaaa", "....eee....", "....eee...."
+    ],
+    "christmas-snowflake": [
+      "a.....a.....a", ".a....a....a.", "..a...a...a..", "...a..a..a...", "....aaaaa....",
+      "aaaaaaaaaaaaa", "....aaaaa....", "...a..a..a...", "..a...a...a..", ".a....a....a.", "a.....a.....a"
+    ],
+    "gingerbread-man": [
+      "...aaaaa...", "..aabbaa...", ".aabcbcbaa.", "..aabbbaa..", "aaabbbbbaaa", ".aabdbdbaa.",
+      "..aabaaaa..", "..aa...aa..", ".aa.....aa."
+    ],
+    "christmas-angel": [
+      "....ddd....", "...daaad...", "...abcba...", "..aabbbaa..", ".eeebbbeee.", "eeeeebbeeee",
+      "...bbbbb...", "..bbbbbbb..", ".bbbbbbbbb."
+    ],
+    "christmas-snowman": [
+      "..bbbbbbb..", "...bbbbb...", "...aaaaa...", "..aacacaa..", "...aadaa...", "...eeeee...",
+      "..aaaaaaa..", ".aaaaaaaaa.", ".aaaafaaaa.", "..aaaaaaa.."
+    ],
+    "christmas-reindeer": [
+      "aa.......aa", ".aa.....aa.", "..aa...aa..", "...bbbbb...", "..bbbbbbb..", ".bbcbdcbb.",
+      "..bbebb...", "aaabbbbbaaa", "...bbbbb...", "...bb.bb..."
+    ],
+    "christmas-elf": [
+      ".....a.....", "....aaa....", "...aaaaa...", "..aabbbbb..", ".bbbcbbcbb.", "..bbbbbbb..",
+      "cccddeedccc", "...ddddd...", "...ddddd...", "..ff...ff.."
+    ],
+    "glow-in-the-dark-christmas-ornament": [
+      ".....aa.....", "....aaaa....", "..bbbbbbbb..", ".bbccddccbb.", "bbcddeeddcbb", "bcdeeffeedcb",
+      "bcdeeffeedcb", "bbcddeeddcbb", ".bbccddccbb.", "..bbbbbbbb.."
+    ],
+    "mrs-claus": [
+      "....aaa....", "...aaaaa...", "..aabbbbaa..", ".bbbcbbcbbb.", "..bbbbbbb..", "cccaaddaccc",
+      "...aaaaa...", "..aaeeeaa..", "..aa...aa..", "..ff...ff.."
+    ],
+    "christmas-santa": [
+      "....aaa....", "...aaaaa...", "..aabbbbaa..", ".bbbcbbcbbb.", "..bbbbbbb..", "cccaaddaccc",
+      "...aaaaa...", "..aaeeeaa..", "..aa...aa..", "..ff...ff.."
+    ]
+  };
+
+  // Final owner-requested correction batch. These rows reproduce only the
+  // front-facing construction visible in approved photographs. Hidden cord
+  // paths remain unverified until the owner approves each corrected proposal.
+  const ownerCorrectedPatternRows = {
+    "tiger": [
+      "..aa.......aa..", ".aaaa.....aaaa.", "..aabaaaaabaa..", "...abbbbbba...",
+      "..aabcbcbbaa..", "...abdddba...", "....abeba....", ".....aaa.....",
+      "aa..aabaa..aa", ".aa.aabaa.aa.", "..aaababa...", "...aa...aa...", "..aa.....aa.."
+    ],
+    "monkey": [
+      "...aa.....aa...", "..aaaa...aaaa..", "...aabbbbbaa...", "..aabccccbbaa..",
+      "..abcbddbcba..", "...abcccba...", "....abeba....", ".....aaa.....",
+      "aa..aabaa..aa", ".aa.aabaa.aa.", "..aaababa....", "...aa...aa...", "..aa.....aa..",
+      "...........aa.", "..........aa.."
+    ],
+    "panda": [
+      "...bb.....bb...", "..bbb.....bbb..", "...bbaaaaabb...", "..bbaaaaaaabb..",
+      "..baabbbaaaab..", "..baaacacaaab..", "...baadddaab...", "....baaaaab....",
+      "bb..baaaaab..bb", ".bb.baaaaab.bb.", "..bbbaaaaabbb..", "....ba...ab....", "...bb.....bb..."
+    ],
+    "giraffe": [
+      "....a.a........", "...aaaaa.......", "...abaca.......", "....aaa........",
+      "....aba........", "....aba........", "....aba........", "....aba........",
+      "....abaaaaa....", "....abababaa...", "....aaaaaaa..b.", "....a.a...a.bb.",
+      "...aa.a...aa...", "...a..a....a...", "..aa..aa..aa..."
+    ],
+    "puppy": [
+      "..aa.........aa..", ".aaaa.......aaaa.", "..aabbbbbbbbbaa..", "...abccccccba...",
+      "...abcdddcba....", "....abceeba.....", ".....abfba......", "......aaa.......",
+      "aa...aabaa...aa.", ".aa..aabaa..aa..", "..aa.aaaaa.aa...", "...aa.a.a.aa....", "....aa...aa....."
+    ],
+    "owl": [
+      "..aa.........aa..", ".aaaa.......aaaa.", "..aabbbbbbbbbaa..", "...bbccdccbb....",
+      "..bbcceeeccbb...", "...bbbcfcbbb....", "....bbbbbbb.....", ".....bbbbb......",
+      "....bbgbgbb.....", "...bbgggggbb....", "....bb...bb....."
+    ],
+    "fall-fox": [
+      "..aa.........aa..", ".aaaa.......aaaa.", "..aaabbbbbbbbaaa.", "...abccccccba...",
+      "....bcdddc b....", ".....bcecb.....", "......bfb......", "......bbb......",
+      "aa...bbbbb...aa", ".aa..bbnbb..aa.", "..aa.bbbbb.aa..", "....bb...bb....", "...bb.....bb...",
+      "..........aaaa..", ".........aaaaaa."
+    ].map(row => row.replace(/ /g, "")),
+    "squirrel": [
+      "...aa..........", "..aaaa......bbb.", "..abcaa....bbbbb", "...aaaa...bbbbbb",
+      "....aaa..bbbbbb.", ".....aaabbbbb...", "aa..aaaaabbb....", ".aa.aaaaaaa.....",
+      "..aaaaaaaaa.....", "...aaa.aaa......", "...aa...aa......", "..aa.....aa....."
+    ],
+    "lion": [
+      "...ccc.....ccc...", "..ccccc...ccccc..", "...ccaaaaaaacc...", "..ccaaabaaaacc..",
+      ".ccaaababa aaacc.", "..ccaaadddaaacc..", "...ccaaeaacc....", "....ccaaaacc.....",
+      "aa...caaaaac...aa", ".aa..caaaaac..aa.", "..aa.caaaaac.aa..", "....cc...cc.....", "...cc.....cc...."
+    ].map(row => row.replace(/ /g, "")),
+    "zebra": [
+      "....bb.....bb....", "...bbbb...bbbb...", "....bbaaaaabb....", "....ababbaba.....",
+      "....baaacaaa.....", "....abadaaba.....", ".....aaaaa.......", "bb...abababa...bb",
+      ".bb..baaaab..bb.", "..bb.ababa.bb...", "....ab...ba.....", "...ab.....ba....", "..abb.....bba..."
+    ],
+    "abc-blocks": [
+      ".aaa...bbb...ccc.", "aaaaa.bbbbb.ccccc", "aanaa.bnnbb.cnncc", "aanaa.bnnbb.cnncc",
+      "aaaaa.bbbbb.ccccc", ".aaa...bbb...ccc."
+    ],
+    "backpack": [
+      "....aaaaa....", "...a.....a...", "..abbbbbbbba..", ".abccccccccba.",
+      ".abcddddddcba.", ".abcddnnddcba.", ".abcddnnddcba.", ".abcddddddcba.",
+      ".abccccccccba.", "..abbbbbbbba..", ".aa.........aa."
+    ],
+    "calculator": [
+      ".aaaaaaaaaaa.", "abbbbbbbbbbba", "abbbbbbbbbbba", "accccccccccca",
+      "acddcddcddcca", "acddcddcddcca", "aceeceeceecca", "aceeceeceecca", ".aaaaaaaaaaa."
+    ],
+    "glue-bottle": [
+      "....aaa....", "...ababa...", "...aaaaa...", "..bbbbbbb..", ".bbbbbbbbb.",
+      ".bcccccccb.", ".bccnnnncb.", ".bcccccccb.", ".bbbbbbbbb.", "..bbbbbbb.."
+    ],
+    "scissors": [
+      "aaa.........aaa", "aaaa.......aaaa", ".aaa.......aaa.", "..aa.......aa..",
+      "...aa.....aa...", "....aa...aa....", ".....aa.aa.....", "......aba......",
+      ".....cc.cc.....", "....cc...cc....", "...cc.....cc..."
+    ],
+    "stack-of-books": [
+      ".aaaaaaaaaaaa.", "abbbbbbbbbbbba", ".cccccccccccc.", "cddddddddddddc",
+      ".eeeeeeeeeeee.", "efffffffffffffe", ".gggggggggggg.", "ghhhhhhhhhhhhg"
+    ],
+    "personalized-butterfly-keychain": ownerApprovedButterflyNameRows,
+    "butterfly-and-flower": ownerApprovedButterflyFlowerRows,
+    "butterfly-collection": ownerApprovedButterflyRows,
+    "butterfly-name-keychain": ownerApprovedButterflyNameRows,
+    "christmas-star": [
+      "......a......", ".....aaa.....", "a...aaaaa...a", ".aaaaaaaaaaa.", "..aaaaaaaaa..",
+      "...aaaaaaa...", "..aaaaaaaaa..", ".aaaa...aaaa.", "aaaa.....aaaa"
+    ],
+    "poinsettia": [
+      "....a.....a....", "..aaaa...aaaa..", ".aaaaaa.aaaaaa.", "aaaabbbbbbaaaa", ".aaabbcccbbbaa.",
+      "..aaabbbbbaaa..", "...dddbbbddd...", ".ddddd...ddddd.", "ddd.......ddd", ".dd.........dd."
+    ],
+    "christmas-truck": [
+      "........d........", ".......ddd.......", "......ddddd......", ".....ddddddd.....",
+      "..aaaaaaaaaaaa...", ".abbbbaaaaaaaa....", "abbbbbaacccaaaaaa", "aaaaaaaaaaaaaaaaa",
+      "aaeeeeaaaaaeeeeaa", "..eeee.....eeee.."
+    ],
+    "christmas-teddy-bear": [
+      "..aa.......aa..", ".aaaa.....aaaa.", "..aaaaaaaaaaa..", "...aabcbcbaa...", "....abdddba....",
+      ".....abeba.....", "aa...aaaaa...aa", ".aa..aafaa..aa.", "..aa.aaaaa.aa..", "....aa.aa....", "...aa...aa..."
+    ],
+    "christmas-polar-bear": [
+      "..aa.......aa..", ".aaaa.....aaaa.", "..aaaaaaaaaaa..", "...aabcbcbaa...", "....abdddba....",
+      ".....abeba.....", "aa...fffff...aa", ".aa..ffgff..aa.", "..aa.fffff.aa..", "....aa.aa....", "...aa...aa..."
+    ],
+    "gingerbread-girl": [
+      "....aaaaa....", "...aabbaa....", "..aabcbcbaa..", "...aadddaa...", "....abeba....",
+      "aa..aaaaa..aa", ".aa.aafaa.aa.", "..aafffffaa..", ".aafffffffaa.", "...aa...aa...", "..aa.....aa.."
+    ],
+    "christmas-candy-cane": [
+      "....aabb....", "...aabbaa...", "..aabbaa....", ".aabbaa.....", ".abbaa......",
+      "..bbaa......", "..aabb......", "..bbaa......", "..aabbccaa..", ".aabbccccaa.", "aabbccccccaa"
+    ],
+    "christmas-tree": [
+      ".....d.....", "....aaa....", "...aaaaa...", "..aabaaaa..", ".aaaaacaaaa.", "aaaabaaaaaaa",
+      "..aaaaaaa..", ".aaacaaaaaa.", "aaaaaaaaaaa", "...eeee....", "...eeee....", "...eeee...."
+    ],
+    "christmas-snowflake": [
+      "a.....a.....a", ".a....a....a.", "..a...a...a..", "...a..a..a...", "....aaaaa....",
+      "aaaaaaaaaaaaa", "....aaaaa....", "...a..a..a...", "..a...a...a..", ".a....a....a.", "a.....a.....a"
+    ],
+    "gingerbread-man": [
+      "....aaaaa....", "...aabbaa....", "..aabcbcbaa..", "...aadddaa...", "....abeba....",
+      "aa..aaaaa..aa", ".aa.aafaa.aa.", "..aaagaaa....", "...aa...aa...", "..aa.....aa.."
+    ],
+    "christmas-angel": [
+      ".....ddd.....", "....daaad....", "....abcba....", "...aabbbaa...", "..eeebbbeee..",
+      ".eeeeebbbeeeee.", "...bbbbbbb...", "..bbbbbbbbb..", ".bbbbbbbbbbb.", "....bb.bb...."
+    ],
+    "christmas-snowman": [
+      "...bbbbbbb...", "....bbbbb....", "....aaaaa....", "...aacacaa...", "....aadaa....",
+      "....eeeee....", "...aaaaaaa...", "..aaaaaaaaa..", "..aaaafaaaa..", "...aaaaaaa...", "....aa.aa...."
+    ],
+    "christmas-reindeer": [
+      "aa.........aa", ".aa.......aa.", "..aa.....aa..", "...aa...aa...", "....bbbbb....",
+      "...bbbbbbb...", "..bbcbdcbb...", "...bbebb.....", "aa..bbbbb..aa", ".aa.bbbbb.aa.", "...bb...bb...", "..bb.....bb.."
+    ],
+    "christmas-elf": [
+      ".....a.....", "....aaa....", "...aaaaa...", "..aabbbbb..", ".bbbcbbcbb.", "..bbbbbbb..",
+      "cccddeedccc", "...ddddd...", "...ddddd...", "..ff...ff..", ".fff...fff."
+    ],
+    "mrs-claus": [
+      "....aaa....", "...aaaaa...", "..aabbbbaa..", ".bbbbcbbbb.", ".bbcbdcbb.", "..bbeebbb..",
+      "cccaaddaccc", "...aaaaa...", "..aafffaa..", ".aafffffaa.", "..gg...gg.."
+    ],
+    "christmas-santa": [
+      "....aaa....", "...aaaaa...", "..aabbbbaa..", ".bbbbcbbbb.", ".bbcbdcbb.", "..bbeebbb..",
+      "cccaaddaccc", "...aaaaa...", "..aaeeeaa..", "..aa...aa..", ".fff...fff."
+    ],
+    "unicorn": [
+      ".........c.....", "........cc.....", "...aa..ccc.....", "..aaaab.........", ".aaabaaaa.......",
+      "aabcbcaaaa......", ".aadddaaaa......", "..aaaaaaa......", "aa..aaaaa...ee.", ".aa.aaaaaaa.eee",
+      "..aaa...aaaee..", "...aa...aa.....", "..aa.....aa...."
+    ],
+    "magical-mane-unicorn": [
+      ".........c.....", "........cc.....", "...aa..ccc.....", "..aaaab.........", ".aaabaaaa.......",
+      "aabcbcaaaa......", ".aadddaaaa......", "..aaaaaaa......", "aa..aaaaa...eee", ".aa.aaaaaaa.eeee",
+      "..aaa...aaaeee.", "...aa...aa.....", "..aa.....aa...."
+    ],
+    "ariel": [
+      "....aaaaa....", "...aabbaa....", "..aabcbcbaa..", "...aadddaa...", "cc..ddddd..cc",
+      ".cc.ddddd.cc.", "....eeeee....", "....eeeee....", "...eeeeeee...", "....eeeee....",
+      ".....eee.....", "....ee.ee....", "...ee...ee..."
+    ],
+    "fall-maple-leaf": [
+      "......a......", "..a...aaa...a..", ".aaa.aaaaa.aaa.", "aaaaaaaaaaaaaaa", ".aaaaaaaaaaaaa.",
+      "...aaaaaaaaa...", ".....aaaaa.....", "......bbb......", "......bbb......", ".....bbbbb....."
+    ],
+    "fall-sunflower": [
+      "....aaa....", "..aabbbaa..", ".aabbbbbaa.", "aabbcccbbaa", ".aabbbbbaa.", "..aabbbaa..",
+      "....ddd....", "...ddddd...", "..ddd.ddd..", "....ddd....", "....ddd...."
+    ],
+    "fall-coffee-cup": [
+      "....ccccc....", "...ccccccc...", "..bbbbbbbbb..", ".baaaaaaaaab.", ".baaannnaaab.",
+      ".baaannnaaabb", ".baaannnaaabb", ".baaaaaaaaabb", "..baaaaaabbb", "...bbbbbbb.."
+    ],
+    "fall-leaves-keychain": [
+      ".aaa.........bbb.", "aaaaa.......bbbbb", ".aaaaa.....bbbbb.", "..aaa.......bbb..", "...c.........c...",
+      "......ddd........", ".....ddddd.......", "....ddddddd......", ".....ddddd.......", "......ddd........", ".......c........."
+    ],
+    "autumn-tree": [
+      ".....a.....", "...aacaa...", "..aaacaaa..", ".aaaacaaaa.", "aaaaacaaaaa", ".aaaacaaaa.",
+      "..aaacaaa..", "...bbbbb...", "....bbb....", "....bbb....", "...bbbbb..."
+    ],
+    "scarf": [
+      "...aaaa...", "..abbbba..", ".abccccba.", "..abbbba..", "...aaaa...", "...ab.....",
+      "..ab......", ".ab.......", ".ab.......", "..b.......", ".b.b......"
+    ],
+    "hot-chocolate": [
+      "....ccc....", "...ccccc...", "..bbbbbbb..", ".baaaaaaab.", ".baaannnaabb",
+      ".baaannnaa.b", ".baaaaaaa..b", "..baaaaab..", "...bbbbb...", "...ddddd..."
+    ],
+    "pumpkin-spice-latte": [
+      "....ccccc....", "...ccccccc...", "..bbbbbbbbb..", ".baaaaaaaaab.", ".baaannnaaab.",
+      ".baaannnaaabb", ".baaannnaaabb", ".baaaaaaaaabb", "..baaaaaabbb", "...bbbbbbb..", "....ddddd...."
+    ],
+    "deluxe-flower": [
+      ".....aaa.....", "..aaabbbaaa..", ".aabbbbbbbbb..", "aabbbcccbbbaa", ".aabbbbbbbbaa.",
+      "..aaabbbaaa..", ".....ddd.....", "...ddeddd....", "..dddedddd...", ".....ddd....."
+    ],
+    "flower-braided": [
+      "....aaa....", "..aabbbaa..", ".aabbbbbaa.", "..aabbbaa..", "....ccc....", "...cdcdc...",
+      "....ccc....", "...cecec...", "....ccc....", "...cfcfc...", "....ccc....", "...c...c..."
+    ],
+    "big-flower": [
+      "....aaa....", "..aaabaaa..", ".aaabbbbaaa.", "aaabccccbaaa", ".aaabbbbaaa.",
+      "..aaabaaa..", "....ddd....", "...ddddd...", "..ddd.ddd..", "....ddd....", "....ddd...."
+    ],
+    "pastel-flower-bar-keychain": [
+      "..aaa...aaa..", ".aabaa.aabaa.", "..aaa...aaa..", "...c.....c...", "..ddd...ddd..",
+      ".deded.deded.", "..ddd...ddd..", "...c.....c...", "....ccccc...."
+    ],
+    "blue-flower-keychain": [
+      "....aaa....", "..aabbbaa..", ".aabbbbbaa.", "aabbcccbb aa", ".aabbbbbaa.",
+      "..aabbbaa..", "....ddd....", "...ddddd...", "..ddd.ddd..", "....ddd....", "...ed.de...", "..ee.d.ee..", "....ddd...."
+    ].map(row => row.replace(/ /g, "")),
+    "rainbow-name-keychain": [
+      "..aabbccddee..", ".aabbccddeeff.", "aabbccddeeffgg", "......nnn.....", "......nnn.....",
+      "......nnn.....", "......nnn.....", "......nnn.....", ".....h...h...."
+    ],
+    "turtle": [
+      ".....aa.........", "...aabbaa.......", "..aabbbbaa...cc.", ".aabbbbbbaa.cccc", "aabbbbbbbbaacdcc",
+      ".aabbbbbbaa.cccc", "..aabbbbaa...cc.", "d...aaaa...d....", ".dd......dd.....", "..d......d......"
+    ],
+    "personalized-turtle-keychain": [
+      ".....aa.........", "...aabbaa.......", "..aabbbbaa...cc.", ".aabbbbbbaa.cccc", "aabbbbbbbbaacdcc",
+      ".aabbbbbbaa.cccc", "..aabbbbaa...cc.", "d...aaaa...d....", "....nnn.........", "....nnn.........",
+      "....nnn.........", "....nnn.........", "...e...e........"
+    ],
+    "whale": [
+      ".............aa", "...........aaaa", "....aaaaaaaaaa.", "..aaaaaaaaaaaa.", ".aabaaaaaaaaaa..",
+      "aabccccaaaaa....", ".aaaaaaaaa......", "..aaaaaaa.......", "...aa..aa.......", "..aa....aa......"
+    ],
+    "lobster": [
+      "aa.........aa", "aaa.......aaa", ".aa...b...aa.", "..aa.bbb.aa..", "...aabcbbaa...",
+      ".....bbb.....", "....bbbbb....", ".....bbb.....", "....bbbbb....", "...bb...bb...", "..bb.....bb.."
+    ],
+    "shark": [
+      ".........aa.....", "........aaaa....", "...aaaaaaaaaaa..", ".aaaaaaaaaaaaaaa", "aabccccccaaaaaaa",
+      ".aaaaaaaaaaaaaaa", "...aaaaaaaaaaa..", ".....aa..aa.....", "....aa....aa...."
+    ],
+    "palm-tree": [
+      "....aaa.aaa....", "..aaaaaaaaaaa..", ".aaaaaabaaaaaa.", "...aaa.b.aaa...", "......bbb......",
+      ".......b.......", ".......b.......", "......bbb......", "......bbb......", ".....bbbbb.....", "....bbbbbbb...."
+    ],
+    "ladybug-backpack": [
+      "....bbbb....", "...bbbbbb...", "..bbccccbb..", ".bbcaaccabb.", ".bcacccacb.", ".bcacccacb.",
+      ".bcacccacb.", ".bbcaaccabb.", "..bbccccbb..", "...bbbbbb...", "....bbbb...."
+    ]
+  };
+
+  const provisionalPatternsBySlug = Object.freeze(Object.fromEntries(
+    Object.entries({ ...provisionalPatternRows, ...ownerCorrectedPatternRows }).map(([slug, rows]) => [slug, patternFromRows(rows)])
+  ));
+  const provisionalPartLabelsBySlug = Object.freeze({
+    "best-friends-forever-bracelet": ["Second colour", "Heart accent"],
+    "unicorn-dreams-bracelet": ["Pearl accents", "Heart accent"],
+    "mermaid-wishes-bracelet": ["Ocean accents", "Heart accent"],
+    "sweetheart-bracelet": ["Second colour", "Heart accent"],
+    "pearl-glow-bracelet": ["Pearl accents", "Heart accent"],
+    "personalized-butterfly-keychain": ["Lower wings", "Pearl body", "Antennae", "Name loop"],
+    "personalized-blossom-keychain": ["Petal details", "Flower centre", "Name strand", "Dangles"],
+    "butterfly-with-flowers": ["Lower wings", "Pearl body", "Antennae", "Flowers"],
+    "personalized-turtle-keychain": ["Shell", "Face", "Name strand", "Feet"],
+    "personalized-scripture-dove-keychain": ["Wing", "Beak", "Scripture strand", "Tail"],
+    "butterfly-collection": ["Lower wings", "Pearl body", "Antennae"],
+    "butterfly-name-keychain": ["Lower wings", "Pearl body", "Antennae", "Name loop"],
+    "flower-braided": ["Petal details", "Centre", "Braided strand", "Leaves"],
+    "intricated-flower": ["Inner petals", "Centre", "Stem", "Leaves"],
+    "butterfly-and-flower": ["Lower wings", "Pearl body", "Antennae", "Flower petals", "Flower centre"],
+    "abc-blocks": ["Block two", "Block three", "Letters", "Edging"],
+    "backpack": ["Pocket", "Trim", "Straps", "Details"],
+    "school-bus": ["Windows", "Trim", "Wheels", "Lights"],
+    "ruler": ["Markings", "Edge", "Details"],
+    "calculator": ["Screen", "Buttons", "Button details", "Trim"],
+    "glue-bottle": ["Cap", "Label", "Label details", "Outline"],
+    "scissors": ["Handles", "Blades", "Pivot", "Details"],
+    "lunch-box": ["Trim", "Front panel", "Handle", "Details"],
+    "stack-of-books": ["Book two", "Book three", "Pages", "Spines"],
+    "owl": ["Face", "Eyes", "Beak", "Chest"],
+    "fall-fox": ["Face", "Chest", "Eyes", "Feet"],
+    "fall-maple-leaf": ["Leaf accents", "Stem", "Veins"],
+    "fall-sunflower": ["Centre", "Stem", "Leaves", "Petal accents"],
+    "fall-leaves-keychain": ["Second leaf", "Third leaf", "Stems", "Accents"],
+    "spider-man": ["Webbing", "Eyes", "Suit details", "Outline"],
+    "spider-man-version-1": ["Webbing", "Eyes", "Suit details", "Outline"],
+    "christmas-star": ["Inner star", "Outline", "Highlights"],
+    "poinsettia": ["Inner petals", "Centre", "Leaves", "Stem"],
+    "christmas-truck": ["Tree", "Windows", "Wheels", "Trim"],
+    "christmas-teddy-bear": ["Muzzle", "Eyes", "Bow", "Paws"],
+    "christmas-polar-bear": ["Hat and scarf", "Face", "Cheeks", "Muzzle"],
+    "gingerbread-girl": ["Icing", "Bow", "Heart", "Face"],
+    "christmas-wreath": ["Bow", "Berries", "Golden accents", "Foliage details"],
+    "christmas-candy-cane": ["White stripe", "Bow", "Holly", "Details"],
+    "christmas-present": ["Ribbon", "Bow", "Highlights", "Outline"],
+    "christmas-stocking": ["Cuff", "Holly", "Toe and heel", "Details"],
+    "christmas-tree": ["Ornaments", "Garland", "Star", "Trunk"],
+    "christmas-snowflake": ["Centres", "Crystal tips", "Highlights", "Outline"],
+    "gingerbread-man": ["Icing", "Bow", "Buttons", "Face"],
+    "christmas-angel": ["Wings", "Halo", "Face", "Dress details"],
+    "christmas-snowman": ["Hat", "Scarf", "Arms", "Face"],
+    "christmas-reindeer": ["Antlers", "Chest", "Nose", "Hooves"],
+    "christmas-elf": ["Suit details", "Face", "Belt", "Shoes"],
+    "glow-in-the-dark-christmas-ornament": ["Glow mix two", "Glow mix three", "Glow mix four", "Glow mix five"],
+    "mrs-claus": ["Trim", "Face", "Belt", "Boots"],
+    "christmas-santa": ["Trim", "Face", "Belt", "Boots"]
+  });
+
   const products = [
     {
       id: 12,
@@ -839,8 +1347,16 @@
       previewImageUrl: "images/products/frog-keychain.jpg",
       originalSourceImageUrl: "images/products/frog-keychain.jpg",
       imageClassification: "owner-approved-original",
+      constructionReferenceImageUrl: "images/products/frog-keychain-owner-construction-reference-original.jpg",
+      constructionReferenceClassification: "owner-supplied-original-photo",
       previewPattern: previewPatterns.frog,
       defaultColours: ["green", "red", "black"],
+      previewAccentDefault: "Red",
+      previewPartDefaults: {
+        "Body": "Green",
+        "Arms and legs": "Green",
+        "Fingers and toes": "Black"
+      },
       supportsPersonalization: true,
       personalizationLabel: "Optional name personalization",
       personalizationPlaceholder: "e.g. Natalie",
@@ -1000,6 +1516,9 @@
       previewImageUrl: "etsy/images-branded/penguin-etsy-branded.jpg",
       previewPattern: previewPatterns.penguin,
       defaultColours: ["black", "white", "orange"],
+      previewColourParts: ["Belly", "Beak and feet"],
+      previewPartDefaults: { "Belly": "White", "Beak and feet": "Orange" },
+      previewSupportsAccent: false,
       active: true,
       disabledReason: "",
       sortOrder: 56
@@ -1892,6 +2411,10 @@
       previewImageUrl: "images/back-to-school/apple.jpeg",
       previewPattern: previewPatterns.apple,
       defaultColours: ["red", "green", "brown"],
+      previewColourParts: ["Leaf", "Stem"],
+      previewPartDefaults: { "Leaf": "Green", "Stem": "Brown" },
+      previewFixedColours: { d: "White" },
+      previewSupportsAccent: false,
       active: true,
       sortOrder: 140
     },
@@ -2729,6 +3252,7 @@
       originalSourceImageUrl: "images/christmas-collection/originals/batch-2/9-Photo-9.jpg",
       imageClassification: "styled-marketing-photo",
       previewPattern: null,
+      previewNote: "Naturally glowing beads charge after exposure to light and glow in darker surroundings. No batteries or LEDs are used; glow brightness and duration vary with light exposure.",
       defaultColours: ["green", "blue", "pink", "yellow", "pearl"],
       supportsPersonalization: false,
       exclusiveLabel: "November Exclusive — 2026",
@@ -2794,7 +3318,228 @@
     }
   ];
 
-  const catalogue = Object.freeze(products.map((product) => Object.freeze({ ...product })));
+  const ownerCorrectionSlugs = new Set([
+    "tiger", "monkey", "panda", "giraffe", "puppy", "owl", "fall-fox", "squirrel", "lion", "zebra",
+    "abc-blocks", "backpack", "calculator", "glue-bottle", "scissors", "stack-of-books",
+    "personalized-butterfly-keychain", "butterfly-and-flower", "butterfly-collection", "butterfly-name-keychain",
+    "christmas-star", "poinsettia", "christmas-truck", "christmas-teddy-bear", "christmas-polar-bear",
+    "gingerbread-girl", "christmas-candy-cane", "christmas-tree", "christmas-snowflake", "gingerbread-man",
+    "christmas-angel", "christmas-snowman", "christmas-reindeer", "christmas-elf", "mrs-claus", "christmas-santa",
+    "unicorn", "magical-mane-unicorn", "ariel",
+    "fall-maple-leaf", "fall-sunflower", "fall-coffee-cup", "fall-leaves-keychain", "autumn-tree", "scarf",
+    "hot-chocolate", "pumpkin-spice-latte",
+    "deluxe-flower", "flower-braided", "big-flower", "pastel-flower-bar-keychain", "blue-flower-keychain",
+    "rainbow-name-keychain",
+    "turtle", "personalized-turtle-keychain", "whale", "lobster", "shark",
+    "palm-tree", "ladybug-backpack"
+  ]);
+
+  const braceletSlugs = new Set([
+    "best-friends-forever-bracelet",
+    "unicorn-dreams-bracelet",
+    "mermaid-wishes-bracelet",
+    "sweetheart-bracelet",
+    "pearl-glow-bracelet"
+  ]);
+
+  const productConstruction = (product) => {
+    if (braceletSlugs.has(product.slug)) {
+      return {
+        productType: "bracelet",
+        attachmentType: "elastic-bracelet",
+        attachmentDescription: "Continuous stretch bracelet; no keychain hardware",
+        hardwareOptions: [],
+        requiresHardwareSelection: false
+      };
+    }
+    if (product.slug === "flower-beaded-lanyard") {
+      return {
+        productType: "lanyard",
+        attachmentType: "lanyard-clasp",
+        attachmentDescription: "Silver-tone lanyard clasp",
+        hardwareOptions: [],
+        requiresHardwareSelection: false
+      };
+    }
+    if (product.slug === "glow-in-the-dark-christmas-ornament") {
+      return {
+        productType: "ornament",
+        attachmentType: "hanging-cord",
+        attachmentDescription: "White hanging cord",
+        hardwareOptions: [],
+        requiresHardwareSelection: false
+      };
+    }
+    if (product.slug === "custom-idea") {
+      return {
+        productType: "custom",
+        attachmentType: "owner-confirmed",
+        attachmentDescription: "Attachment confirmed after design review",
+        hardwareOptions: ["Silver", "Gold"],
+        requiresHardwareSelection: true
+      };
+    }
+    return {
+      productType: "keychain",
+      attachmentType: "keyring-and-clasp",
+      attachmentDescription: "Keyring and lobster clasp",
+      hardwareOptions: ["Silver", "Gold"],
+      requiresHardwareSelection: true
+    };
+  };
+
+  const essentialOwnerClarificationSlugs = new Set([
+    "butterfly-collection",
+    "personalized-blossom-keychain",
+    "personalized-scripture-dove-keychain",
+    "spider-man",
+    "spider-man-version-1",
+    "glow-in-the-dark-christmas-ornament"
+  ]);
+  const elevatedVisualDifferenceSlugs = new Set([
+    ...essentialOwnerClarificationSlugs,
+    "personalized-butterfly-keychain",
+    "personalized-blossom-keychain",
+    "personalized-turtle-keychain",
+    "butterfly-name-keychain",
+    "fall-leaves-keychain",
+    "christmas-truck",
+    "poinsettia"
+  ]);
+  const insufficientPatternEvidenceSlugs = new Set([
+    "butterfly-collection",
+    "personalized-scripture-dove-keychain",
+    "personalized-blossom-keychain",
+    "spider-man",
+    "spider-man-version-1",
+    "glow-in-the-dark-christmas-ornament"
+  ]);
+  const needsVisualCorrectionReasons = Object.freeze({
+    "natalies-butterfly": "Wing span, body length, and compact bead spacing do not yet match the approved butterfly photograph.",
+    "butterfly": "Wing rows and the narrow central body need to be rebuilt from the approved compact butterfly construction.",
+    "personalized-butterfly-keychain": "The approved design uses a compact butterfly above a vertical name strand; the current wide-wing proposal has the wrong construction.",
+    "flower": "The flower head, stem, leaves, and dangling name strand need the photograph's visible row lengths and spacing.",
+    "personalized-blossom-keychain": "The blossom, vertical name strand, heart accents, and two dangling strands cannot be established exactly from the single styled view.",
+    "big-flower": "The proposal is a large diamond flower; the approved product is a smaller flower head with a long stem and leaves.",
+    "deluxe-flower": "The proposal is a vertical flower bar; the approved product is a dense circular flower with different petal construction.",
+    "butterfly-with-flowers": "The approved product is a slim flower-and-butterfly strand, not a full-width butterfly silhouette.",
+    "macaw": "Head, beak, wing, body, feet, and long tail proportions need to follow the full bird in the approved photograph.",
+    "fish": "Body direction, fins, eye placement, and tail construction do not match the approved fish.",
+    "penguin": "The proposal reads as a rounded face; the approved product is a complete upright penguin with wings, body, and feet.",
+    "turtle": "Shell, head, flippers, and tail proportions need to be rebuilt from the approved turtle photograph.",
+    "personalized-turtle-keychain": "The turtle body and attached vertical personalization strand are not represented by the current shell-only proposal.",
+    "whale": "The current silhouette does not preserve the approved whale's head, belly, flippers, and tail proportions.",
+    "jellyfish": "The bell shape and individual dangling tentacles need the approved photograph's visible bead rows.",
+    "lobster": "Claws, antennae, segmented body, and tail are too simplified to match the approved lobster.",
+    "shark": "Snout, dorsal fin, belly, side fins, and tail proportions do not match the approved shark.",
+    "personalized-scripture-dove-keychain": "The dove, carrot detail, and name strand are partly obscured; exact visible construction needs additional evidence.",
+    "pencil": "The proposal is too wide and does not preserve the approved pencil's narrow shaft, eraser, and pointed tip.",
+    "octopus": "The head and eight distinct curled tentacles are not represented accurately.",
+    "best-friends-forever-bracelet": "The shared ring proposal omits this bracelet's exact letter-bead sequence and colour placement.",
+    "unicorn-dreams-bracelet": "The shared ring proposal omits this bracelet's exact letter-bead sequence and colour placement.",
+    "mermaid-wishes-bracelet": "The shared ring proposal omits this bracelet's exact letter-bead sequence and colour placement.",
+    "sweetheart-bracelet": "The shared ring proposal omits this bracelet's exact letter-bead sequence and colour placement.",
+    "pearl-glow-bracelet": "The shared ring proposal does not reproduce this bracelet's pearl spacing and accent sequence.",
+    "personalized-love-heart-keychain": "The heart outline, interior name beads, and hanging construction need the approved photograph's exact visible layout.",
+    "flower-beaded-lanyard": "The long lanyard loop, repeated flower spacing, and clasp ends are too simplified.",
+    "tiger": "The approved product is a full-limbed tiger; the current block face/body proposal loses its legs, ears, and proportions.",
+    "ladybug-backpack": "The approved product is a tall ladybug keychain; the proposal incorrectly uses a round body.",
+    "unicorn": "The approved product is a complete standing unicorn; the proposal is a small head-like silhouette.",
+    "baby-gecko": "Head, torso, four limbs, feet, and long tail proportions do not match the approved gecko.",
+    "monkey": "The approved product is a full monkey with head, torso, four limbs, hands, feet, and tail; the proposal is not that construction.",
+    "lion": "Mane, face, torso, legs, paws, and tail need to be rebuilt as the complete approved lion.",
+    "zebra": "The full-body direction is recognizable, but leg, muzzle, mane, and stripe placement remain visibly different.",
+    "magical-mane-unicorn": "The approved product is a complete standing unicorn; the proposal is a small head-like silhouette.",
+    "panda": "The proposal is a large square face; the approved product is a tall full-body panda with arms and legs.",
+    "giraffe": "The proposal omits the approved giraffe's complete head, neck, torso, four legs, and tail construction.",
+    "ariel": "Head, hair, torso, arms, and mermaid tail need to follow the approved character-specific bead arrangement.",
+    "pumpkin-spice-latte": "The approved product is a tall handled cup with foam and personalization; the proposal is a rounded badge.",
+    "varsity-stripe-personalized-keychain": "The long stripe bar is recognizable, but the central letter beads and end construction are missing.",
+    "melting-ice-cream": "The proposal does not preserve the approved melting scoop, drips, cone, and hanging orientation.",
+    "puppy": "The approved product is a complete puppy with head, body, legs, paws, and ears; the proposal uses an unrelated compact silhouette.",
+    "rainbow-name-keychain": "The approved product is a long vertical personalized strand; the proposal incorrectly uses a rainbow arc.",
+    "butterfly-name-keychain": "The approved design is a compact butterfly with an attached name strand; the current proposal has the wrong scale and arrangement.",
+    "pastel-flower-bar-keychain": "The flower clusters and narrow vertical bar need the approved photograph's exact spacing and row lengths.",
+    "blue-flower-keychain": "The approved flower head, leaves, and stem are not represented by the oversized diamond proposal.",
+    "flower-braided": "The approved braided flower strand has a narrow construction that the wide flower proposal does not reproduce.",
+    "intricated-flower": "The dense circular multicolour flower construction is not represented by the current wide oval proposal.",
+    "butterfly-and-flower": "The small butterfly, flower, and connecting vertical strand need their own product-specific layout.",
+    "apple": "The apple silhouette is recognizable, but the approved interior name beads, leaf, stem, and row spacing are not yet reproduced.",
+    "abc-blocks": "The approved product has three separate hanging alphabet blocks; the proposal incorrectly forms one rectangular panel.",
+    "backpack": "Pocket, straps, zipper rows, and personalized front panel do not match the approved backpack construction.",
+    "glue-bottle": "Bottle shoulders, cap, label area, and narrow body proportions need the approved visible row structure.",
+    "lunch-box": "Handle, rounded case, border, and personalized centre panel need the approved photograph's construction.",
+    "personalized-faith-heart-keychain": "The approved heart includes interior letter beads and a different outline density than the current solid heart.",
+    "fall-fox": "The approved product is a full fox with head, torso, legs, ears, tail, and personalization; the proposal is a face-like mask.",
+    "fall-coffee-cup": "The handle, cup body, foam rim, and personalized centre need to match the approved photograph.",
+    "christmas-polar-bear": "The approved product is a complete standing bear; the proposal is a rounded face/body panel without correct limbs.",
+    "gingerbread-girl": "Dress, arms, legs, bow, icing, and body proportions need closer reconstruction from the approved photograph.",
+    "christmas-teddy-bear": "The approved bear has distinct ears, arms, torso, legs, and bow; the proposal remains too block-like.",
+    "mrs-claus": "The proposal shares Santa's geometry and does not reproduce Mrs. Claus's hair, dress, face, and body arrangement.",
+    "ice-cream-keychain": "The approved product is a narrow cone with a tapered scoop; the proposal is too wide and round."
+  });
+  const previewAuditMaxProductId = 195;
+  const catalogue = Object.freeze(products.map((product) => {
+    const construction = productConstruction(product);
+    const proposedPattern = provisionalPatternsBySlug[product.slug] || product.previewPattern;
+    const provisionalLabels = provisionalPartLabelsBySlug[product.slug];
+    const defaultColours = (product.defaultColours || []).map(colour => (
+      String(colour || "").charAt(0).toUpperCase() + String(colour || "").slice(1).toLowerCase()
+    ));
+    const derivedPartLabels = provisionalLabels
+      ? provisionalLabels.slice(0, Math.max(1, defaultColours.length - 2))
+      : product.previewColourParts;
+    const derivedPartDefaults = provisionalLabels
+      ? Object.fromEntries(derivedPartLabels.map((label, index) => [label, defaultColours[index + 1] || defaultColours[0] || "Cream"]))
+      : product.previewPartDefaults;
+    const hasProposedPattern = Number(product.id) <= previewAuditMaxProductId
+      && Array.isArray(proposedPattern)
+      && proposedPattern.length > 0;
+    const previewMode = product.slug === "custom-idea"
+      ? "custom"
+      : (hasProposedPattern ? "colour-responsive" : "reference");
+    const previewAuditReason = previewMode === "reference"
+      ? "missing-pattern"
+      : "owner-approved-pattern";
+    const requiresOwnerCorrection = ownerCorrectionSlugs.has(product.slug);
+    const patternVerificationStatus = product.slug === "custom-idea" ? "not-applicable" : "verified";
+    const correctionReason = needsVisualCorrectionReasons[product.slug] || "Owner identified this product for final pattern correction.";
+    const visualAuditReason = requiresOwnerCorrection
+      ? "Owner approved the corrected dimensional pattern during the complete 117-product visual review."
+      : "Owner approved during the complete 117-product visual review; existing geometry is preserved.";
+    const patternAccuracyStatus = product.slug === "custom-idea"
+      ? "not-applicable"
+      : (hasProposedPattern ? "accurate" : "missing");
+    const customerPreviewMode = patternVerificationStatus === "verified" && hasProposedPattern
+      ? "colour-responsive"
+      : "reference";
+    return Object.freeze({
+      ...product,
+      ...construction,
+      previewPattern: proposedPattern,
+      previewRendererKind: construction.productType === "bracelet"
+        ? "bracelet-construction"
+        : (Number(product.id) === 174 ? "frog-construction" : "bead-grid"),
+      previewColourParts: derivedPartLabels,
+      previewPartDefaults: derivedPartDefaults,
+      previewAccentDefault: provisionalLabels
+        ? (defaultColours.at(-1) || product.previewAccentDefault)
+        : product.previewAccentDefault,
+      previewMode,
+      previewAuditReason,
+      patternVerificationStatus,
+      patternProposalAvailable: hasProposedPattern,
+      patternEvidence: hasProposedPattern ? "proposed-pattern-and-approved-photo" : "approved-photo-only",
+      patternAccuracyStatus,
+      correctionReason,
+      visualAuditReason,
+      visualDifferenceRisk: requiresOwnerCorrection ? "high" : "standard",
+      essentialOwnerClarification: false,
+      ownerCorrectionRequired: requiresOwnerCorrection,
+      ownerCorrectionApproved: requiresOwnerCorrection,
+      customerPreviewMode
+    });
+  }));
 
   if (typeof module !== "undefined" && module.exports) {
     module.exports = catalogue;

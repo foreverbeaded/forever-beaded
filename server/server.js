@@ -599,7 +599,10 @@ async function getTrustedProduct(db, productId) {
       name: row.name,
       priceCents: row.base_price_cents,
       imageUrl: row.image_url,
-      personalizationMaxLength: seed?.personalizationMaxLength ?? null
+      personalizationMaxLength: seed?.personalizationMaxLength ?? null,
+      productType: seed?.productType || "keychain",
+      hardwareOptions: seed?.hardwareOptions || ["Silver", "Gold"],
+      requiresHardwareSelection: seed?.requiresHardwareSelection !== false
     };
   }
 
@@ -610,7 +613,10 @@ async function getTrustedProduct(db, productId) {
     name: seed.name,
     priceCents: seed.basePriceCents,
     imageUrl: seed.imageUrl,
-    personalizationMaxLength: seed.personalizationMaxLength ?? null
+    personalizationMaxLength: seed.personalizationMaxLength ?? null,
+    productType: seed.productType,
+    hardwareOptions: seed.hardwareOptions,
+    requiresHardwareSelection: seed.requiresHardwareSelection
   } : null;
 }
 
@@ -645,6 +651,14 @@ async function normalizeItem(db, rawItem) {
   if (isCustomIdea && !colours) throw new PublicError(400, "Please choose a primary bead colour.");
   if (isCustomIdea && colours.split(",").length > 3) throw new PublicError(400, "Please choose no more than three bead colours.");
 
+  const submittedHardware = normalizeText(rawItem.hardware || rawItem.keychainType, 80, "Hardware");
+  const hardware = product.requiresHardwareSelection
+    ? submittedHardware
+    : "";
+  if (hardware && product.requiresHardwareSelection && !product.hardwareOptions.includes(hardware)) {
+    throw new PublicError(400, "Please choose an available hardware option.");
+  }
+
   return {
     productId: String(product.id),
     productName: product.name,
@@ -655,7 +669,7 @@ async function normalizeItem(db, rawItem) {
     personalizationText,
     requestedProductName,
     customDescription,
-    hardware: normalizeText(rawItem.hardware || rawItem.keychainType, 80, "Hardware"),
+    hardware,
     quantity,
     unitPriceCents,
     lineTotalCents: unitPriceCents * quantity,
@@ -1317,7 +1331,7 @@ function buildOrderNotification(order, saved, etransferEmail) {
     `Requested product name: ${item.requestedProductName || ""}`,
     `Design: ${item.design || ""}`,
     `Colours: ${item.colours || ""}`,
-    `Hardware: ${item.hardware || ""}`,
+    item.hardware ? `Hardware: ${item.hardware}` : "",
     `Quantity: ${item.quantity}`,
     `Personalization choice: ${item.personalizationType || "none"}`,
     `Name or initials entered: ${item.personalizationText || item.personalization || ""}`,

@@ -108,7 +108,7 @@ test("Create Your Own Treasure keeps trusted product previews and payment drafts
   assert.ok(Array.isArray(apple?.previewPattern) && apple.previewPattern.length > 0);
   assert.notDeepEqual(apple.previewPattern, loveHeart?.previewPattern, "Apple must not reuse the Heart preview");
   assert.match(gardenSource, /productCatalogue\.find\(product => String\(product\.id\) === numericId\)/);
-  assert.match(gardenSource, /Design reference — colours may vary from your selection\./);
+  assert.match(gardenSource, /Design reference — your selected colours are listed below\./);
   assert.doesNotMatch(gardenSource, /<rect class="preview-bead-shape" data-preview-part="Main Colour" x="166"/);
   assert.ok(
     createSource.indexOf("js/payment-email.js") < createSource.indexOf("js/garden.js"),
@@ -126,6 +126,150 @@ test("Create Your Own Treasure keeps trusted product previews and payment drafts
   assert.match(gardenCss, /\.payment-email-open-button:focus-visible/);
   assert.match(gardenCss, /@media \(max-width: 620px\)[\s\S]*\.payment-email-copy-row \{ grid-template-columns: minmax\(0, 1fr\); \}/);
   assert.match(gardenCss, /\.payment-email-primary-action,[\s\S]*\.payment-email-open-button \{ width: 100%; \}/);
+});
+
+test("every active trusted product has an audited universal preview strategy", () => {
+  const catalogue = loadCatalogue();
+  const active = catalogue.filter(product => product.active !== false && product.slug !== "custom-idea");
+  const customIdea = catalogue.find(product => product.slug === "custom-idea");
+  const gardenSource = fs.readFileSync(path.join(projectRoot, "js", "garden.js"), "utf8");
+  const createPage = fs.readFileSync(path.join(projectRoot, "create.html"), "utf8");
+
+  assert.equal(active.length, 117);
+  assert.equal(customIdea?.previewMode, "custom");
+  assert.equal(new Set(active.map(product => product.id)).size, active.length);
+  assert.equal(new Set(active.map(product => product.slug)).size, active.length);
+
+  active.forEach(product => {
+    assert.ok(["colour-responsive", "reference"].includes(product.previewMode), `${product.slug} has an audited preview mode`);
+    const image = product.previewImageUrl || product.referenceImageUrl || product.imageUrl;
+    assert.ok(image, `${product.slug} has a product-specific approved image`);
+    assert.ok(fs.existsSync(path.join(projectRoot, image)), `${product.slug} preview image exists: ${image}`);
+    if (product.previewMode === "colour-responsive") {
+      assert.ok(Array.isArray(product.previewPattern) && product.previewPattern.length > 0, `${product.slug} has a proposed colour pattern`);
+      assert.equal(product.previewAuditReason, "owner-approved-pattern");
+      assert.equal(product.patternProposalAvailable, true);
+    } else {
+      assert.ok(["missing-pattern", "shape-mismatch"].includes(product.previewAuditReason), `${product.slug} records why its approved photograph is used`);
+      assert.equal(product.patternProposalAvailable, false);
+    }
+    assert.equal(product.patternVerificationStatus, "verified");
+    assert.equal(product.patternAccuracyStatus, "accurate");
+    assert.ok(product.visualAuditReason, `${product.slug} records its visual comparison result`);
+    assert.ok(["standard", "high"].includes(product.visualDifferenceRisk));
+    assert.equal(product.customerPreviewMode, product.patternVerificationStatus === "verified" ? "colour-responsive" : "reference");
+  });
+
+  assert.equal(active.filter(product => product.previewAuditReason === "missing-pattern").length, 0);
+  assert.equal(active.filter(product => product.previewAuditReason === "shape-mismatch").length, 0);
+  assert.equal(active.filter(product => product.previewMode === "colour-responsive").length, 117);
+  assert.equal(active.filter(product => product.previewMode === "reference").length, 0);
+  assert.equal(active.filter(product => product.patternAccuracyStatus === "accurate").length, 117);
+  assert.equal(active.filter(product => product.patternAccuracyStatus === "needs-correction").length, 0);
+  assert.equal(active.filter(product => product.patternAccuracyStatus === "insufficient-evidence").length, 0);
+  assert.equal(active.filter(product => product.visualDifferenceRisk === "high").length, 60);
+  assert.equal(active.filter(product => product.essentialOwnerClarification).length, 0);
+  assert.equal(active.filter(product => product.patternVerificationStatus === "verified").length, 117);
+  assert.equal(active.filter(product => product.patternVerificationStatus === "needs-pattern-verification").length, 0);
+  assert.equal(active.filter(product => product.customerPreviewMode === "reference").length, 0);
+  assert.equal(active.filter(product => product.customerPreviewMode === "colour-responsive").length, 117);
+  assert.equal(active.filter(product => !(product.previewImageUrl || product.referenceImageUrl || product.imageUrl)).length, 0);
+  assert.deepEqual(
+    Array.from(active.filter(product => product.ownerCorrectionRequired), product => product.id).sort((a, b) => a - b),
+    [11, 17, 19, 20, 21, 23, 24, 27, 29, 42, 104, 109, 110, 111, 114, 115, 116, 127, 130, 131,
+      132, 133, 134, 135, 137, 139, 141, 142, 145, 146, 147, 149, 150, 152, 154, 155, 156, 157,
+      160, 164, 167, 169, 171, 172, 176, 177, 178, 179, 180, 181, 183, 186, 187, 188, 189, 190,
+      191, 192, 194, 195]
+  );
+  const correctedPatterns = active.filter(product => product.ownerCorrectionRequired);
+  assert.equal(correctedPatterns.every(product => product.ownerCorrectionApproved), true,
+    "all 60 corrected products retain their correction history and final owner approval");
+  const deluxeFlower = active.find(product => product.slug === "deluxe-flower");
+  const intricatedFlower = active.find(product => product.slug === "intricated-flower");
+  const bigFlower = active.find(product => product.slug === "big-flower");
+  const blueFlower = active.find(product => product.slug === "blue-flower-keychain");
+  assert.deepEqual(deluxeFlower?.previewPattern, intricatedFlower?.previewPattern,
+    "Deluxe and Intricated Flower intentionally share the verified underlying flower construction");
+  assert.notDeepEqual(bigFlower?.previewPattern, blueFlower?.previewPattern,
+    "Blue Flower must not reuse the Big Flower coordinates");
+  const butterfly = active.find(product => product.slug === "butterfly");
+  const butterflyCollection = active.find(product => product.slug === "butterfly-collection");
+  const personalizedButterfly = active.find(product => product.slug === "personalized-butterfly-keychain");
+  const butterflyName = active.find(product => product.slug === "butterfly-name-keychain");
+  const butterflyFlower = active.find(product => product.slug === "butterfly-and-flower");
+  const butterflyCore = pattern => pattern.filter(point => ["a", "b", "c", "d"].includes(point.c));
+  assert.deepEqual(butterflyCollection?.previewPattern, butterfly?.previewPattern,
+    "Butterfly Collection shows one owner-approved butterfly rather than a multi-butterfly substitute");
+  assert.deepEqual(butterflyCore(personalizedButterfly.previewPattern), butterfly.previewPattern,
+    "Personalized Butterfly keeps the approved butterfly construction and adds only its name loop");
+  assert.deepEqual(personalizedButterfly.previewPattern, butterflyName?.previewPattern,
+    "both name-keychain identities reuse the same approved butterfly and name-loop construction");
+  assert.deepEqual(butterflyCore(butterflyFlower.previewPattern), butterfly.previewPattern,
+    "Butterfly and Flower keeps the approved butterfly construction and adds only its flower detail");
+
+  const apple = active.find(product => product.slug === "apple");
+  assert.equal(apple?.id, 140);
+  assert.equal(apple?.previewMode, "colour-responsive");
+  assert.equal(apple?.basePriceCents, 2500);
+  assert.deepEqual(Array.from(apple?.previewColourParts || []), ["Leaf", "Stem"]);
+  assert.ok(apple?.previewPattern.some(point => point.c === "n"), "Apple includes in-pattern personalization beads");
+  assert.deepEqual({ ...apple?.previewFixedColours }, { d: "White" });
+  assert.equal(apple?.previewSupportsAccent, false);
+  const penguin = active.find(product => product.slug === "penguin");
+  assert.deepEqual(Array.from(penguin?.previewColourParts || []), ["Belly", "Beak and feet"]);
+  assert.ok(penguin?.previewPattern.length >= 80, "Penguin keeps a complete upright body pattern");
+  const frog = active.find(product => product.id === 174);
+  assert.equal(frog?.slug, "frog-keychain");
+  assert.equal(frog?.previewMode, "colour-responsive");
+  assert.equal(frog?.constructionReferenceClassification, "owner-supplied-original-photo");
+  assert.equal(frog?.constructionReferenceImageUrl, "images/products/frog-keychain-owner-construction-reference-original.jpg");
+  assert.equal(fs.existsSync(path.join(projectRoot, frog.constructionReferenceImageUrl)), true);
+  assert.deepEqual({ ...frog?.previewPartDefaults }, {
+    "Body": "Green",
+    "Arms and legs": "Green",
+    "Fingers and toes": "Black"
+  });
+  assert.equal(frog?.previewAccentDefault, "Red");
+  const ornament = active.find(product => product.id === 193);
+  assert.equal(ornament?.slug, "glow-in-the-dark-christmas-ornament");
+  assert.equal(ornament?.previewMode, "colour-responsive");
+  assert.equal(ornament?.patternAccuracyStatus, "accurate");
+  assert.equal(ornament?.essentialOwnerClarification, false);
+  assert.equal(ornament?.productType, "ornament");
+  assert.deepEqual(Array.from(ornament?.hardwareOptions || []), []);
+  assert.equal(ornament?.basePriceCents, 3500);
+  assert.match(ornament?.previewNote || "", /exposure to light/i);
+  assert.match(ornament?.previewNote || "", /no batteries or LEDs/i);
+
+  assert.doesNotMatch(gardenSource, /colour preview coming soon/i);
+  assert.match(gardenSource, /product\?\.previewMode !== "colour-responsive"/);
+  assert.match(gardenSource, /patternVerificationStatus === "verified"/);
+  assert.match(gardenSource, /allowUnverifiedPattern === true/);
+  assert.match(gardenSource, /product\?\.customerPreviewMode !== "colour-responsive"/);
+  assert.match(gardenSource, /product\?\.customerPreviewMode === "reference"/);
+  assert.match(gardenSource, /renderPreviewSelectionLegend\(colourSelections, product, hardware\)/);
+  assert.match(gardenSource, /artwork = artwork\.replaceAll\("#c9a653", hardwareHex\)/);
+  assert.match(gardenSource, /previewRendererKind === "frog-construction"/);
+  assert.match(gardenSource, /code === "n"/);
+  assert.match(gardenSource, /previewFixedColours/);
+  assert.match(gardenSource, /preview-frog-cord/);
+  assert.match(gardenSource, /preview-bead-depth/);
+  assert.match(createPage, /id="homePreviewSelectionLegend" class="preview-selection-legend"/);
+  assert.match(createPage, /id="homeTreasureHardwareField"/);
+
+  const bracelets = active.filter(product => product.productType === "bracelet");
+  assert.deepEqual(Array.from(bracelets, product => product.id), [120, 121, 122, 123, 124]);
+  bracelets.forEach(product => {
+    assert.equal(product.requiresHardwareSelection, false);
+    assert.deepEqual(Array.from(product.hardwareOptions || []), []);
+    assert.equal(product.attachmentType, "elastic-bracelet");
+    assert.match(product.attachmentDescription, /bracelet/i);
+    assert.equal(product.previewRendererKind, "bracelet-construction");
+    assert.ok(product.previewPattern.some(point => point.c === "n"), `${product.slug} keeps letter beads in the bracelet construction`);
+  });
+  assert.match(gardenSource, /product\?\.productType === "bracelet"/);
+  assert.match(gardenSource, /preview-bracelet-cord/);
+  assert.match(gardenSource, /productUsesSelectableHardware/);
 });
 
 test("homepage monarch uses one accessible, self-cleaning appearance cycle", () => {

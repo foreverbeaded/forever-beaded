@@ -780,11 +780,14 @@
     .world-create .finished-custom-preview svg { position:absolute; z-index:1; inset:16px 16px 44px; width:calc(100% - 32px); height:calc(100% - 60px); overflow:visible; filter:drop-shadow(0 15px 18px rgba(42,20,39,.22)); }
     .world-create .finished-custom-preview .preview-cord { fill:none; stroke:#f7f2eb; stroke-width:10; stroke-linecap:round; stroke-linejoin:round; }
     .world-create .finished-custom-preview .preview-pony-bead { filter:drop-shadow(0 3px 2px rgba(35,18,31,.3)); }
+    .world-create .finished-custom-preview .preview-bead-depth { fill:rgba(34,15,29,.26); pointer-events:none; }
     .world-create .finished-custom-preview .preview-bead-shape { stroke:rgba(55,27,47,.3); stroke-width:2.2; }
     .world-create .finished-custom-preview .preview-bead-shine { fill:rgba(255,255,255,.52); filter:blur(.35px); pointer-events:none; }
+    .world-create .finished-custom-preview .preview-bead-glint { fill:rgba(255,255,255,.88); pointer-events:none; }
     .world-create .finished-custom-preview .preview-bead-rim { fill:rgba(255,255,255,.2); stroke:rgba(48,25,41,.28); stroke-width:1.4; }
     .world-create .finished-custom-preview .preview-bead-hole { fill:rgba(28,17,26,.56); stroke:rgba(255,255,255,.38); stroke-width:1.1; }
     .world-create .finished-custom-preview .preview-highlight { fill:none; stroke:rgba(255,255,255,.48); stroke-width:4; stroke-linecap:round; pointer-events:none; }
+    .world-create .finished-custom-preview .preview-frog-cord { fill:none; stroke:#f7f2eb; stroke-width:8; stroke-linecap:round; stroke-linejoin:round; filter:drop-shadow(0 2px 2px rgba(36,23,31,.32)); }
     .world-create .showcase-custom-preview { width:100%!important; min-height:clamp(390px,52vw,610px)!important; margin:0!important; }
     .world-create .custom-idea-notice { display:grid!important; place-items:center!important; padding:clamp(22px,4vw,46px)!important; }
     .world-create .custom-idea-notice-inner { position:relative; z-index:2; max-width:440px; padding:clamp(24px,4vw,42px); border:1px solid rgba(115,72,103,.2); border-radius:24px; background:rgba(255,255,255,.8); box-shadow:0 18px 45px rgba(56,26,48,.14); color:#43283d; text-align:center; }
@@ -875,7 +878,7 @@
           <figure class="editorial-photo editorial-photo-main">
             <img id="homeShowcaseProductImage" src="etsy/images-branded/butterfly-owner-approved-master.jpg" alt="Butterfly handmade beaded keychain" loading="eager" decoding="async" hidden>
             <div id="homeShowcaseDynamicPreview" class="home-preview-beads finished-custom-preview showcase-custom-preview" aria-label="Large live picture of the customized treasure"></div>
-            <p id="homeShowcaseImageFallback" class="showcase-image-fallback" role="status" hidden>Product image coming soon.</p>
+            <p id="homeShowcaseImageFallback" class="showcase-image-fallback" role="status" hidden>No approved product image is currently available.</p>
             <article id="homeCustomConceptCard" class="custom-concept-card" aria-label="Your custom treasure concept preview" hidden>
               <p class="custom-concept-kicker">Concept preview</p>
               <h2>Your Custom Treasure</h2>
@@ -979,14 +982,14 @@
               </span>
             </div>
             <label class="colour-summary-field">Colour summary <input id="homeTreasureColours" name="colours" type="text" value="Purple, Cream, Gold" autocomplete="off" readonly></label>
-            <label>Hardware <select id="homeTreasureHardware" name="hardware"><option value="Silver" selected>Silver</option><option value="Gold">Gold</option></select></label>
+            <label id="homeTreasureHardwareField">Hardware <select id="homeTreasureHardware" name="hardware"><option value="Silver" selected>Silver</option><option value="Gold">Gold</option></select></label>
             <label>Quantity <input id="homeTreasureQuantity" name="quantity" type="number" min="1" max="20" value="1" inputmode="numeric"></label>
             <label class="order-honeypot" aria-hidden="true" tabindex="-1">Website <input id="homeOrderWebsite" name="website" type="text" autocomplete="off" tabindex="-1"></label>
           </div>
           <div class="treasure-preview" aria-live="polite">
             <div class="preview-copy"><span class="preview-label">Approximate Finished Preview</span><p id="homeTreasurePreviewSelected" class="preview-selected-design">Selected Design: Loading…</p><h4 id="homeTreasurePreviewTitle">Loading selected design…</h4><p id="homeTreasurePreviewMeta">Silver hardware, quantity 1, no personalization.</p><p id="homeTreasurePreviewDescription" class="preview-description">Approximate colour visualization; the final handmade treasure may vary slightly.</p></div>
             <div class="home-preview-art-wrap">
-              <aside class="hardware-preview-card" aria-label="Hardware preview">
+              <aside id="homeHardwarePreviewCard" class="hardware-preview-card" aria-label="Hardware preview">
                 <span class="preview-label">Hardware preview</span>
                 <div id="homeHardwarePreviewSample" class="hardware-preview-sample has-silver-hardware" aria-hidden="true"></div>
                 <p id="homeHardwarePreviewText">Silver ring and clasp</p>
@@ -994,6 +997,7 @@
               <div id="homeTreasurePreview" class="home-preview-beads" aria-label="Approximate finished bead colour preview"></div>
               <p id="homeTreasurePreviewPersonalization" class="preview-personalization" hidden></p>
             </div>
+            <div id="homePreviewSelectionLegend" class="preview-selection-legend" aria-live="polite"></div>
           </div>
           <div id="homeOrderStatus" class="cart-payment-note" role="status" aria-live="polite"></div>
           <button id="homeTreasureButton" class="gold-button treasure-submit" type="submit">Create My Treasure</button>

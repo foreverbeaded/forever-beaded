@@ -104,7 +104,7 @@
     }
   };
 
-  const changeFulfillmentStatus = async (order, select, trackingInput, button) => {
+  const changeFulfillmentStatus = async (order, select, trackingInput, carrierInput, pickupInput, button) => {
     const fulfillmentStatus = select.value;
     const notificationMilestone = ["COMPLETED", "SHIPPED", "READY_FOR_PICKUP", "DELIVERED"].includes(fulfillmentStatus);
     const notice = notificationMilestone && fulfillmentNotificationsEnabled
@@ -115,7 +115,11 @@
     setStatus(`Saving ${stateLabel(fulfillmentStatus)} for ${order.orderNumber}...`);
     try {
       const body = { fulfillmentStatus };
-      if (fulfillmentStatus === "SHIPPED") body.trackingNumber = trackingInput.value.trim();
+      if (fulfillmentStatus === "SHIPPED") {
+        body.trackingNumber = trackingInput.value.trim();
+        body.carrier = carrierInput.value.trim();
+      }
+      if (fulfillmentStatus === "READY_FOR_PICKUP") body.pickupInstructions = pickupInput.value.trim();
       const result = await adminFetch(`/api/admin/orders/${encodeURIComponent(order.orderNumber)}/fulfillment-status`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -160,6 +164,52 @@
       await loadOrders();
     } catch (error) {
       setStatus(error.message, true);
+      button.disabled = false;
+    }
+  };
+
+  const createCustomerTrackingLink = async (order, button, region) => {
+    if (!window.confirm(`Create a new private customer tracking link for ${order.orderNumber}? Any older tracking link for this order will stop working.`)) return;
+    button.disabled = true;
+    try {
+      const result = await adminFetch(`/api/admin/orders/${encodeURIComponent(order.orderNumber)}/tracking-link`, { method: "POST" });
+      const label = document.createElement("label");
+      label.textContent = "Private customer tracking link";
+      const input = document.createElement("input");
+      input.type = "text";
+      input.readOnly = true;
+      input.value = result.trackingUrl;
+      input.setAttribute("aria-label", `Private tracking link for ${order.orderNumber}`);
+      const copy = actionButton("Copy Tracking Link", "secondary", async copyButton => {
+        copyButton.disabled = true;
+        try {
+          await navigator.clipboard.writeText(input.value);
+          setStatus(`Tracking link copied for ${order.orderNumber}.`);
+        } catch {
+          input.focus();
+          input.select();
+          setStatus("Select and copy the tracking link shown in the order card.");
+        } finally {
+          copyButton.disabled = false;
+        }
+      });
+      const revoke = actionButton("Revoke Tracking Link", "danger", async revokeButton => {
+        if (!window.confirm(`Revoke the customer tracking link for ${order.orderNumber}?`)) return;
+        revokeButton.disabled = true;
+        try {
+          await adminFetch(`/api/admin/orders/${encodeURIComponent(order.orderNumber)}/tracking-link`, { method: "DELETE" });
+          region.replaceChildren();
+          setStatus(`Customer tracking link revoked for ${order.orderNumber}.`);
+        } catch (error) {
+          setStatus(error.message, true);
+          revokeButton.disabled = false;
+        }
+      });
+      region.replaceChildren(label, input, copy, revoke);
+      setStatus(`A private tracking link was created for ${order.orderNumber}. It has not been emailed automatically.`);
+    } catch (error) {
+      setStatus(error.message, true);
+    } finally {
       button.disabled = false;
     }
   };
@@ -403,8 +453,24 @@
       trackingInput.maxLength = 100;
       trackingInput.value = order.trackingNumber || "";
       trackingInput.placeholder = "Enter tracking number when available";
-      const saveProgress = actionButton("Update Progress", "", button => changeFulfillmentStatus(order, fulfillmentSelect, trackingInput, button));
-      fulfillmentControls.append(legend, fulfillmentLabel, fulfillmentSelect, trackingLabel, trackingInput, saveProgress);
+      const extraDetails = document.createElement("div");
+      extraDetails.className = "fulfillment-extra";
+      const carrierLabel = document.createElement("label");
+      carrierLabel.textContent = "Shipping carrier (optional)";
+      const carrierInput = document.createElement("input");
+      carrierInput.type = "text";
+      carrierInput.maxLength = 80;
+      carrierInput.value = order.carrier || "";
+      carrierInput.placeholder = "Example: Canada Post";
+      const pickupLabel = document.createElement("label");
+      pickupLabel.textContent = "Customer-facing pickup instructions (optional; do not include private home details)";
+      const pickupInput = document.createElement("textarea");
+      pickupInput.maxLength = 500;
+      pickupInput.value = order.pickupInstructions || "";
+      pickupInput.placeholder = "Shown only when the order is ready for pickup";
+      extraDetails.append(carrierLabel, carrierInput, pickupLabel, pickupInput);
+      const saveProgress = actionButton("Update Progress", "", button => changeFulfillmentStatus(order, fulfillmentSelect, trackingInput, carrierInput, pickupInput, button));
+      fulfillmentControls.append(legend, fulfillmentLabel, fulfillmentSelect, trackingLabel, trackingInput, extraDetails, saveProgress);
       card.append(fulfillmentControls);
 
       if (reminder?.lastError) {
@@ -416,6 +482,8 @@
 
       const actions = document.createElement("div");
       actions.className = "actions";
+      const trackingLinkRegion = document.createElement("div");
+      trackingLinkRegion.className = "tracking-link-region";
       const detailsRegion = document.createElement("section");
       const detailsId = `order-details-${String(order.orderNumber).replace(/[^A-Za-z0-9_-]/g, "-")}`;
       detailsRegion.id = detailsId;
@@ -425,6 +493,7 @@
       detailsButton.setAttribute("aria-expanded", "false");
       detailsButton.setAttribute("aria-controls", detailsId);
       actions.append(detailsButton);
+      actions.append(actionButton("Create / Replace Customer Tracking Link", "secondary", button => createCustomerTrackingLink(order, button, trackingLinkRegion)));
       if (order.paymentStatus !== "VERIFIED") actions.append(actionButton("Mark Paid", "", button => changePaymentStatus(order, "VERIFIED", button)));
       if (order.paymentStatus !== "AWAITING_PAYMENT") actions.append(actionButton("Mark Awaiting Payment", "secondary", button => changePaymentStatus(order, "AWAITING_PAYMENT", button)));
       if (order.paymentStatus !== "CANCELLED") actions.append(actionButton("Mark Cancelled", "danger", button => changePaymentStatus(order, "CANCELLED", button)));
@@ -444,6 +513,7 @@
         actions.append(actionButton(`Retry ${stateLabel(notification.fulfillmentStatus)} Email`, "secondary", button => retryFulfillmentNotification(order, notification, button)));
       });
       card.append(actions);
+      card.append(trackingLinkRegion);
       card.append(detailsRegion);
 
       if (order.history?.length) {

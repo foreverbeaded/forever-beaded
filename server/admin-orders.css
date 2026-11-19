@@ -35,11 +35,16 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .actions button { flex: 1 1 170px; }
 .actions .details-button { border-color: #fff8e8; background: #fff8e8; color: #211225; }
+.tracking-link-region { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 8px; align-items: end; }
+.tracking-link-region:empty { display: none; }
+.tracking-link-region label { grid-column: 1 / -1; }
 .fulfillment-controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 8px 12px; margin: 2px 0; border: 1px solid rgba(223,185,93,.45); padding: 14px; }
 .fulfillment-controls legend { padding: 0 7px; color: #f2d38b; font-weight: 900; }
 .fulfillment-controls label { align-self: end; font-size: .82rem; }
 .fulfillment-controls select, .fulfillment-controls input { grid-row: 2; }
 .fulfillment-controls button { grid-column: 3; grid-row: 2; white-space: nowrap; }
+.fulfillment-extra { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px 12px; }
+.fulfillment-extra label, .fulfillment-extra input, .fulfillment-extra textarea { grid-column: auto; grid-row: auto; }
 .order-details { display: grid; gap: 14px; border-top: 1px solid rgba(223,185,93,.35); padding-top: 16px; }
 .order-details[hidden] { display: none; }
 .order-details h3 { margin-top: 4px; color: #f2d38b; font-size: 1.08rem; }
@@ -67,7 +72,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .detail-grid, .item-grid { grid-template-columns: 1fr; }
   .actions { flex-direction: column; }
   .actions button { flex: 0 0 auto; width: 100%; }
+  .tracking-link-region { grid-template-columns: 1fr; }
+  .tracking-link-region label { grid-column: 1; }
   .fulfillment-controls { grid-template-columns: 1fr; }
   .fulfillment-controls label, .fulfillment-controls select, .fulfillment-controls input, .fulfillment-controls button { grid-column: 1; grid-row: auto; }
   .fulfillment-controls button { width: 100%; }
+  .fulfillment-extra { grid-template-columns: 1fr; }
 }

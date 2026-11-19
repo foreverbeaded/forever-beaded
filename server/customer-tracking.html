@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="no-referrer">
+  <title>Your Treasure Journey | Forever Beaded</title>
+  <link rel="stylesheet" href="/tracking-assets/customer-tracking.css">
+  <script src="/tracking-assets/customer-tracking.js" defer></script>
+</head>
+<body>
+  <main>
+    <header class="storybook-header">
+      <p class="eyebrow">Forever Beaded</p>
+      <h1>Your Treasure Journey</h1>
+      <p>Your creation is being handmade with love!</p>
+    </header>
+    <section id="loadingPanel" class="panel" aria-live="polite">
+      <p>Opening your private order journey...</p>
+    </section>
+    <section id="errorPanel" class="panel error-panel" hidden>
+      <h2>This tracking link is unavailable</h2>
+      <p>The link may be invalid, expired, or no longer active. Please contact Forever Beaded if you need a fresh tracking link.</p>
+      <a href="https://foreverbeaded.ca/contact.html">Contact Forever Beaded</a>
+    </section>
+    <section id="trackingPanel" class="panel" hidden aria-labelledby="statusHeading">
+      <div class="order-heading">
+        <div><span>Order number</span><strong id="orderNumber"></strong></div>
+        <div><span>Order date</span><strong id="orderDate"></strong></div>
+      </div>
+      <div class="status-cards">
+        <article><span>Payment</span><strong id="paymentStatus"></strong></article>
+        <article><span>Treasure progress</span><strong id="fulfillmentStatus"></strong></article>
+      </div>
+      <h2 id="statusHeading">Where your treasure is now</h2>
+      <ol id="timeline" class="timeline"></ol>
+      <section id="shippingDetails" class="detail-box" hidden>
+        <h2>Shipping details</h2>
+        <dl>
+          <div id="carrierRow" hidden><dt>Carrier</dt><dd id="carrier"></dd></div>
+          <div id="trackingRow" hidden><dt>Tracking number</dt><dd id="trackingNumber"></dd></div>
+        </dl>
+      </section>
+      <section id="pickupDetails" class="detail-box" hidden>
+        <h2>Pickup details</h2>
+        <p id="pickupInstructions"></p>
+      </section>
+      <section id="reviewInvitation" class="detail-box" hidden>
+        <h2>How did your treasure make you feel?</h2>
+        <p>Once you have enjoyed your handmade piece, you are warmly invited to share your experience.</p>
+        <a href="https://foreverbeaded.ca/reviews.html">Leave a review</a>
+      </section>
+    </section>
+  </main>
+</body>
+</html>

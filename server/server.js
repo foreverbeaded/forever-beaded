@@ -27,6 +27,14 @@ const {
   validCustomerEmail,
   validTrackingNumber
 } = require("./fulfillment-notifications");
+const {
+  createTrackingMaterial,
+  deriveTrackingToken,
+  hashTrackingToken,
+  migrateOrderTrackingSchema,
+  trackingExpiry,
+  validTrackingToken
+} = require("./order-tracking");
 
 const PAYMENT_STATUSES = new Set(["AWAITING_PAYMENT", "RECEIVED", "VERIFIED", "REFUNDED", "CANCELLED"]);
 const ORDER_STATUSES = new Set(["NEW", "IN_PROGRESS", "READY", "SHIPPED", "COMPLETED", "CANCELLED"]);
@@ -692,6 +700,7 @@ async function normalizeOrderPayload(db, body) {
   const shippingCents = subtotalCents >= 7500 ? 0 : 500;
 
   return {
+    submissionKey: normalizeText(body.submissionKey, 100, "Order submission key"),
     customerName: normalizeText(customer.name || body.customerName || body.name, 120, "Customer name", { required: true }),
     customerEmail: normalizeEmail(customer.email || body.email),
     customerPhone: normalizeText(customer.phone || body.phone, 40, "Phone"),
@@ -747,6 +756,59 @@ function isOriginAllowed(origin, allowedOrigins) {
   });
 }
 
+function safeLogPath(requestPath) {
+  return String(requestPath || "")
+    .replace(/^\/track\/[A-Za-z0-9_-]+/, "/track/[private-token]")
+    .replace(/^\/api\/tracking\/[A-Za-z0-9_-]+/, "/api/tracking/[private-token]");
+}
+
+function trackingConfiguration(options = {}) {
+  const configuredSecret = options.trackingTokenSecret || process.env.TRACKING_TOKEN_SECRET || "";
+  const secret = configuredSecret || (!isProductionRuntime() ? crypto.randomBytes(32).toString("hex") : "");
+  if (!secret || secret.length < 32) {
+    throw new Error("TRACKING_TOKEN_SECRET must be configured with at least 32 characters.");
+  }
+  return {
+    secret,
+    publicBaseUrl: String(options.trackingPublicBaseUrl || process.env.TRACKING_PUBLIC_BASE_URL ||
+      (isProductionRuntime() ? "https://forever-beaded-api.onrender.com" : "http://127.0.0.1:3000")).replace(/\/$/, "")
+  };
+}
+
+function trackingUrl(config, token, fallbackBaseUrl = "") {
+  const baseUrl = config.publicBaseUrl || String(fallbackBaseUrl || "").replace(/\/$/, "");
+  if (!baseUrl) throw new Error("Tracking public base URL is not configured.");
+  return `${baseUrl}/track#${token}`;
+}
+
+async function createOrderTrackingLink(db, orderId, config, now = new Date().toISOString()) {
+  const existing = await dbGet(db, `SELECT derivation_id, token_hash, expires_at, revoked_at
+    FROM order_tracking_links WHERE order_id = ?`, [orderId]);
+  if (existing) {
+    const token = deriveTrackingToken(config.secret, existing.derivation_id);
+    if (hashTrackingToken(token) !== existing.token_hash) throw new Error("Stored tracking link could not be verified.");
+    return { token, expiresAt: existing.expires_at, existing: true, revoked: Boolean(existing.revoked_at) };
+  }
+  const material = createTrackingMaterial(config.secret);
+  const expiresAt = trackingExpiry(new Date(now), 365);
+  await dbRun(db, `INSERT INTO order_tracking_links
+    (order_id, derivation_id, token_hash, created_at, updated_at, expires_at, revoked_at)
+    VALUES (?, ?, ?, ?, ?, ?, NULL)`, [
+    orderId, material.derivationId, hashTrackingToken(material.token), now, now, expiresAt
+  ]);
+  return { token: material.token, expiresAt, existing: false, revoked: false };
+}
+
+async function activeOrderTrackingLink(db, orderId, config, fallbackBaseUrl = "") {
+  const row = await dbGet(db, `SELECT derivation_id, token_hash, expires_at, revoked_at
+    FROM order_tracking_links WHERE order_id = ?`, [orderId]);
+  const expired = row?.expires_at && Date.parse(row.expires_at) <= Date.now();
+  if (!row || !row.derivation_id || row.revoked_at || expired) return null;
+  const token = deriveTrackingToken(config.secret, row.derivation_id);
+  if (hashTrackingToken(token) !== row.token_hash) throw new Error("Stored tracking link could not be verified.");
+  return { token, url: trackingUrl(config, token, fallbackBaseUrl), expiresAt: row.expires_at };
+}
+
 async function migrateSchema(db) {
   await dbRun(db, "PRAGMA foreign_keys = ON");
   await dbRun(db, "PRAGMA journal_mode = WAL");
@@ -763,7 +825,8 @@ async function migrateSchema(db) {
     "customer_phone", "shipping_address", "address_as_entered", "normalized_address", "city", "province", "postal_code", "country", "notes",
     "subtotal_cents", "shipping_cents", "total_cents", "currency", "payment_method",
     "payment_status", "payment_confirmed_at", "order_status", "fulfillment_status",
-    "customer_notifications_suppressed", "etransfer_reference", "tracking_number"
+    "customer_notifications_suppressed", "etransfer_reference", "tracking_number",
+    "shipping_carrier", "pickup_instructions"
   ]);
 
   if (currentOrders.length && currentOrders.some((column) => !requiredOrderColumns.has(column.name))) {
@@ -1036,6 +1099,7 @@ async function migrateSchema(db) {
   )`);
   await migratePaymentReminderSchema(db);
   await migrateFulfillmentNotificationSchema(db);
+  await migrateOrderTrackingSchema(db);
 
   await dbRun(db, `CREATE TABLE IF NOT EXISTS order_reference_images (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1082,10 +1146,23 @@ async function generateOrderNumber(db, createdAt) {
   return `FB-${day}-${String((row?.count || 0) + 1).padStart(4, "0")}`;
 }
 
-async function createOrder(db, order, reminderOptions = {}) {
+async function createOrder(db, order, reminderOptions = {}, trackingConfig = null) {
   await dbRun(db, "BEGIN IMMEDIATE TRANSACTION");
   try {
     const now = new Date().toISOString();
+    const submissionKeyHash = order.submissionKey ? hashTrackingToken(order.submissionKey) : null;
+    const payloadHash = hashTrackingToken(JSON.stringify({ ...order, submissionKey: "" }));
+    if (submissionKeyHash) {
+      const existing = await dbGet(db, `SELECT order_submission_keys.payload_hash, orders.id AS order_id,
+        orders.order_number FROM order_submission_keys JOIN orders ON orders.id = order_submission_keys.order_id
+        WHERE order_submission_keys.submission_key_hash = ?`, [submissionKeyHash]);
+      if (existing) {
+        if (existing.payload_hash !== payloadHash) throw new PublicError(409, "This order request changed while it was being retried. Please refresh and try again.");
+        const tracking = trackingConfig ? await createOrderTrackingLink(db, existing.order_id, trackingConfig, now) : null;
+        await dbRun(db, "COMMIT");
+        return { orderId: existing.order_id, orderNumber: existing.order_number, referenceUploads: [], tracking, duplicate: true };
+      }
+    }
     const orderNumber = await generateOrderNumber(db, now);
     const result = await dbRun(db, `INSERT INTO orders (
       order_number, created_at, updated_at, customer_name, customer_email, customer_phone,
@@ -1127,8 +1204,17 @@ async function createOrder(db, order, reminderOptions = {}) {
       createdAt: now,
       customerEmail: order.customerEmail
     }, reminderOptions);
+    const tracking = trackingConfig
+      ? await createOrderTrackingLink(db, result.lastID, trackingConfig, now)
+      : null;
+    if (submissionKeyHash) {
+      await dbRun(db, `INSERT INTO order_submission_keys
+        (submission_key_hash, payload_hash, order_id, created_at) VALUES (?, ?, ?, ?)`, [
+        submissionKeyHash, payloadHash, result.lastID, now
+      ]);
+    }
     await dbRun(db, "COMMIT");
-    return { orderId: result.lastID, orderNumber, referenceUploads, reminder };
+    return { orderId: result.lastID, orderNumber, referenceUploads, reminder, tracking };
   } catch (error) {
     await dbRun(db, "ROLLBACK").catch(() => {});
     throw error;
@@ -1139,7 +1225,7 @@ async function getOrderWithItems(db, orderNumber) {
   const orderRow = await dbGet(db, `SELECT id, order_number, created_at, updated_at, customer_name, customer_email, customer_phone,
     shipping_address, address_as_entered, normalized_address, city, province, postal_code, country, notes,
     subtotal_cents, shipping_cents, total_cents, currency, payment_method, payment_status, payment_confirmed_at, order_status,
-    fulfillment_status, customer_notifications_suppressed, tracking_number
+    fulfillment_status, customer_notifications_suppressed, tracking_number, shipping_carrier, pickup_instructions
     FROM orders
     WHERE order_number = ?`, [orderNumber]);
   if (!orderRow) throw new PublicError(404, "Order was not found.");
@@ -1182,6 +1268,8 @@ async function getOrderWithItems(db, orderNumber) {
     fulfillmentStatus: effectiveFulfillmentStatus(orderRow),
     customerNotificationsSuppressed: Boolean(orderRow.customer_notifications_suppressed),
     trackingNumber: orderRow.tracking_number || "",
+    carrier: orderRow.shipping_carrier || "",
+    pickupInstructions: orderRow.pickup_instructions || "",
     items: itemRows.map((item) => ({
       productId: item.product_id,
       productName: item.product_name,
@@ -1338,6 +1426,7 @@ function buildOrderNotification(order, saved, etransferEmail) {
     item.customDescription ? `Custom-design description: ${item.customDescription}` : ""
   ].filter(Boolean).join("\n")).join("\n\n");
 
+  const trackingDetails = saved.trackingUrl ? `\nPrivate customer tracking link: ${saved.trackingUrl}\n` : "";
   return `New Forever Beaded order received.
 
 Order number: ${saved.orderNumber}
@@ -1360,10 +1449,21 @@ Shipping: ${(order.shippingCents / 100).toFixed(2)} ${order.currency}
 Total: ${(order.totalCents / 100).toFixed(2)} ${order.currency}
 Payment status: Awaiting e-Transfer
 E-transfer email: ${etransferEmail}
+${trackingDetails}
 
 Notes:
 ${order.notes || ""}
 `;
+}
+
+function buildCustomerOrderEmail(order, saved, etransferEmail) {
+  const trackingDetails = saved.trackingUrl
+    ? `\n\nFollow your treasure's journey:\n${saved.trackingUrl}`
+    : "";
+  return {
+    subject: `Your Forever Beaded order ${saved.orderNumber}`,
+    text: `Thank you! Your Forever Beaded order has been received.\n\nOrder number: ${saved.orderNumber}\nTotal: ${(order.totalCents / 100).toFixed(2)} ${order.currency}\n\nSend your Interac e-Transfer to:\n${etransferEmail}\n\nInclude your order number in the e-Transfer message.\n\nWe'll begin creating your handmade treasure after payment has been received and verified.${trackingDetails}\n\nWith love,\nForever Beaded`
+  };
 }
 
 function buildCustomerConfirmationMessage(order, saved, etransferEmail, emailSent) {
@@ -1635,14 +1735,23 @@ async function sendOrderNotificationEmail(order, saved, etransferEmail) {
       subject,
       text
     });
+    const customerMessage = buildCustomerOrderEmail(order, saved, etransferEmail);
+    const customerResult = await sendSmtpMail(config, {
+      from: config.from,
+      to: order.customerEmail,
+      subject: customerMessage.subject,
+      text: customerMessage.text
+    });
     console.info(`[email] provider response: ${result.providerResponse}`);
     console.info(`[email] message ID: ${result.messageId}`);
+    console.info(`[email] customer confirmation accepted: ${customerResult.providerResponse}`);
     return {
       emailSent: true,
       to,
       provider: "smtp",
       providerResponse: result.providerResponse,
-      messageId: result.messageId
+      messageId: result.messageId,
+      customerMessageId: customerResult.messageId
     };
   } catch (error) {
     const outboxPath = writeConfirmationEmail(order, saved, etransferEmail);
@@ -1723,7 +1832,7 @@ async function sendFulfillmentNotificationEmail(order, status) {
   }
 }
 
-async function processFulfillmentNotification(db, orderNumber, status, sender) {
+async function processFulfillmentNotification(db, orderNumber, status, sender, trackingConfig) {
   const now = new Date().toISOString();
   let claimed;
   await dbRun(db, "BEGIN IMMEDIATE TRANSACTION");
@@ -1776,6 +1885,8 @@ async function processFulfillmentNotification(db, orderNumber, status, sender) {
     trackingNumber: claimed.tracking_number || "",
     productNames: items.map(item => item.product_name)
   };
+  const tracking = await activeOrderTrackingLink(db, claimed.order_id, trackingConfig);
+  if (tracking) payload.trackingUrl = tracking.url;
   let result;
   try {
     result = await sender(payload, status);
@@ -1897,6 +2008,7 @@ async function createApp(options = {}) {
   const referenceUploadPath = getReferenceUploadPath(options);
   const reminderConfig = paymentReminderOptions(options);
   const fulfillmentNotificationConfig = fulfillmentNotificationOptions(options);
+  const trackingConfig = trackingConfiguration(options);
   await migrateSchema(db);
   await syncAllEtsyTestimonials(db);
 
@@ -1904,6 +2016,7 @@ async function createApp(options = {}) {
   const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: options.apiRateLimit || 100, standardHeaders: true, legacyHeaders: false });
   const orderLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: options.orderRateLimit || 40, standardHeaders: true, legacyHeaders: false });
   const reviewLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: options.reviewRateLimit || 5, standardHeaders: true, legacyHeaders: false });
+  const trackingLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: options.trackingRateLimit || 30, standardHeaders: true, legacyHeaders: false });
 
   app.disable("x-powered-by");
   if (options.trustProxy != null) {
@@ -1923,7 +2036,7 @@ async function createApp(options = {}) {
     }
   }));
   app.use(cors({
-    methods: ["GET", "POST", "PUT", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Authorization", "Content-Type", "X-Reference-Upload-Token", "X-File-Name"],
     optionsSuccessStatus: 204,
     origin(origin, callback) {
@@ -1935,7 +2048,7 @@ async function createApp(options = {}) {
   app.use((req, res, next) => {
     const started = Date.now();
     res.on("finish", () => {
-      console.info(`${req.method} ${req.path} ${res.statusCode} ${Date.now() - started}ms`);
+      console.info(`${req.method} ${safeLogPath(req.path)} ${res.statusCode} ${Date.now() - started}ms`);
     });
     next();
   });
@@ -1952,6 +2065,10 @@ async function createApp(options = {}) {
   app.get("/admin/orders", (req, res) => {
     res.set("Cache-Control", "no-store");
     res.sendFile(path.join(__dirname, "admin-orders.html"));
+  });
+  app.get("/track", (req, res) => {
+    res.set({ "Cache-Control": "no-store", "Referrer-Policy": "no-referrer", "X-Robots-Tag": "noindex, nofollow, noarchive" });
+    res.sendFile(path.join(__dirname, "customer-tracking.html"));
   });
   app.get("/admin-assets/custom-design.css", (req, res) => {
     res.type("text/css").sendFile(path.join(__dirname, "admin-custom-design.css"));
@@ -1971,8 +2088,51 @@ async function createApp(options = {}) {
   app.get("/admin-assets/orders.js", (req, res) => {
     res.type("application/javascript").sendFile(path.join(__dirname, "admin-orders.js"));
   });
+  app.get("/tracking-assets/customer-tracking.css", (req, res) => {
+    res.type("text/css").sendFile(path.join(__dirname, "customer-tracking.css"));
+  });
+  app.get("/tracking-assets/customer-tracking.js", (req, res) => {
+    res.type("application/javascript").sendFile(path.join(__dirname, "customer-tracking.js"));
+  });
 
   app.use("/api", apiLimiter);
+
+  app.post("/api/tracking", trackingLimiter, async (req, res, next) => {
+    res.set({
+      "Cache-Control": "private, no-store",
+      "Referrer-Policy": "no-referrer",
+      "X-Robots-Tag": "noindex, nofollow, noarchive"
+    });
+    try {
+      const token = String(req.body?.token || "");
+      if (!validTrackingToken(token)) throw new PublicError(404, "This tracking link is unavailable.");
+      const row = await dbGet(db, `SELECT orders.order_number, orders.created_at, orders.payment_status,
+        orders.order_status, orders.fulfillment_status, orders.tracking_number, orders.shipping_carrier,
+        orders.pickup_instructions, order_tracking_links.expires_at, order_tracking_links.revoked_at
+        FROM order_tracking_links JOIN orders ON orders.id = order_tracking_links.order_id
+        WHERE order_tracking_links.token_hash = ?`, [hashTrackingToken(token)]);
+      const expired = row?.expires_at && Date.parse(row.expires_at) <= Date.now();
+      if (!row || row.revoked_at || expired || row.payment_status === "CANCELLED" || row.order_status === "CANCELLED") {
+        throw new PublicError(404, "This tracking link is unavailable.");
+      }
+      res.json({
+        success: true,
+        order: {
+          orderNumber: row.order_number,
+          orderDate: row.created_at,
+          paymentStatus: row.payment_status,
+          fulfillmentStatus: effectiveFulfillmentStatus(row),
+          trackingNumber: row.tracking_number || "",
+          carrier: row.shipping_carrier || "",
+          pickupInstructions: row.pickup_instructions
+            ? "Please reply to your Forever Beaded email to arrange pickup."
+            : ""
+        }
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
 
   app.get("/api/products", async (req, res, next) => {
     try {
@@ -2068,12 +2228,16 @@ async function createApp(options = {}) {
       if (order.items.some((item) => item.referenceImageRequested) && !referenceUploadPath) {
         throw new PublicError(503, "Reference photo uploads are temporarily unavailable. Please remove the photo and try again.");
       }
-      const saved = await createOrder(db, order, reminderConfig);
+      const saved = await createOrder(db, order, reminderConfig, trackingConfig);
+      const requestBaseUrl = `${req.protocol}://${req.get("host")}`;
+      saved.trackingUrl = trackingUrl(trackingConfig, saved.tracking.token, requestBaseUrl);
       const etransferEmail = getEtransferEmail();
       await writeOrdersWorkbook(db);
-      const emailResult = options.emailSender
-        ? await options.emailSender(order, saved, etransferEmail)
-        : await sendOrderNotificationEmail(order, saved, etransferEmail);
+      const emailResult = saved.duplicate
+        ? { emailSent: false, duplicateSuppressed: true, messageId: null }
+        : (options.emailSender
+          ? await options.emailSender(order, saved, etransferEmail)
+          : await sendOrderNotificationEmail(order, saved, etransferEmail));
       res.status(200).json({
         success: true,
         orderSaved: true,
@@ -2093,6 +2257,7 @@ async function createApp(options = {}) {
         workbookUpdated: true,
         email: emailResult,
         confirmationEmail: emailResult,
+        duplicate: Boolean(saved.duplicate),
         message: buildCustomerConfirmationMessage(order, saved, etransferEmail, emailResult.emailSent)
       });
     } catch (error) {
@@ -2249,6 +2414,74 @@ async function createApp(options = {}) {
   app.get("/api/admin/health", (req, res) => {
     res.json({ ok: true, admin: true });
   });
+  app.get("/api/admin/orders/:orderNumber/tracking-link", async (req, res, next) => {
+    try {
+      const orderNumber = normalizeText(req.params.orderNumber, 40, "Order number", { required: true });
+      const row = await dbGet(db, `SELECT order_tracking_links.created_at, order_tracking_links.expires_at,
+        order_tracking_links.revoked_at FROM orders LEFT JOIN order_tracking_links
+        ON order_tracking_links.order_id = orders.id WHERE orders.order_number = ?`, [orderNumber]);
+      if (!row) throw new PublicError(404, "Order was not found.");
+      res.json({
+        orderNumber,
+        trackingLink: row.created_at ? {
+          active: !row.revoked_at && (!row.expires_at || Date.parse(row.expires_at) > Date.now()),
+          createdAt: row.created_at,
+          expiresAt: row.expires_at,
+          revokedAt: row.revoked_at
+        } : null
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+  app.post("/api/admin/orders/:orderNumber/tracking-link", async (req, res, next) => {
+    try {
+      const orderNumber = normalizeText(req.params.orderNumber, 40, "Order number", { required: true });
+      const order = await dbGet(db, "SELECT id, payment_status, order_status FROM orders WHERE order_number = ?", [orderNumber]);
+      if (!order) throw new PublicError(404, "Order was not found.");
+      if (order.payment_status === "CANCELLED" || order.order_status === "CANCELLED") {
+        throw new PublicError(409, "Cancelled orders cannot receive a tracking link.");
+      }
+      const material = createTrackingMaterial(trackingConfig.secret);
+      const now = new Date().toISOString();
+      const expiresAt = trackingExpiry(new Date(now), 365);
+      await dbRun(db, `INSERT INTO order_tracking_links (order_id, derivation_id, token_hash, created_at, updated_at, expires_at, revoked_at)
+        VALUES (?, ?, ?, ?, ?, ?, NULL)
+        ON CONFLICT(order_id) DO UPDATE SET derivation_id = excluded.derivation_id, token_hash = excluded.token_hash, created_at = excluded.created_at,
+          updated_at = excluded.updated_at, expires_at = excluded.expires_at, revoked_at = NULL`, [
+        order.id, material.derivationId, hashTrackingToken(material.token), now, now, expiresAt
+      ]);
+      await dbRun(db, "INSERT INTO order_events(order_id, created_at, event_type, details) VALUES (?, ?, ?, ?)", [
+        order.id, now, "CUSTOMER_TRACKING_LINK_CREATED", JSON.stringify({ expiresAt })
+      ]);
+      res.status(201).json({
+        success: true,
+        orderNumber,
+        trackingUrl: trackingUrl(trackingConfig, material.token, `${req.protocol}://${req.get("host")}`),
+        expiresAt
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+  app.delete("/api/admin/orders/:orderNumber/tracking-link", async (req, res, next) => {
+    try {
+      const orderNumber = normalizeText(req.params.orderNumber, 40, "Order number", { required: true });
+      const order = await dbGet(db, "SELECT id FROM orders WHERE order_number = ?", [orderNumber]);
+      if (!order) throw new PublicError(404, "Order was not found.");
+      const now = new Date().toISOString();
+      const result = await dbRun(db, `UPDATE order_tracking_links SET revoked_at = ?, updated_at = ?
+        WHERE order_id = ? AND revoked_at IS NULL`, [now, now, order.id]);
+      if (result.changes) {
+        await dbRun(db, "INSERT INTO order_events(order_id, created_at, event_type, details) VALUES (?, ?, ?, ?)", [
+          order.id, now, "CUSTOMER_TRACKING_LINK_REVOKED", "{}"
+        ]);
+      }
+      res.json({ success: true, orderNumber, revoked: Boolean(result.changes) });
+    } catch (error) {
+      next(error);
+    }
+  });
   app.get("/api/admin/payment-orders", async (req, res, next) => {
     try {
       const requestedStatus = normalizeText(req.query.paymentStatus || "AWAITING_PAYMENT", 30, "Payment status").toUpperCase();
@@ -2262,6 +2495,7 @@ async function createApp(options = {}) {
         orders.updated_at, orders.customer_name, orders.customer_email, orders.total_cents,
         orders.currency, orders.payment_status, orders.payment_confirmed_at, orders.order_status,
         orders.fulfillment_status, orders.customer_notifications_suppressed, orders.tracking_number,
+        orders.shipping_carrier, orders.pickup_instructions,
         payment_reminders.due_at, payment_reminders.state AS reminder_state,
         payment_reminders.attempt_count, payment_reminders.last_attempt_at,
         payment_reminders.next_attempt_at, payment_reminders.sent_at,
@@ -2324,6 +2558,8 @@ async function createApp(options = {}) {
           fulfillmentStatus: effectiveFulfillmentStatus(row),
           customerNotificationsSuppressed: Boolean(row.customer_notifications_suppressed),
           trackingNumber: row.tracking_number || "",
+          carrier: row.shipping_carrier || "",
+          pickupInstructions: row.pickup_instructions || "",
           fulfillmentNotifications: notificationsByOrder.get(row.id) || [],
           reminder: row.due_at ? {
             dueAt: row.due_at,
@@ -2396,6 +2632,12 @@ async function createApp(options = {}) {
       if (hasTracking && !validTrackingNumber(trackingNumber)) {
         throw new PublicError(400, "Tracking information may use letters, numbers, spaces, periods, and hyphens.");
       }
+      const hasCarrier = Object.prototype.hasOwnProperty.call(req.body || {}, "carrier");
+      const carrier = hasCarrier ? normalizeText(req.body.carrier, 80, "Shipping carrier") : null;
+      const hasPickupInstructions = Object.prototype.hasOwnProperty.call(req.body || {}, "pickupInstructions");
+      const pickupInstructions = hasPickupInstructions
+        ? normalizeMultilineText(req.body.pickupInstructions, 500, "Pickup instructions")
+        : null;
       const now = new Date().toISOString();
       let notificationState = null;
       let shouldSend = false;
@@ -2403,15 +2645,23 @@ async function createApp(options = {}) {
       await dbRun(db, "BEGIN IMMEDIATE TRANSACTION");
       try {
         const order = await dbGet(db, `SELECT id, customer_email, payment_status, order_status,
-          fulfillment_status, customer_notifications_suppressed, tracking_number
+          fulfillment_status, customer_notifications_suppressed, tracking_number, shipping_carrier, pickup_instructions
           FROM orders WHERE order_number = ?`, [orderNumber]);
         if (!order) throw new PublicError(404, "Order was not found.");
         const previousStatus = effectiveFulfillmentStatus(order);
-        unchanged = previousStatus === fulfillmentStatus && (!hasTracking || String(order.tracking_number || "") === trackingNumber);
+        unchanged = previousStatus === fulfillmentStatus &&
+          (!hasTracking || String(order.tracking_number || "") === trackingNumber) &&
+          (!hasCarrier || String(order.shipping_carrier || "") === carrier) &&
+          (!hasPickupInstructions || String(order.pickup_instructions || "") === pickupInstructions);
         if (!unchanged) {
           const savedTracking = fulfillmentStatus === "SHIPPED" && hasTracking ? (trackingNumber || null) : order.tracking_number;
+          const savedCarrier = hasCarrier ? (carrier || null) : order.shipping_carrier;
+          const savedPickupInstructions = hasPickupInstructions ? (pickupInstructions || null) : order.pickup_instructions;
           await dbRun(db, `UPDATE orders SET fulfillment_status = ?, order_status = ?, tracking_number = ?,
-            updated_at = ? WHERE id = ?`, [fulfillmentStatus, legacyOrderStatus(fulfillmentStatus), savedTracking, now, order.id]);
+            shipping_carrier = ?, pickup_instructions = ?, updated_at = ? WHERE id = ?`, [
+            fulfillmentStatus, legacyOrderStatus(fulfillmentStatus), savedTracking,
+            savedCarrier, savedPickupInstructions, now, order.id
+          ]);
           await dbRun(db, "INSERT INTO order_events(order_id, created_at, event_type, details) VALUES (?, ?, ?, ?)", [
             order.id,
             now,
@@ -2453,7 +2703,8 @@ async function createApp(options = {}) {
           db,
           orderNumber,
           fulfillmentStatus,
-          options.fulfillmentNotificationSender || sendFulfillmentNotificationEmail
+          options.fulfillmentNotificationSender || sendFulfillmentNotificationEmail,
+          trackingConfig
         );
       }
       res.json({
@@ -2524,7 +2775,8 @@ async function createApp(options = {}) {
         db,
         orderNumber,
         status,
-        options.fulfillmentNotificationSender || sendFulfillmentNotificationEmail
+        options.fulfillmentNotificationSender || sendFulfillmentNotificationEmail,
+        trackingConfig
       );
       res.json({ success: notification.sent, orderNumber, fulfillmentStatus: status, ...notification });
     } catch (error) {
@@ -3111,6 +3363,7 @@ module.exports = {
   migrateSchema,
   normalizeOrderPayload,
   buildReviewNotificationEmail,
+  buildCustomerOrderEmail,
   buildSmtpMessage,
   dbGet,
   dbRun

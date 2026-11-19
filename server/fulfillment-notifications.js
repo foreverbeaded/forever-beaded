@@ -87,8 +87,14 @@ function buildFulfillmentNotificationEmail(order, status) {
     subject = "Your Forever Beaded Order Has Been Delivered! 💜";
     message = `Your Forever Beaded order ${orderNumber} has been delivered!\n\nThank you so much for supporting my handmade business. Every creation is made with love and care, and I hope you enjoy yours!`;
   }
-  const text = `Hi ${name},\n\n${message}\n\nWith love,\nForever Beaded\nhttps://foreverbeaded.ca`;
-  const html = `<!doctype html><html><body style="margin:0;background:#fff8fb;color:#241528;font-family:Arial,sans-serif"><div style="max-width:620px;margin:0 auto;padding:28px"><h1 style="color:#7b2f86;font-family:Georgia,serif;font-size:26px">Forever Beaded</h1><p>Hi ${escapeHtml(name)},</p>${escapeHtml(message).replaceAll("\n", "<br>")}<p style="margin-top:24px">With love,<br><strong>Forever Beaded</strong><br><a href="https://foreverbeaded.ca">foreverbeaded.ca</a></p></div></body></html>`;
+  const trackingText = order.trackingUrl
+    ? `\n\nFollow your treasure's journey:\n${order.trackingUrl}`
+    : "";
+  const trackingHtml = order.trackingUrl
+    ? `<p style="margin-top:22px"><a href="${escapeHtml(order.trackingUrl)}" style="display:inline-block;padding:12px 18px;background:#7b2f86;color:#fff;text-decoration:none;border-radius:6px">Follow your treasure's journey</a></p>`
+    : "";
+  const text = `Hi ${name},\n\n${message}${trackingText}\n\nWith love,\nForever Beaded\nhttps://foreverbeaded.ca`;
+  const html = `<!doctype html><html><body style="margin:0;background:#fff8fb;color:#241528;font-family:Arial,sans-serif"><div style="max-width:620px;margin:0 auto;padding:28px"><h1 style="color:#7b2f86;font-family:Georgia,serif;font-size:26px">Forever Beaded</h1><p>Hi ${escapeHtml(name)},</p>${escapeHtml(message).replaceAll("\n", "<br>")}${trackingHtml}<p style="margin-top:24px">With love,<br><strong>Forever Beaded</strong><br><a href="https://foreverbeaded.ca">foreverbeaded.ca</a></p></div></body></html>`;
   return { subject, text, html };
 }
 

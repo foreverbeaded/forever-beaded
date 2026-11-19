@@ -2822,6 +2822,12 @@
     let orderSucceeded = false;
     try {
       const submittedOrder = buildHomeTreasureOrder(confirmedAddress);
+      if (!form.dataset.orderSubmissionKey) {
+        const randomBytes = new Uint8Array(24);
+        window.crypto.getRandomValues(randomBytes);
+        form.dataset.orderSubmissionKey = Array.from(randomBytes, byte => byte.toString(16).padStart(2, "0")).join("");
+      }
+      submittedOrder.submissionKey = form.dataset.orderSubmissionKey;
       const storedRequestItems = loadStoredRequestItems();
       const extendingOrderNumber = activeTreasureOrder?.orderNumber && storedRequestItems.length === 0 && submittedOrder.items.length === 1
         ? activeTreasureOrder.orderNumber
